@@ -53,8 +53,8 @@ val sampleProperties = listOf(
 fun HomeScreen() {
     Box(
         modifier = Modifier
-            .fillMaxSize().
-            .background(SurfaceGray)
+            .fillMaxSize()
+            .background(SurfaceGray),
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
