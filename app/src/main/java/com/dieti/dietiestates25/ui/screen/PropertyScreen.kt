@@ -20,8 +20,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dieti.dietiestates25.R
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.draw.clip
+import com.dieti.dietiestates25.ui.theme.DarkPurple80
+import com.dieti.dietiestates25.ui.theme.TealLighter
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun PropertyDetailScreen(
     onBackPressed: () -> Unit = {},
@@ -43,20 +55,37 @@ fun PropertyDetailScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Property Images Section
+                // Property Images Section with navigation buttons
                 item {
+                    // State for tracking current image
+                    val totalImages = 10 // Esempio con 10 immagini
+                    var currentImageIndex = remember { mutableStateOf(0) }
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(250.dp)
                     ) {
-                        // Property Image
-                        Image(
-                            painter = painterResource(id = R.drawable.property1),
-                            contentDescription = "Property Image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
+                        // HorizontalPager for images
+                        HorizontalPager(
+                            state = rememberPagerState { totalImages },
+                            modifier = Modifier.fillMaxSize()
+                        ) { page ->
+                            // Update the current index
+                            currentImageIndex.value = page
+
+                            // Property Image
+                            Image(
+                                painter = painterResource(
+                                    // Qui dovresti caricare l'immagine corretta in base all'indice
+                                    // Per questo esempio usiamo un placeholder
+                                    id = R.drawable.property2
+                                ),
+                                contentDescription = "Property Image ${page + 1}",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
 
                         // Image Navigation
                         Row(
@@ -66,8 +95,16 @@ fun PropertyDetailScreen(
                                 .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            // Previous image button
                             IconButton(
-                                onClick = { },
+                                onClick = {
+                                    if (currentImageIndex.value > 0) {
+                                        currentImageIndex.value -= 1
+                                    } else {
+                                        // Loop to the last image
+                                        currentImageIndex.value = totalImages - 1
+                                    }
+                                },
                                 modifier = Modifier
                                     .size(40.dp)
                                     .background(Color.Black.copy(alpha = 0.6f), CircleShape)
@@ -79,8 +116,30 @@ fun PropertyDetailScreen(
                                 )
                             }
 
+                            // Image counter indicator
+                            Box(
+                                modifier = Modifier
+                                    .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "${currentImageIndex.value + 1}/$totalImages",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+
+                            // Next image button
                             IconButton(
-                                onClick = { },
+                                onClick = {
+                                    if (currentImageIndex.value < totalImages - 1) {
+                                        currentImageIndex.value += 1
+                                    } else {
+                                        // Loop to the first image
+                                        currentImageIndex.value = 0
+                                    }
+                                },
                                 modifier = Modifier
                                     .size(40.dp)
                                     .background(Color.Black.copy(alpha = 0.6f), CircleShape)
@@ -92,16 +151,6 @@ fun PropertyDetailScreen(
                                 )
                             }
                         }
-
-                        // Time display at top left
-                        Text(
-                            text = "9:30",
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .padding(16.dp),
-                            color = Color.Black,
-                            fontSize = 14.sp
-                        )
                     }
                 }
 
@@ -307,7 +356,8 @@ fun PropertyDetailScreen(
                             onClick = { },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = TealPrimary
+                                contentColor = DarkPurple80,
+                                containerColor = TealLighter
                             )
                         ) {
                             Icon(
@@ -324,7 +374,8 @@ fun PropertyDetailScreen(
                             onClick = { },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = TealPrimary
+                                contentColor = DarkPurple80,
+                                containerColor = TealLighter
                             )
                         ) {
                             Icon(
@@ -337,31 +388,71 @@ fun PropertyDetailScreen(
                     }
                 }
 
-                // Report Ad
+                // Report Ad with decorative lines and shadow
                 item {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = "Report",
-                            tint = Color.Red,
-                            modifier = Modifier.size(16.dp)
+                        // Top decorative line
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.7f)
+                                .height(1.dp)
+                                .background(
+                                    brush = Brush.horizontalGradient(
+                                        colors = listOf(Color.Transparent, Color.Red.copy(alpha = 0.6f), Color.Transparent)
+                                    )
+                                )
                         )
-                        Text(
-                            text = "Segnala Annuncio",
-                            color = Color.Red,
-                            fontSize = 14.sp,
-                            modifier = Modifier.padding(start = 4.dp)
+
+                        // Report button with shadow
+                        Row(
+                            modifier = Modifier
+                                .padding(vertical = 12.dp)
+                                .shadow(
+                                    elevation = 2.dp,
+                                    shape = RoundedCornerShape(16.dp),
+                                    clip = false
+                                )
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.White)
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = "Report",
+                                tint = Color.Red,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "Segnala Annuncio",
+                                color = Color.Red,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+
+                        // Bottom decorative line
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.7f)
+                                .height(1.dp)
+                                .background(
+                                    brush = Brush.horizontalGradient(
+                                        colors = listOf(Color.Transparent, Color.Red.copy(alpha = 0.6f), Color.Transparent)
+                                    )
+                                )
                         )
                     }
                 }
 
-                // Similar Listings
+                // Similar Listings Section with Horizontal Scrolling
                 item {
                     Column(
                         modifier = Modifier
@@ -376,19 +467,51 @@ fun PropertyDetailScreen(
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
 
+                        // Horizontal scrollable row
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState())
+                                .padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            SimilarPropertyCard(
-                                price = "400.000",
-                                modifier = Modifier.weight(1f)
-                            )
+                            // Add up to 7 similar properties
+                            repeat(7) { index ->
+                                SimilarPropertyCard(
+                                    price = if (index == 0) "400.000" else "${300 + index * 50}.000",
+                                    modifier = Modifier
+                                        .width(200.dp)
+                                        .height(150.dp)
+                                )
+                            }
 
-                            SimilarPropertyCard(
-                                price = "",  // This can be updated as needed
-                                modifier = Modifier.weight(1f)
-                            )
+                            // "View More" button at the end
+                            Box(
+                                modifier = Modifier
+                                    .width(120.dp)
+                                    .height(150.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(SurfaceGray),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.KeyboardArrowRight,
+                                        contentDescription = "View More",
+                                        tint = TealPrimary,
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                    Text(
+                                        text = "Vedi tutti",
+                                        color = TealPrimary,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -401,7 +524,9 @@ fun PropertyDetailScreen(
 
             // Fixed top navigation bar (stays visible during scroll)
             TopAppBar(
-                modifier = Modifier.background(Color.Transparent),
+                modifier = Modifier
+                    .padding(horizontal = 10.dp)
+                    .background(Color.Transparent),
                 navigationIcon = {
                     IconButton(
                         onClick = onBackPressed,
