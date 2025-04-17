@@ -78,7 +78,8 @@ fun FilterHeader() {
 
 @Composable
 fun NavigationButtons(onBackClick: () -> Unit) {
-    var selectedPurchaseType by remember { mutableStateOf("Compra") }
+    // Inizializzazione senza selezione predefinita
+    var selectedPurchaseType by remember { mutableStateOf<String?>(null) }
 
     // Una singola riga che contiene tutti gli elementi
     Row(
@@ -98,13 +99,13 @@ fun NavigationButtons(onBackClick: () -> Unit) {
                 imageVector = Icons.Default.ArrowBack,
                 contentDescription = "Indietro"
             )
-        }
+        }git
 
         // Box centrale per i pulsanti Compra/Affitta, centrati orizzontalmente
         Box(
             modifier = Modifier
-                .weight(1f)
-                .padding(start = 32.dp),
+                .padding(start = 26.dp)
+                .weight(1f),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -112,16 +113,19 @@ fun NavigationButtons(onBackClick: () -> Unit) {
                     .wrapContentWidth()
                     .clip(RoundedCornerShape(24.dp))
                     .background(Color.LightGray.copy(alpha = 0.3f))
-                    .padding(8.dp),
+                    .padding(4.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 listOf("Compra", "Affitta").forEach { option ->
                     val selected = option == selectedPurchaseType
                     Button(
-                        onClick = { selectedPurchaseType = option },
+                        onClick = {
+                            selectedPurchaseType = if (selectedPurchaseType == option) null else option
+                        },
                         modifier = Modifier
-                            .height(36.dp),
+                            .height(36.dp)
+                            .padding(horizontal = 2.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (selected) TealPrimary else Color.Transparent,
@@ -147,10 +151,10 @@ fun NavigationButtons(onBackClick: () -> Unit) {
 
 @Composable
 fun FilterContent() {
-    // State per i vari filtri
-    var selectedBathrooms by remember { mutableStateOf(1) }
+    // State per i vari filtri - inizializzati a null o valori non selezionati
+    var selectedBathrooms by remember { mutableStateOf<Int?>(null) }
     val propertyConditions = listOf("Ottimo", "Buono", "Da ristrutturare")
-    var selectedCondition by remember { mutableStateOf<String?>("Nuovo") }
+    var selectedCondition by remember { mutableStateOf<String?>(null) }
 
     // Contenuto scrollabile per i filtri
     Column(
@@ -231,17 +235,21 @@ fun FilterContent() {
                 listOf(1, 2, 3, ">3").forEach { count ->
                     val isSelected = when {
                         count is Int && selectedBathrooms == count -> true
-                        count is String && selectedBathrooms > 3 && count == ">3" -> true
+                        count is String && selectedBathrooms != null && selectedBathrooms!! > 3 && count == ">3" -> true
                         else -> false
                     }
 
                     Box(modifier = Modifier.weight(1f)) {
                         Button(
                             onClick = {
-                                selectedBathrooms = if (count is String) 4 else count as Int
+                                if (selectedBathrooms == (if (count is String) 4 else count as Int)) {
+                                    selectedBathrooms = null // Deseleziona se già selezionato
+                                } else {
+                                    selectedBathrooms = if (count is String) 4 else count as Int
+                                }
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isSelected) TealLightest else TealLightest.copy(alpha = 0.5f)
                             ),
@@ -257,42 +265,90 @@ fun FilterContent() {
             }
         }
 
-        // Stato immobile
+        // Stato immobile - layout migliorato
         FilterSection(title = "Stato immobile") {
-            // Opzione "Nuovo"
-            Button(
-                onClick = { selectedCondition = if (selectedCondition == "Nuovo") null else "Nuovo" },
-                modifier = Modifier
-                    .width(150.dp)
-                    .padding(bottom = 8.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (selectedCondition == "Nuovo") TealLightest else TealLightest.copy(alpha = 0.5f)
-                )
-            ) {
-                Text(
-                    text = "Nuovo",
-                    color = Color.Black
-                )
-            }
-
-            // Altre condizioni
-            Row(
+            // Grid layout organizzato con 2 elementi per riga
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                propertyConditions.forEach { condition ->
+                // Prima riga: 2 elementi
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Nuovo
                     Box(modifier = Modifier.weight(1f)) {
                         Button(
-                            onClick = { selectedCondition = if (selectedCondition == condition) null else condition },
+                            onClick = { selectedCondition = if (selectedCondition == "Nuovo") null else "Nuovo" },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(24.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedCondition == condition) TealLightest else TealLightest.copy(alpha = 0.5f)
+                                containerColor = if (selectedCondition == "Nuovo") TealLightest else TealLightest.copy(alpha = 0.5f)
                             )
                         ) {
                             Text(
-                                text = condition,
+                                text = "Nuovo",
+                                color = Color.Black,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+
+                    // Ottimo
+                    Box(modifier = Modifier.weight(1f)) {
+                        Button(
+                            onClick = { selectedCondition = if (selectedCondition == "Ottimo") null else "Ottimo" },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (selectedCondition == "Ottimo") TealLightest else TealLightest.copy(alpha = 0.5f)
+                            )
+                        ) {
+                            Text(
+                                text = "Ottimo",
+                                color = Color.Black,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+
+                // Seconda riga: 2 elementi
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Buono
+                    Box(modifier = Modifier.weight(1f)) {
+                        Button(
+                            onClick = { selectedCondition = if (selectedCondition == "Buono") null else "Buono" },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (selectedCondition == "Buono") TealLightest else TealLightest.copy(alpha = 0.5f)
+                            )
+                        ) {
+                            Text(
+                                text = "Buono",
+                                color = Color.Black,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+
+                    // Da ristrutturare
+                    Box(modifier = Modifier.weight(1f)) {
+                        Button(
+                            onClick = { selectedCondition = if (selectedCondition == "Da ristrutturare") null else "Da ristrutturare" },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (selectedCondition == "Da ristrutturare") TealLightest else TealLightest.copy(alpha = 0.5f)
+                            )
+                        ) {
+                            Text(
+                                text = "Da ristrutturare",
                                 color = Color.Black,
                                 fontSize = 12.sp,
                                 textAlign = TextAlign.Center
@@ -385,24 +441,6 @@ fun SearchButton() {
                 )
             }
         }
-    }
-}
-
-// Esempio di inclusione di FilterScreen in un'app con navigazione
-@Composable
-fun ExampleAppWithNavigation() {
-    var currentScreen by remember { mutableStateOf("search") }
-
-    when (currentScreen) {
-        "search" -> {
-            // Qui potresti chiamare il tuo SearchScreen
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Button(onClick = { currentScreen = "filter" }) {
-                    Text("Vai ai filtri")
-                }
-            }
-        }
-        "filter" -> FilterScreen(onNavigateBack = { currentScreen = "search" })
     }
 }
 
