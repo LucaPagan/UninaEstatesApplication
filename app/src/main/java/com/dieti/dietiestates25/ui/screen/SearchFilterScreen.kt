@@ -99,7 +99,7 @@ fun NavigationButtons(onBackClick: () -> Unit) {
                 imageVector = Icons.Default.ArrowBack,
                 contentDescription = "Indietro"
             )
-        }git
+        }
 
         // Box centrale per i pulsanti Compra/Affitta, centrati orizzontalmente
         Box(
@@ -350,7 +350,7 @@ fun FilterContent() {
                             Text(
                                 text = "Da ristrutturare",
                                 color = Color.Black,
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 textAlign = TextAlign.Center
                             )
                         }
