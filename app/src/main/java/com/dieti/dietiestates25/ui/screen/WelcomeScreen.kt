@@ -25,8 +25,9 @@ val OffWhite = Color(0xFFF5F5F5)
 val TealLightest = Color(0xFFB2DFDB)
 
 @Composable
-fun WelcomeScreen() {
-
+fun WelcomeScreen(
+    onNavigateToHome: () -> Unit = {} // Parametro per la navigazione, con valore predefinito vuoto per il Preview
+) {
     val colorStops = arrayOf(
         0.0f to TealPrimary,
         0.20f to OffWhite,  // Raggiunge bianco al 20%
@@ -78,7 +79,7 @@ fun WelcomeScreen() {
             Spacer(modifier = Modifier.height(48.dp))
 
             Button(
-                onClick = { /* Azione */ },
+                onClick = { onNavigateToHome() }, // Ora chiama la funzione di navigazione
                 modifier = Modifier
                     .widthIn(max = 300.dp) // Manteniamo la larghezza massima
                     .height(50.dp)
