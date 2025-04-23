@@ -28,6 +28,7 @@ import com.dieti.dietiestates25.ui.theme.TealLighter
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.mutableStateOf
@@ -36,7 +37,7 @@ import androidx.compose.runtime.remember
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun PropertyDetailScreen(
-    onBackPressed: () -> Unit = {},
+    // navController: NavController,
     onFavoritePressed: () -> Unit = {}
 ) {
     Scaffold(
@@ -261,33 +262,83 @@ fun PropertyDetailScreen(
                     }
                 }
 
-                // Map Section
+                /*
+                // Map Section with Geoapify API
                 item {
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(150.dp)
-                            .padding(horizontal = 16.dp)
-                            .background(SurfaceGray, RoundedCornerShape(8.dp))
+                            .padding(16.dp)
                     ) {
-                        // Here you would integrate an actual map like Google Maps
-                        // For the mockup, we're using a placeholder
+                        Text(
+                            text = "Posizione",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextGray,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        val geoapifyApiKey = "YOUR_GEOAPIFY_API_KEY" // Sostituisci con la tua chiave API
+                        val latitude = 40.839813  // Coordinate di Napoli, Via Francesco Girardi
+                        val longitude = 14.250849
+
+                        // URL per la mappa statica Geoapify
+                        val mapUrl = "https://maps.geoapify.com/v1/staticmap" +
+                                "?style=osm-bright" +
+                                "&width=800" +
+                                "&height=400" +
+                                "&center=lonlat:$longitude,$latitude" +
+                                "&zoom=15" +
+                                "&marker=lonlat:$longitude,$latitude;type:material;color:%23FF0000;size:large;iconType:awesome" +
+                                "&apiKey=$geoapifyApiKey"
+
+                        // Box per la mappa con bordi arrotondati e ombra
                         Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.LightGray.copy(alpha = 0.3f))
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .shadow(4.dp, RoundedCornerShape(8.dp))
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(SurfaceGray)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = "Location",
-                                tint = TealPrimary,
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .align(Alignment.Center)
+                            // Caricamento dell'immagine mappa con Coil
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(mapUrl)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = "Property Location Map",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
                             )
+
+                            // Overlay con pulsante per aprire Google Maps
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(8.dp)
+                                    .size(40.dp)
+                                    .background(TealPrimary, CircleShape)
+                                    .clickable {
+                                        // Intent per aprire Google Maps con le coordinate
+                                        val mapIntent = Intent().apply {
+                                            action = Intent.ACTION_VIEW
+                                            data = Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude")
+                                        }
+                                        context.startActivity(mapIntent)
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Navigation,
+                                    contentDescription = "Open in Maps",
+                                    tint = Color.White
+                                )
+                            }
                         }
                     }
                 }
+                */
 
                 // Agent Info
                 item {
@@ -524,12 +575,16 @@ fun PropertyDetailScreen(
 
             // Fixed top navigation bar (stays visible during scroll)
             TopAppBar(
-                modifier = Modifier
-                    .padding(horizontal = 10.dp)
-                    .background(Color.Transparent),
+                modifier = Modifier.background(Color.Transparent),
                 navigationIcon = {
                     IconButton(
-                        onClick = onBackPressed,
+                        onClick = {
+//                            // Naviga indietro alla HomeScreen
+//                            navController.navigate("home") {
+//                                // Opzionale: pulisci il backstack per evitare accumulo di schermate
+//                                popUpTo("home") { inclusive = true }
+//                            }
+                        },
                         modifier = Modifier
                             .size(40.dp)
                             .background(TealPrimary, CircleShape)
