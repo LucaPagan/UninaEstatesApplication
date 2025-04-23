@@ -153,7 +153,7 @@ fun SearchBar(
             placeholder = { Text("Cerca casa...") },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
             singleLine = true,
-            colors = TextFieldDefaults.outlinedTextFieldColors(
+            colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = TealPrimary,
                 unfocusedBorderColor = TealLighter
             )

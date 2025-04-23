@@ -3,26 +3,17 @@ package com.dieti.dietiestates25
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-<<<<<<< HEAD
+
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-=======
-
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.navigation.NavHostController
->>>>>>> 98d27b42ede958eb03b52baeb09b1b0b049882cb
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.data.PreferenceManager
 import com.dieti.dietiestates25.ui.screen.HomeScreen
-
-import com.dieti.dietiestates25.ui.screen.PropertyDetailScreen
-
 import com.dieti.dietiestates25.ui.screen.WelcomeScreen
 import com.dieti.dietiestates25.ui.theme.DietiEstates25Theme
 import com.dieti.dietiestates25.viewmodel.SharedViewModel
