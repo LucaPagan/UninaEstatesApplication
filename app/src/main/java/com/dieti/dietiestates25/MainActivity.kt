@@ -3,6 +3,7 @@ package com.dieti.dietiestates25
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
@@ -11,6 +12,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.data.PreferenceManager
 import com.dieti.dietiestates25.ui.screen.HomeScreen
+
+import com.dieti.dietiestates25.ui.screen.PropertyDetailScreen
+
 import com.dieti.dietiestates25.ui.screen.WelcomeScreen
 import com.dieti.dietiestates25.ui.theme.DietiEstates25Theme
 
