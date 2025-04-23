@@ -13,7 +13,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,12 +22,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.dieti.dietiestates25.R
+import com.dieti.dietiestates25.data.PreferenceManager
 import com.dieti.dietiestates25.ui.theme.TealLighter
 import com.dieti.dietiestates25.ui.theme.TealPrimary
+import com.dieti.dietiestates25.viewmodel.SharedViewModel
 
 val TealSelected = Color(0xFFB2DFDB)
 val SurfaceGray = Color(0xFFF5F5F5)
@@ -42,15 +42,23 @@ data class Property(
     val imageRes: Int
 )
 
-val sampleProperties = listOf(
-    Property(1, "400.000", "Appartamento...", R.drawable.property1),
-    Property(2, "320.000", "Villa...", R.drawable.property2),
-    Property(3, "250.000", "Attico...", R.drawable.property1),
-    Property(4, "180.000", "Bilocale...", R.drawable.property2)
-)
-
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    userToken: String,
+    viewModel: SharedViewModel,
+    onSearchClick: (String) -> Unit,
+    onPropertyClick: (Int) -> Unit,
+    onProfileClick: () -> Unit,
+    onNotificationsClick: () -> Unit,
+    onPostAdClick: () -> Unit,
+    onRecentSearchesClick: () -> Unit
+) {
+    // Stato per il campo di ricerca
+    var searchQuery by remember { mutableStateOf("") }
+
+    // Osserva le proprietà dal viewModel
+    val properties = viewModel.properties
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -63,23 +71,40 @@ fun HomeScreen() {
 
             Spacer(modifier = Modifier.height(80.dp))
 
-            // Search Bar Botton
-            SearchBar()
+            // Search Bar
+            SearchBar(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                onSearch = {
+                    if (searchQuery.isNotBlank()) {
+                        viewModel.addSearch(searchQuery)
+                        onSearchClick(searchQuery)
+                    }
+                }
+            )
 
             Spacer(modifier = Modifier.height(80.dp))
 
             // Recent Searches Section
-            RecentSearchesSection()
+            RecentSearchesSection(
+                properties = properties,
+                onPropertyClick = onPropertyClick,
+                onViewAllClick = onRecentSearchesClick
+            )
 
             Spacer(modifier = Modifier.height(48.dp))
 
             // Post Ad Section
-            PostAdSection()
+            PostAdSection(onPostAdClick)
 
             Spacer(modifier = Modifier.weight(1f))
 
             // Bottom Navigation
-            BottomNavigation()
+            BottomNavigation(
+                onHomeClick = { /* Già nella home */ },
+                onNotificationsClick = onNotificationsClick,
+                onProfileClick = onProfileClick
+            )
         }
     }
 }
@@ -110,14 +135,35 @@ fun Header() {
 }
 
 @Composable
-fun SearchBar() {
-    Box(
+fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit
+) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
     ) {
+        // Campo di testo per la ricerca
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Cerca casa...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = TealPrimary,
+                unfocusedBorderColor = TealLighter
+            )
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Bottone di ricerca
         Button(
-            onClick = { /* TODO: Handle search click */ },
+            onClick = onSearch,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 64.dp)
@@ -148,7 +194,11 @@ fun SearchBar() {
 }
 
 @Composable
-fun RecentSearchesSection() {
+fun RecentSearchesSection(
+    properties: List<Property>,
+    onPropertyClick: (Int) -> Unit,
+    onViewAllClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -169,7 +219,7 @@ fun RecentSearchesSection() {
             )
 
             Button(
-                onClick = { /* TODO: Handle click */ },
+                onClick = onViewAllClick,
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = TealLighter
@@ -191,11 +241,10 @@ fun RecentSearchesSection() {
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(sampleProperties) { property ->
+            items(properties) { property ->
                 PropertyCard(
-                    price = property.price,
-                    type = property.type,
-                    imageRes = property.imageRes,
+                    property = property,
+                    onPropertyClick = { onPropertyClick(property.id) },
                     modifier = Modifier.width(240.dp)
                 )
             }
@@ -205,56 +254,49 @@ fun RecentSearchesSection() {
 
 @Composable
 fun PropertyCard(
-    price: String,
-    type: String,
-    imageRes: Int,
+    property: Property,
+    onPropertyClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
             .height(160.dp)
             .clip(RoundedCornerShape(10.dp))
-            .clickable { /* TODO: Handle property click */ }
+            .clickable(onClick = onPropertyClick)
     ) {
         Image(
-            painter = painterResource(id = imageRes),
+            painter = painterResource(id = property.imageRes),
             contentDescription = "Property Image",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
 
         // Price and type overlay
-        if (price.isNotEmpty() || type.isNotEmpty()) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(8.dp)
-            ) {
-                if (price.isNotEmpty()) {
-                    Text(
-                        text = price,
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(8.dp)
+        ) {
+            Text(
+                text = "€ ${property.price}",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
 
-                if (type.isNotEmpty()) {
-                    Text(
-                        text = type,
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
+            Text(
+                text = property.type,
+                color = Color.White,
+                fontSize = 14.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
 
 @Composable
-fun PostAdSection() {
+fun PostAdSection(onPostAdClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -271,7 +313,7 @@ fun PostAdSection() {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { /* TODO: Handle click */ },
+            onClick = onPostAdClick,
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = TealPrimary
@@ -290,7 +332,11 @@ fun PostAdSection() {
 }
 
 @Composable
-fun BottomNavigation() {
+fun BottomNavigation(
+    onHomeClick: () -> Unit,
+    onNotificationsClick: () -> Unit,
+    onProfileClick: () -> Unit
+) {
     Surface(
         color = TealPrimary,
         modifier = Modifier
@@ -305,19 +351,22 @@ fun BottomNavigation() {
             BottomNavItem(
                 icon = Icons.Default.Home,
                 label = "Esplora",
-                selected = true
+                selected = true,
+                onClick = onHomeClick
             )
 
             BottomNavItem(
                 icon = Icons.Default.Notifications,
                 label = "Notifiche",
-                selected = false
+                selected = false,
+                onClick = onNotificationsClick
             )
 
             BottomNavItem(
                 icon = Icons.Default.Person,
                 label = "Profilo",
-                selected = false
+                selected = false,
+                onClick = onProfileClick
             )
         }
     }
@@ -327,14 +376,15 @@ fun BottomNavigation() {
 fun BottomNavItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
-    selected: Boolean
+    selected: Boolean,
+    onClick: () -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
             .padding(8.dp)
-            .clickable { /* TODO: Handle navigation */ }
+            .clickable(onClick = onClick)
     ) {
         Icon(
             imageVector = icon,
@@ -349,10 +399,4 @@ fun BottomNavItem(
             fontSize = 12.sp
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewHomeScreen() {
-    HomeScreen()
 }
