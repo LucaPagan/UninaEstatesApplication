@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -17,73 +16,78 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
-
-// Assicurati che questi colori siano accessibili
-val TealPrimary = Color(0xFF00796B)
-val OffWhite = Color(0xFFF5F5F5)
-val TealLightest = Color(0xFFB2DFDB)
+import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.theme.TealPrimary
+import com.dieti.dietiestates25.ui.theme.OffWhite
+import com.dieti.dietiestates25.ui.theme.TealLightest
+import com.dieti.dietiestates25.ui.theme.White
 
 @Composable
-fun WelcomeScreen(
-    onNavigateToHome: () -> Unit = {} // Parametro per la navigazione, con valore predefinito vuoto per il Preview
-) {
+fun WelcomeScreen(navController: NavController) {
     val colorStops = arrayOf(
         0.0f to TealPrimary,
-        0.20f to OffWhite,  // Raggiunge bianco al 20%
-        0.60f to OffWhite,  // Mantiene bianco fino al 60% (copre il centro)
-        1.0f to TealPrimary // Sfuma verso Teal
+        0.20f to OffWhite,
+        0.60f to OffWhite,
+        1.0f to TealPrimary
     )
+
+    val idUtente = ""
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(colorStops = colorStops)),
     ) {
-        // --- Immagine ---
+        // Welcome Image
         Image(
             painter = painterResource(id = R.drawable.welcome_image),
             contentDescription = "Illustrazione casa",
             modifier = Modifier
-                .align(Alignment.Center) // <-- Allinea l'immagine al centro del Box genitore
-                .fillMaxWidth(0.9f)      // Definisci la larghezza desiderata
+                .align(Alignment.Center)
+                .fillMaxWidth(0.9f)
                 .aspectRatio(1f / 0.8f)
-                .padding(bottom = 8.dp), // Mantieni le proporzioni
+                .padding(bottom = 8.dp),
             contentScale = ContentScale.Fit
         )
 
-        // --- Testo e Bottone ---
+        // Content Column (Text and Button)
         Column(
             modifier = Modifier
-                .align(Alignment.BottomCenter) // Allinea l'intera colonna in basso al centro
-                .fillMaxWidth()               // Occupa tutta la larghezza
-                .padding(horizontal = 32.dp)  // Padding laterale
-                .padding(bottom = 30.dp),     // Padding dal fondo per staccare il bottone (aggiusta se serve)
-            horizontalAlignment = Alignment.CenterHorizontally // Centra gli elementi *dentro* la colonna
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 30.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "Benvenuto",
-                color = Color.White, // Si troverà sulla parte Teal inferiore
+                color = White,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
+
             Spacer(modifier = Modifier.height(12.dp))
+
             Text(
                 text = "Compra la tua casa dei sogni",
-                color = Color.White.copy(alpha = 0.9f),
+                color = White.copy(alpha = 0.9f),
                 fontSize = 16.sp,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Normal
             )
+
             Spacer(modifier = Modifier.height(48.dp))
 
             Button(
-                onClick = { onNavigateToHome() }, // Ora chiama la funzione di navigazione
+                onClick = {
+                    navController.navigate(Screen.HomeScreen.withArgs(idUtente))
+                },
                 modifier = Modifier
-                    .widthIn(max = 300.dp) // Manteniamo la larghezza massima
-                    .height(50.dp)
-                    .padding(bottom = 8.dp),
+                    .widthIn(max = 300.dp)
+                    .height(50.dp),
                 shape = RoundedCornerShape(25),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = TealLightest.copy(alpha = 0.95f),
@@ -106,6 +110,8 @@ fun WelcomeScreen(
 
 @Preview(showBackground = true, device = "id:pixel_4")
 @Composable
-fun DefaultImageCenteredPreview() {
-    WelcomeScreen()
+fun WelcomeScreenPreview() {
+
+    val navController = rememberNavController()
+    WelcomeScreen(navController = navController)
 }
