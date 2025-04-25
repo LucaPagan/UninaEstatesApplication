@@ -3,6 +3,9 @@ package com.dieti.dietiestates25.ui.navigation
 sealed class Screen(val route: String) {
     data object WelcomeScreen : Screen ("welcome_screen")
     data object HomeScreen : Screen ("home_screen")
+    data object PropertyScreen : Screen ("property_screen")
+    data object PriceProposalScreen : Screen ("price_screen")
+    data object AppointmentBookingScreen : Screen ("appointment_screen")
 
     fun withArgs(vararg args: String): String {
         return buildString {

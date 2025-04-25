@@ -28,22 +28,21 @@ import com.dieti.dietiestates25.ui.theme.TealLighter
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.navigation.Screen
 
 // Definizione dei colori mancanti
-private val TextGray = Color(0xFF424242)
 private val TealPrimary = Color(0xFF009688)
-private val SurfaceGray = Color(0xFFF5F5F5)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun PropertyDetailScreen(
-    // navController: NavController,
-    onFavoritePressed: () -> Unit = {}
+    navController: NavHostController
 ) {
     Scaffold(
         topBar = {
@@ -125,7 +124,10 @@ fun PropertyDetailScreen(
                             // Image counter indicator
                             Box(
                                 modifier = Modifier
-                                    .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                                    .background(
+                                        Color.Black.copy(alpha = 0.6f),
+                                        RoundedCornerShape(12.dp)
+                                    )
                                     .padding(horizontal = 12.dp, vertical = 4.dp)
                             ) {
                                 Text(
@@ -349,7 +351,9 @@ fun PropertyDetailScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedButton(
-                            onClick = { },
+                            onClick = {
+                                navController.navigate(Screen.PriceProposalScreen.route)
+                            },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = DarkPurple80,
@@ -381,7 +385,11 @@ fun PropertyDetailScreen(
                                 .height(1.dp)
                                 .background(
                                     brush = Brush.horizontalGradient(
-                                        colors = listOf(Color.Transparent, Color.Red.copy(alpha = 0.6f), Color.Transparent)
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            Color.Red.copy(alpha = 0.6f),
+                                            Color.Transparent
+                                        )
                                     )
                                 )
                         )
@@ -401,19 +409,25 @@ fun PropertyDetailScreen(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = "Report",
-                                tint = Color.Red,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "Segnala Annuncio",
-                                color = Color.Red,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(start = 8.dp)
-                            )
+                            Button(
+                                onClick = { },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = "Report",
+                                    tint = Color.Red,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = "Segnala Annuncio",
+                                    color = Color.Red,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
+                            }
+
                         }
 
                         // Bottom decorative line
@@ -423,7 +437,11 @@ fun PropertyDetailScreen(
                                 .height(1.dp)
                                 .background(
                                     brush = Brush.horizontalGradient(
-                                        colors = listOf(Color.Transparent, Color.Red.copy(alpha = 0.6f), Color.Transparent)
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            Color.Red.copy(alpha = 0.6f),
+                                            Color.Transparent
+                                        )
                                     )
                                 )
                         )
@@ -522,7 +540,9 @@ fun PropertyDetailScreen(
                 title = { /* Empty title */ },
                 actions = {
                     IconButton(
-                        onClick = onFavoritePressed,
+                        onClick = {
+
+                        },
                         modifier = Modifier
                             .size(40.dp)
                             .background(TealPrimary, CircleShape)
@@ -624,5 +644,6 @@ fun SimilarPropertyCard(
 @Preview(showBackground = true)
 @Composable
 fun PropertyDetailScreenPreview() {
-    PropertyDetailScreen()
+    val navController = rememberNavController()
+    PropertyDetailScreen(navController = navController)
 }

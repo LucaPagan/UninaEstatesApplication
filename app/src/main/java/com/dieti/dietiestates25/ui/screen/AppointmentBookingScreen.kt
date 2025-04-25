@@ -1,5 +1,6 @@
 package com.dieti.dietiestates25.ui.screen
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -43,6 +44,7 @@ class AppointmentBookingActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun AppointmentBookingScreen() {
     var selectedDate by remember { mutableStateOf(LocalDate.of(2025, 8, 17)) }
