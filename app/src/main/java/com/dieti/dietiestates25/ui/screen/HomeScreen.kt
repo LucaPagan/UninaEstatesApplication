@@ -2,91 +2,110 @@ package com.dieti.dietiestates25.ui.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dieti.dietiestates25.R
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
-import com.dieti.dietiestates25.ui.theme.PrimaryColor
-import com.dieti.dietiestates25.ui.theme.SecondaryColor
+import com.dieti.dietiestates25.ui.theme.TealLighter
+import com.dieti.dietiestates25.ui.theme.TealPrimary
+
+val TealSelected = Color(0xFFB2DFDB)
+val SurfaceGray = Color(0xFFF5F5F5)
+val TextGray = Color(0xFF424242)
+val IconColor = Color(0xFF37474F)
+
+// Dati di esempio per la propertyList
+data class Property(
+    val id: Int,
+    val price: String,
+    val type: String,
+    val imageRes: Int
+)
+
+val sampleProperties = listOf(
+    Property(1, "400.000", "Appartamento...", R.drawable.property1),
+    Property(2, "320.000", "Villa...", R.drawable.property2),
+    Property(3, "250.000", "Attico...", R.drawable.property1),
+    Property(4, "180.000", "Bilocale...", R.drawable.property2)
+)
 
 @Composable
-fun HomeScreen(idUtente: String = "") {
-    Column(
+fun HomeScreen() {
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(SurfaceGray),
     ) {
-        // Header
-        Header()
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Header()
 
-        // Search bar
-        SearchBar()
+            Spacer(modifier = Modifier.height(80.dp))
 
-        // Recent searches section
-        RecentSearches()
+            // Search Bar Botton
+            SearchBar()
 
-        // Post Ad section
-        PostAdSection()
+            Spacer(modifier = Modifier.height(80.dp))
 
-        // Spacer to push navigation to bottom
-        Spacer(modifier = Modifier.weight(1f))
+            // Recent Searches Section
+            RecentSearchesSection()
 
-        // Bottom navigation
-        BottomNavigation()
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // Post Ad Section
+            PostAdSection()
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Bottom Navigation
+            BottomNavigation()
+        }
     }
 }
 
 @Composable
 fun Header() {
-    Box(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .background(PrimaryColor)
-            .padding(16.dp)
+            .height(120.dp),
+        color = TealPrimary,
+        shape = RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp)
     ) {
-        Text(
-            text = "UNINAESTATES25",
-            color = Color.White,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.align(Alignment.Center)
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "UNINAESTATES25",
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
@@ -95,30 +114,41 @@ fun SearchBar() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 64.dp, vertical = 16.dp)
+            .padding(horizontal = 24.dp)
     ) {
-        // The most modern and simple approach with TextField
-        androidx.compose.material3.TextField(
-            value = "",
-            onValueChange = {},
-            placeholder = { Text("Cerca casa") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+        Button(
+            onClick = { /* TODO: Handle search click */ },
             modifier = Modifier
-                .fillMaxWidth(),
-            singleLine = true,
-            shape = RoundedCornerShape(8.dp),
-            colors = androidx.compose.material3.TextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedIndicatorColor = PrimaryColor,
-                unfocusedIndicatorColor = PrimaryColor
+                .fillMaxWidth()
+                .padding(horizontal = 64.dp)
+                .height(50.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = TealLighter
             )
-        )
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = Color.White
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Cerca casa",
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun RecentSearches() {
+fun RecentSearchesSection() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -126,53 +156,50 @@ fun RecentSearches() {
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Ultime ricerche",
+                color = TextGray,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
             )
-            TextButton(onClick = { }) {
+
+            Button(
+                onClick = { /* TODO: Handle click */ },
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = TealLighter
+                ),
+                modifier = Modifier.height(36.dp),
+                contentPadding = PaddingValues(horizontal = 18.dp)
+            ) {
                 Text(
                     text = "Vai ad ultime ricerche",
-                    color = PrimaryColor,
-                    fontSize = 14.sp
+                    color = Color.White,
+                    fontSize = 12.sp
                 )
             }
         }
 
-        // Property cards row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // ScrollView orizzontale delle proprietà
+        LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // First property card (larger)
-            PropertyCard(
-                price = "400.000",
-                type = "Appartamento",
-                modifier = Modifier.weight(2f),
-                imageRes = R.drawable.property1
-            )
-
-            // Second property card (smaller)
-            PropertyCard(
-                price = "",
-                type = "",
-                modifier = Modifier.weight(1f),
-                imageRes = R.drawable.property2
-            )
+            items(sampleProperties) { property ->
+                PropertyCard(
+                    price = property.price,
+                    type = property.type,
+                    imageRes = property.imageRes,
+                    modifier = Modifier.width(240.dp)
+                )
+            }
         }
-
-        Divider(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            color = Color.LightGray,
-            thickness = 1.dp
-        )
     }
 }
 
@@ -180,44 +207,45 @@ fun RecentSearches() {
 fun PropertyCard(
     price: String,
     type: String,
-    modifier: Modifier = Modifier,
-    imageRes: Int
+    imageRes: Int,
+    modifier: Modifier = Modifier
 ) {
-    Card(
+    Box(
         modifier = modifier
             .height(160.dp)
-            .padding(4.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .clickable { /* TODO: Handle property click */ }
     ) {
-        Box {
-            // Property image
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = "Property Image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+        Image(
+            painter = painterResource(id = imageRes),
+            contentDescription = "Property Image",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
 
-            // Price overlay (only if price is not empty)
-            if (price.isNotEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(8.dp)
-                        .background(Color(0x88000000), RoundedCornerShape(4.dp))
-                        .padding(4.dp)
-                ) {
+        // Price and type overlay
+        if (price.isNotEmpty() || type.isNotEmpty()) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(8.dp)
+            ) {
+                if (price.isNotEmpty()) {
                     Text(
                         text = price,
                         color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
                     )
+                }
+
+                if (type.isNotEmpty()) {
                     Text(
                         text = type,
                         color = Color.White,
-                        fontSize = 12.sp
+                        fontSize = 14.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -230,66 +258,101 @@ fun PostAdSection() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "Inserisci il tuo annuncio nell'app",
-            modifier = Modifier.padding(bottom = 16.dp),
+            color = TextGray,
+            fontSize = 16.sp,
             fontWeight = FontWeight.Medium
         )
 
+        Spacer(modifier = Modifier.height(16.dp))
+
         Button(
-            onClick = { },
-            shape = RoundedCornerShape(24.dp),
+            onClick = { /* TODO: Handle click */ },
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = TealPrimary
+            ),
             modifier = Modifier
-                .fillMaxWidth(0.5f)
-                .height(48.dp),
-            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = PrimaryColor
-            )
+                .width(200.dp)
+                .height(40.dp)
         ) {
-            Text("Pubblica annuncio")
+            Text(
+                text = "Pubblica annuncio",
+                color = Color.White,
+                fontSize = 14.sp
+            )
         }
     }
 }
 
 @Composable
 fun BottomNavigation() {
-    NavigationBar(
-        containerColor = SecondaryColor,
-        contentColor = PrimaryColor
+    Surface(
+        color = TealPrimary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
     ) {
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Esplora") },
-            label = { Text("Esplora") },
-            selected = true,
-            onClick = { }
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomNavItem(
+                icon = Icons.Default.Home,
+                label = "Esplora",
+                selected = true
+            )
+
+            BottomNavItem(
+                icon = Icons.Default.Notifications,
+                label = "Notifiche",
+                selected = false
+            )
+
+            BottomNavItem(
+                icon = Icons.Default.Person,
+                label = "Profilo",
+                selected = false
+            )
+        }
+    }
+}
+
+@Composable
+fun BottomNavItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    selected: Boolean
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .padding(8.dp)
+            .clickable { /* TODO: Handle navigation */ }
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = if (selected) TealSelected else IconColor,
+            modifier = Modifier.size(24.dp)
         )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Notifications, contentDescription = "Notifiche") },
-            label = { Text("Notifiche") },
-            selected = false,
-            onClick = { }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Profilo") },
-            label = { Text("Profilo") },
-            selected = false,
-            onClick = { }
+
+        Text(
+            text = label,
+            color = if (selected) TealSelected else Color.White,
+            fontSize = 12.sp
         )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun HomeScreenPreview() {
-    DietiEstatesTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            HomeScreen()
-        }
-    }
+fun PreviewHomeScreen() {
+    HomeScreen()
 }
