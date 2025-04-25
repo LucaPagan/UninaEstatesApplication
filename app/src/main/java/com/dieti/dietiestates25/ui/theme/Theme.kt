@@ -1,10 +1,10 @@
 package com.dieti.dietiestates25.ui.theme
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -21,40 +21,36 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 
-// Colori principali dell'app
-val PrimaryColor = Color(0xFF009688)
-val SecondaryColor = Color(0xFF4DB6AC)
-val TertiaryColor = Color(0xFF80CBC4)
-val BackgroundColor = Color(0xFFF5F5F5)
-
-private val LightColorScheme = lightColorScheme(
-    primary = PrimaryColor,
-    secondary = SecondaryColor,
-    tertiary = TertiaryColor,
-    background = BackgroundColor,
+// Light theme colors
+private val LightColors = lightColorScheme(
+    primary = TealVibrant,
+    onPrimary = Color.White,
+    primaryContainer = TealDeep,
+    onPrimaryContainer = Color.White,
+    secondary = TealLight,
+    onSecondary = GrayBlue,
+    background = NeutralLight,
+    onBackground = GrayBlue,
     surface = Color.White,
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.Black,
-    onBackground = Color.Black,
-    onSurface = Color.Black,
+    onSurface = GrayBlue
 )
 
-private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryColor,
-    secondary = SecondaryColor,
-    tertiary = TertiaryColor,
+// Dark theme colors
+private val DarkColors = darkColorScheme(
+    primary = TealVibrant,
+    onPrimary = Color.White,
+    primaryContainer = TealDeep,
+    onPrimaryContainer = Color.White,
+    secondary = TealLight,
+    onSecondary = Color.Black,
     background = Color(0xFF121212),
-    surface = Color(0xFF1E1E1E),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.Black,
     onBackground = Color.White,
-    onSurface = Color.White,
+    surface = Color(0xFF1E1E1E),
+    onSurface = Color.White
 )
+// Typography
 
-// Definizione della tipografia
-val AppTypography = androidx.compose.material3.Typography(
+val typography = Typography(
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
@@ -62,39 +58,65 @@ val AppTypography = androidx.compose.material3.Typography(
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
     ),
+    bodyMedium = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.25.sp
+    ),
+    bodySmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.4.sp
+    ),
     titleLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
         fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
+        lineHeight = 28.sp
     ),
     titleMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Medium,
         fontSize = 18.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.2.sp
+        lineHeight = 24.sp
     ),
-    labelSmall = TextStyle(
+    titleSmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp
+    ),
+    labelLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp
+    ),
+    labelMedium = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.5.sp
+    ),
+    labelSmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 10.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp
     )
 )
 
-/**
- * Tema principale dell'applicazione DietiEstates.
- * Configura i colori e lo stile dell'interfaccia utente.
- */
-@Suppress("DEPRECATION")
-@SuppressLint("ObsoleteSdkInt")
 @Composable
 fun DietiEstatesTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color è disponibile su Android 12+
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -103,8 +125,8 @@ fun DietiEstatesTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> DarkColors
+        else -> LightColors
     }
 
     val view = LocalView.current
@@ -112,13 +134,13 @@ fun DietiEstatesTheme(
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme.not()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 
-    androidx.compose.material3.MaterialTheme(
+    MaterialTheme(
         colorScheme = colorScheme,
-        typography = AppTypography,
+        typography = typography,
         content = content
     )
 }

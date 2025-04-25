@@ -26,8 +26,9 @@ fun Navigation() {
                 }
             )
         ) { entry ->
-            HomeScreen(idUtente = entry.arguments?.getString("idUtente") ?: "utente")
-
+            HomeScreen(
+                navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente"
+            )
         }
 
     }
