@@ -2,227 +2,123 @@ package com.dieti.dietiestates25.ui.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dieti.dietiestates25.R
-import com.dieti.dietiestates25.ui.theme.DietiEstates25Theme
-import com.dieti.dietiestates25.ui.theme.TealLighter
-import com.dieti.dietiestates25.ui.theme.TealPrimary
-
-// Definizione dei colori
-private val TealSelected = Color(0xFFB2DFDB)
-private val SurfaceGray = Color(0xFFF5F5F5)
-private val TextGray = Color(0xFF424242)
-private val IconColor = Color(0xFF37474F)
-
-// Dati di esempio per le proprietà immobiliari
-data class Property(
-    val id: Int,
-    val price: String,
-    val type: String,
-    val address: String,
-    val imageRes: Int
-)
+import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import com.dieti.dietiestates25.ui.theme.PrimaryColor
+import com.dieti.dietiestates25.ui.theme.SecondaryColor
 
 @Composable
-fun HomeScreen(
-    idUtente: String,
-    onNavigateToNotifications: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {},
-    onNavigateToPropertyDetails: (Int) -> Unit = {},
-    onNavigateToSearch: (String) -> Unit = {},
-    onNavigateToRecentSearches: () -> Unit = {},
-    onNavigateToPostAd: () -> Unit = {}
-) {
-    // Stato per il campo di ricerca
-    var searchQuery by remember { mutableStateOf("") }
-
-    // Dati di esempio direttamente definiti qui
-    val sampleProperties = remember {
-        listOf(
-            Property(
-                id = 1,
-                price = "500",
-                type = "Monolocale",
-                address = "Via Roma 123, Napoli",
-                imageRes = R.drawable.property2 // Assicurati di avere queste risorse
-            ),
-            Property(
-                id = 2,
-                price = "700",
-                type = "Bilocale",
-                address = "Via Napoli 45, Napoli",
-                imageRes = R.drawable.property1
-            ),
-            Property(
-                id = 3,
-                price = "900",
-                type = "Trilocale",
-                address = "Corso Umberto 78, Napoli",
-                imageRes = R.drawable.property2
-            )
-        )
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SurfaceGray)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Header()
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Search Bar
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                onSearch = {
-                    if (searchQuery.isNotBlank()) {
-                        onNavigateToSearch(searchQuery)
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Recent Searches Section
-            RecentSearchesSection(
-                properties = sampleProperties,
-                onPropertyClick = onNavigateToPropertyDetails,
-                onSeeAllClick = onNavigateToRecentSearches
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Post Ad Section
-            PostAdSection(onPostAdClick = onNavigateToPostAd)
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Bottom Navigation
-            BottomNavigation(
-                onHomeClick = { /* Già nella home */ },
-                onNotificationsClick = onNavigateToNotifications,
-                onProfileClick = onNavigateToProfile
-            )
-        }
-    }
-}
-
-@Composable
-private fun Header() {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp),
-        color = TealPrimary,
-        shape = RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "UNINAESTATES25",
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-@Composable
-private fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onSearch: () -> Unit
-) {
+fun HomeScreen(idUtente: String = "") {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
+            .fillMaxSize()
+            .background(Color.White)
     ) {
-        // Campo di testo per la ricerca
-        OutlinedTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Cerca casa...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-            singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = TealPrimary,
-                unfocusedBorderColor = TealLighter
-            )
-        )
+        // Header
+        Header()
 
-        Spacer(modifier = Modifier.height(8.dp))
+        // Search bar
+        SearchBar()
 
-        // Bottone di ricerca
-        Button(
-            onClick = onSearch,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = TealLighter
-            )
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = Color.White
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Cerca casa",
-                    color = Color.White,
-                    fontSize = 16.sp
-                )
-            }
-        }
+        // Recent searches section
+        RecentSearches()
+
+        // Post Ad section
+        PostAdSection()
+
+        // Spacer to push navigation to bottom
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Bottom navigation
+        BottomNavigation()
     }
 }
 
 @Composable
-private fun RecentSearchesSection(
-    properties: List<Property>,
-    onPropertyClick: (Int) -> Unit,
-    onSeeAllClick: () -> Unit
-) {
+fun Header() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(PrimaryColor)
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "UNINAESTATES25",
+            color = Color.White,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.align(Alignment.Center)
+        )
+    }
+}
+
+@Composable
+fun SearchBar() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 64.dp, vertical = 16.dp)
+    ) {
+        // The most modern and simple approach with TextField
+        androidx.compose.material3.TextField(
+            value = "",
+            onValueChange = {},
+            placeholder = { Text("Cerca casa") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+            modifier = Modifier
+                .fillMaxWidth(),
+            singleLine = true,
+            shape = RoundedCornerShape(8.dp),
+            colors = androidx.compose.material3.TextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedIndicatorColor = PrimaryColor,
+                unfocusedIndicatorColor = PrimaryColor
+            )
+        )
+    }
+}
+
+@Composable
+fun RecentSearches() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -230,290 +126,170 @@ private fun RecentSearchesSection(
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Ultime ricerche",
-                color = TextGray,
-                fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
             )
-
-            Button(
-                onClick = onSeeAllClick,
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = TealLighter
-                ),
-                modifier = Modifier.height(36.dp),
-                contentPadding = PaddingValues(horizontal = 18.dp)
-            ) {
+            TextButton(onClick = { }) {
                 Text(
                     text = "Vai ad ultime ricerche",
-                    color = Color.White,
-                    fontSize = 12.sp
+                    color = PrimaryColor,
+                    fontSize = 14.sp
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // Property cards row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // First property card (larger)
+            PropertyCard(
+                price = "400.000",
+                type = "Appartamento",
+                modifier = Modifier.weight(2f),
+                imageRes = R.drawable.property1
+            )
 
-        // ScrollView orizzontale delle proprietà
-        if (properties.isNotEmpty()) {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp)
-            ) {
-                items(properties) { property ->
-                    PropertyCard(
-                        property = property,
-                        onPropertyClick = { onPropertyClick(property.id) },
-                        modifier = Modifier.width(240.dp)
+            // Second property card (smaller)
+            PropertyCard(
+                price = "",
+                type = "",
+                modifier = Modifier.weight(1f),
+                imageRes = R.drawable.property2
+            )
+        }
+
+        Divider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp),
+            color = Color.LightGray,
+            thickness = 1.dp
+        )
+    }
+}
+
+@Composable
+fun PropertyCard(
+    price: String,
+    type: String,
+    modifier: Modifier = Modifier,
+    imageRes: Int
+) {
+    Card(
+        modifier = modifier
+            .height(160.dp)
+            .padding(4.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Box {
+            // Property image
+            Image(
+                painter = painterResource(id = imageRes),
+                contentDescription = "Property Image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Price overlay (only if price is not empty)
+            if (price.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(8.dp)
+                        .background(Color(0x88000000), RoundedCornerShape(4.dp))
+                        .padding(4.dp)
+                ) {
+                    Text(
+                        text = price,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = type,
+                        color = Color.White,
+                        fontSize = 12.sp
                     )
                 }
             }
-        } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Nessuna ricerca recente",
-                    color = TextGray,
-                    fontSize = 16.sp
-                )
-            }
         }
     }
 }
 
 @Composable
-private fun PropertyCard(
-    property: Property,
-    onPropertyClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .height(160.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .clickable(onClick = onPropertyClick)
-            .background(Color.LightGray)
-    ) {
-        Image(
-            painter = painterResource(id = property.imageRes),
-            contentDescription = "Property Image",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        // Price and type overlay
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth()
-                .background(Color(0x80000000))
-                .padding(8.dp)
-        ) {
-            Text(
-                text = "€ ${property.price}",
-                color = Color.White,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text(
-                text = property.type,
-                color = Color.White,
-                fontSize = 14.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Text(
-                text = property.address,
-                color = Color.White,
-                fontSize = 12.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
-private fun PostAdSection(onPostAdClick: () -> Unit) {
+fun PostAdSection() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "Inserisci il tuo annuncio nell'app",
-            color = TextGray,
-            fontSize = 16.sp,
+            modifier = Modifier.padding(bottom = 16.dp),
             fontWeight = FontWeight.Medium
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         Button(
-            onClick = onPostAdClick,
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = TealPrimary
-            ),
+            onClick = { },
+            shape = RoundedCornerShape(24.dp),
             modifier = Modifier
-                .width(200.dp)
-                .height(40.dp)
-        ) {
-            Text(
-                text = "Pubblica annuncio",
-                color = Color.White,
-                fontSize = 14.sp
+                .fillMaxWidth(0.5f)
+                .height(48.dp),
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                containerColor = PrimaryColor
             )
+        ) {
+            Text("Pubblica annuncio")
         }
     }
 }
 
 @Composable
-private fun BottomNavigation(
-    onHomeClick: () -> Unit,
-    onNotificationsClick: () -> Unit,
-    onProfileClick: () -> Unit
-) {
-    Surface(
-        color = TealPrimary,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp)
+fun BottomNavigation() {
+    NavigationBar(
+        containerColor = SecondaryColor,
+        contentColor = PrimaryColor
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BottomNavItem(
-                icon = Icons.Default.Home,
-                label = "Esplora",
-                selected = true,
-                onClick = onHomeClick
-            )
-
-            BottomNavItem(
-                icon = Icons.Default.Notifications,
-                label = "Notifiche",
-                selected = false,
-                onClick = onNotificationsClick
-            )
-
-            BottomNavItem(
-                icon = Icons.Default.Person,
-                label = "Profilo",
-                selected = false,
-                onClick = onProfileClick
-            )
-        }
-    }
-}
-
-@Composable
-private fun BottomNavItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .padding(8.dp)
-            .clickable(onClick = onClick)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (selected) TealSelected else Color.White,
-            modifier = Modifier.size(24.dp)
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Home, contentDescription = "Esplora") },
+            label = { Text("Esplora") },
+            selected = true,
+            onClick = { }
         )
-
-        Text(
-            text = label,
-            color = if (selected) TealSelected else Color.White,
-            fontSize = 12.sp
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Notifications, contentDescription = "Notifiche") },
+            label = { Text("Notifiche") },
+            selected = false,
+            onClick = { }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Profilo") },
+            label = { Text("Profilo") },
+            selected = false,
+            onClick = { }
         )
     }
 }
 
-// Funzione di Preview che rispetta il NavController
-@Preview(showBackground = true, widthDp = 360, heightDp = 740)
+@Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    // Creazione di stub di navigazione per la preview
-    val navigateToNotifications = {}
-    val navigateToProfile = {}
-    val navigateToPropertyDetails = { _: Int -> }
-    val navigateToSearch = { _: String -> }
-    val navigateToRecentSearches = {}
-    val navigateToPostAd = {}
-
-    // ID utente di esempio per la preview
-    val testUserId = "user123"
-
-    DietiEstates25Theme {
+    DietiEstatesTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            HomeScreen(
-                idUtente = testUserId,
-                onNavigateToNotifications = navigateToNotifications,
-                onNavigateToProfile = navigateToProfile,
-                onNavigateToPropertyDetails = navigateToPropertyDetails,
-                onNavigateToSearch = navigateToSearch,
-                onNavigateToRecentSearches = navigateToRecentSearches,
-                onNavigateToPostAd = navigateToPostAd
-            )
-        }
-    }
-}
-
-// Preview aggiuntiva per il tema scuro
-@Preview(showBackground = true, widthDp = 360, heightDp = 740, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun HomeScreenDarkPreview() {
-    // Creazione di stub di navigazione per la preview
-    val navigateToNotifications = {}
-    val navigateToProfile = {}
-    val navigateToPropertyDetails = { _: Int -> }
-    val navigateToSearch = { _: String -> }
-    val navigateToRecentSearches = {}
-    val navigateToPostAd = {}
-
-    // ID utente di esempio per la preview
-    val testUserId = "user123"
-
-    DietiEstates25Theme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            HomeScreen(
-                idUtente = testUserId,
-                onNavigateToNotifications = navigateToNotifications,
-                onNavigateToProfile = navigateToProfile,
-                onNavigateToPropertyDetails = navigateToPropertyDetails,
-                onNavigateToSearch = navigateToSearch,
-                onNavigateToRecentSearches = navigateToRecentSearches,
-                onNavigateToPostAd = navigateToPostAd
-            )
+            HomeScreen()
         }
     }
 }
