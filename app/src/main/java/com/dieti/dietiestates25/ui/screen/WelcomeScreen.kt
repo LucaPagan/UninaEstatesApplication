@@ -33,7 +33,7 @@ fun WelcomeScreen(navController: NavController) {
             1.0f to colorScheme.primary
         )
 
-        val idUtente = "fwfwefwefwefwefwef"
+        val idUtente = "Danilo Scala"
 
         Box(
             modifier = Modifier
