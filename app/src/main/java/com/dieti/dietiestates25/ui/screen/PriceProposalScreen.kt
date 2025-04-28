@@ -30,12 +30,12 @@ fun PriceProposalScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = White
+        color = Color.White // Using standard Color.White instead of custom White
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(White)
+                .background(Color.White) // Using standard Color.White
                 .padding(16.dp)
         ) {
             // Header with close button
@@ -49,37 +49,37 @@ fun PriceProposalScreen(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Chiudi",
-                        tint = TextGray
+                        tint = GrayBlue // Changed from TextGray to GrayBlue
                     )
                 }
                 Text(
                     text = "Proponi prezzo",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
-                    color = TextGray,
+                    color = GrayBlue, // Changed from TextGray to GrayBlue
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }
 
-            Divider(color = SurfaceGray, thickness = 1.dp)
+            Divider(color = NeutralLight, thickness = 1.dp) // Changed from SurfaceGray to NeutralLight
 
             // Information card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 16.dp),
-                colors = CardDefaults.cardColors(containerColor = OffWhite),
+                colors = CardDefaults.cardColors(containerColor = NeutralLight), // Changed from OffWhite to NeutralLight
                 shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, Color.Gray)
             ) {
                 Text(
                     text = "Proponi un nuovo prezzo all'inserzionista, senta impegno, adatto al tuo budget",
                     modifier = Modifier.padding(16.dp),
-                    color = TextGray
+                    color = GrayBlue // Changed from TextGray to GrayBlue
                 )
             }
 
-            Divider(color = SurfaceGray, thickness = 1.dp)
+            Divider(color = NeutralLight, thickness = 1.dp) // Changed from SurfaceGray to NeutralLight
 
             // Starting price
             Row(
@@ -92,13 +92,13 @@ fun PriceProposalScreen(
                     text = "Prezzo di partenza",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = TextGray
+                    color = GrayBlue // Changed from TextGray to GrayBlue
                 )
                 Text(
                     text = "€${String.format("%,.0f", startingPrice)}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = TextGray
+                    color = GrayBlue // Changed from TextGray to GrayBlue
                 )
             }
 
@@ -113,7 +113,7 @@ fun PriceProposalScreen(
                     text = "La tua proposta",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = TextGray
+                    color = GrayBlue // Changed from TextGray to GrayBlue
                 )
 
                 Column(
@@ -125,7 +125,7 @@ fun PriceProposalScreen(
                         Text(
                             text = "Proposta",
                             fontSize = 12.sp,
-                            color = TealPrimary,
+                            color = TealVibrant, // Changed from TealPrimary to TealVibrant
                             modifier = Modifier.padding(end = 4.dp)
                         )
 
@@ -133,7 +133,7 @@ fun PriceProposalScreen(
                             text = "€$proposedPrice",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            color = TealPrimary
+                            color = TealVibrant // Changed from TealPrimary to TealVibrant
                         )
 
                         IconButton(
@@ -143,7 +143,7 @@ fun PriceProposalScreen(
                             Icon(
                                 imageVector = Icons.Default.Cancel,
                                 contentDescription = "Cancella proposta",
-                                tint = TealPrimary
+                                tint = TealVibrant // Changed from TealPrimary to TealVibrant
                             )
                         }
                     }
@@ -152,7 +152,7 @@ fun PriceProposalScreen(
                         modifier = Modifier
                             .width(160.dp)
                             .padding(top = 4.dp),
-                        color = TealLightest,
+                        color = TealLight, // Changed from TealLightest to TealLight
                         thickness = 1.dp
                     )
                 }
@@ -171,19 +171,19 @@ fun PriceProposalScreen(
                     text = "Differenza di prezzo",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = TextGray
+                    color = GrayBlue // Changed from TextGray to GrayBlue
                 )
 
                 Box(
                     modifier = Modifier
                         .clip(CircleShape)
-                        .background(Black)
+                        .background(Color.Black) // Using standard Color.Black
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "0%",
-                        color = White,
+                        color = Color.White, // Using standard Color.White
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -197,14 +197,14 @@ fun PriceProposalScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 16.dp),
-                colors = CardDefaults.cardColors(containerColor = OffWhite),
+                colors = CardDefaults.cardColors(containerColor = NeutralLight), // Changed from OffWhite to NeutralLight
                 shape = RoundedCornerShape(8.dp),
                 border = BorderStroke(1.dp, Color.Gray)
             ) {
                 Text(
                     text = "Il prezzo è stato elaborato da un professionista immobiliare. Per mantenere coerenza con il mercato, puoi fare un'offerta con una variazione massima del 15%",
                     modifier = Modifier.padding(16.dp),
-                    color = TextGray,
+                    color = GrayBlue, // Changed from TextGray to GrayBlue
                     fontSize = 14.sp
                 )
             }
@@ -218,11 +218,11 @@ fun PriceProposalScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
+                colors = ButtonDefaults.buttonColors(containerColor = TealVibrant) // Changed from TealPrimary to TealVibrant
             ) {
                 Text(
                     text = "Prosegui",
-                    color = White,
+                    color = Color.White, // Using standard Color.White
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium
                 )

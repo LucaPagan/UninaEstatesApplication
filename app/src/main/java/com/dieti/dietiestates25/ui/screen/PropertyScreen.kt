@@ -23,8 +23,7 @@ import com.dieti.dietiestates25.R
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.draw.clip
-import com.dieti.dietiestates25.ui.theme.DarkPurple80
-import com.dieti.dietiestates25.ui.theme.TealLighter
+import com.dieti.dietiestates25.ui.theme.*
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -35,9 +34,6 @@ import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.navigation.Screen
-
-// Definizione dei colori mancanti
-private val TealPrimary = Color(0xFF009688)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -173,7 +169,7 @@ fun PropertyDetailScreen(
                             text = "€129,500",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextGray
+                            color = GrayBlue // Changed from TextGray to GrayBlue
                         )
 
                         Row(
@@ -183,13 +179,13 @@ fun PropertyDetailScreen(
                             Icon(
                                 imageVector = Icons.Default.LocationOn,
                                 contentDescription = "Location",
-                                tint = TextGray,
+                                tint = GrayBlue, // Changed from TextGray to GrayBlue
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
                                 text = "Appartamento Napoli, Via Francesco Girardi 90",
                                 fontSize = 14.sp,
-                                color = TextGray,
+                                color = GrayBlue, // Changed from TextGray to GrayBlue
                                 modifier = Modifier.padding(start = 4.dp)
                             )
                         }
@@ -232,7 +228,7 @@ fun PropertyDetailScreen(
                             text = "Caratteristiche",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextGray,
+                            color = GrayBlue, // Changed from TextGray to GrayBlue
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
 
@@ -256,14 +252,14 @@ fun PropertyDetailScreen(
                             text = "Descrizione",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextGray,
+                            color = GrayBlue, // Changed from TextGray to GrayBlue
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
 
                         Text(
                             text = "Scopri questo accogliente appartamento situato nel cuore di Napoli, ideale per chi cerca comfort e comodità. L'immobile è situato al terzo piano di un edificio con ascensore, è perfetto per famiglie o coppie alla ricerca di uno spazio ben organizzato e luminoso.",
                             fontSize = 14.sp,
-                            color = TextGray,
+                            color = GrayBlue, // Changed from TextGray to GrayBlue
                             lineHeight = 20.sp
                         )
                     }
@@ -282,7 +278,7 @@ fun PropertyDetailScreen(
                             Icon(
                                 imageVector = Icons.Default.Home,
                                 contentDescription = "Agency",
-                                tint = TealPrimary,
+                                tint = TealVibrant, // Changed from TealPrimary to TealVibrant
                                 modifier = Modifier.size(24.dp)
                             )
 
@@ -291,19 +287,19 @@ fun PropertyDetailScreen(
                                     text = "Agenzia: Gianfranco Lombardi",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextGray
+                                    color = GrayBlue // Changed from TextGray to GrayBlue
                                 )
 
                                 Text(
                                     text = "Telefono: 081 1929 6079",
                                     fontSize = 14.sp,
-                                    color = TextGray
+                                    color = GrayBlue // Changed from TextGray to GrayBlue
                                 )
 
                                 Text(
                                     text = "VIA G. PORZIO ISOLA Es 3, Napoli (NA), Campania, 80143",
                                     fontSize = 12.sp,
-                                    color = TextGray.copy(alpha = 0.7f)
+                                    color = GrayBlue.copy(alpha = 0.7f) // Changed from TextGray to GrayBlue
                                 )
                             }
                         }
@@ -320,7 +316,7 @@ fun PropertyDetailScreen(
                         Button(
                             onClick = { },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
+                            colors = ButtonDefaults.buttonColors(containerColor = TealVibrant) // Changed from TealPrimary to TealVibrant
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Phone,
@@ -337,7 +333,7 @@ fun PropertyDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = DarkPurple80,
-                                containerColor = TealLighter
+                                containerColor = TealLight // Changed from TealLighter to TealLight
                             )
                         ) {
                             Icon(
@@ -357,7 +353,7 @@ fun PropertyDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = DarkPurple80,
-                                containerColor = TealLighter
+                                containerColor = TealLight // Changed from TealLighter to TealLight
                             )
                         ) {
                             Icon(
@@ -459,7 +455,7 @@ fun PropertyDetailScreen(
                             text = "Annunci simili",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextGray,
+                            color = GrayBlue, // Changed from TextGray to GrayBlue
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
 
@@ -487,7 +483,7 @@ fun PropertyDetailScreen(
                                     .width(120.dp)
                                     .height(150.dp)
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(SurfaceGray),
+                                    .background(NeutralLight), // Changed from SurfaceGray to NeutralLight
                                 contentAlignment = Alignment.Center
                             ) {
                                 Column(
@@ -496,12 +492,12 @@ fun PropertyDetailScreen(
                                     Icon(
                                         imageVector = Icons.Default.KeyboardArrowRight,
                                         contentDescription = "View More",
-                                        tint = TealPrimary,
+                                        tint = TealVibrant, // Changed from TealPrimary to TealVibrant
                                         modifier = Modifier.size(36.dp)
                                     )
                                     Text(
                                         text = "Vedi tutti",
-                                        color = TealPrimary,
+                                        color = TealVibrant, // Changed from TealPrimary to TealVibrant
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Medium,
                                         modifier = Modifier.padding(top = 4.dp)
@@ -528,7 +524,7 @@ fun PropertyDetailScreen(
                         },
                         modifier = Modifier
                             .size(40.dp)
-                            .background(TealPrimary, CircleShape)
+                            .background(TealVibrant, CircleShape) // Changed from TealPrimary to TealVibrant
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
@@ -545,7 +541,7 @@ fun PropertyDetailScreen(
                         },
                         modifier = Modifier
                             .size(40.dp)
-                            .background(TealPrimary, CircleShape)
+                            .background(TealVibrant, CircleShape) // Changed from TealPrimary to TealVibrant
                     ) {
                         Icon(
                             imageVector = Icons.Default.Favorite,
@@ -573,12 +569,12 @@ fun PropertyFeature(
         Icon(
             imageVector = icon,
             contentDescription = label,
-            tint = TextGray
+            tint = GrayBlue // Changed from TextGray to GrayBlue
         )
         Text(
             text = label,
             fontSize = 14.sp,
-            color = TextGray
+            color = GrayBlue // Changed from TextGray to GrayBlue
         )
     }
 }
@@ -592,12 +588,12 @@ fun PropertyCharacteristic(text: String) {
         Box(
             modifier = Modifier
                 .size(6.dp)
-                .background(TealPrimary, CircleShape)
+                .background(TealVibrant, CircleShape) // Changed from TealPrimary to TealVibrant
         )
         Text(
             text = text,
             fontSize = 14.sp,
-            color = TextGray,
+            color = GrayBlue, // Changed from TextGray to GrayBlue
             modifier = Modifier.padding(start = 8.dp)
         )
     }

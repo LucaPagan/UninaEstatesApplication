@@ -54,7 +54,7 @@ fun AppointmentBookingScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(SurfaceGray)
+            .background(NeutralLight)
     ) {
         AppointmentHeader()
 
@@ -72,7 +72,7 @@ fun AppointmentBookingScreen() {
                     text = "Seleziona il tuo giorno disponibile",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
-                    color = TextGray
+                    color = GrayBlue
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -88,7 +88,7 @@ fun AppointmentBookingScreen() {
                     text = "Scegli la fascia oraria",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
-                    color = TextGray
+                    color = GrayBlue
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -111,7 +111,7 @@ fun AppointmentBookingScreen() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(SurfaceGray)
+                    .background(NeutralLight)
                     .padding(16.dp),
             ) {
                 ContinueButton()
@@ -135,7 +135,7 @@ fun AppointmentHeader() {
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
                 modifier = Modifier.size(24.dp),
-                tint = Black
+                tint = GrayBlue
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -144,7 +144,7 @@ fun AppointmentHeader() {
                 text = "Prenota una visita",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Medium,
-                color = Black
+                color = GrayBlue
             )
         }
     }
@@ -178,14 +178,14 @@ fun CalendarView(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = TealPrimary
+        color = TealVibrant
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
                 text = "Seleziona una data",
-                color = White,
+                color = Color.White,
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp
             )
@@ -203,14 +203,14 @@ fun CalendarView(
                     text = formattedDate,
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
-                    color = White,
+                    color = Color.White,
                     modifier = Modifier.weight(1f)
                 )
 
                 Icon(
                     imageVector = Icons.Default.Edit,
                     contentDescription = "Edit date",
-                    tint = White,
+                    tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -228,14 +228,14 @@ fun CalendarView(
                     text = formattedMonthYear,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
-                    color = White,
+                    color = Color.White,
                     modifier = Modifier.weight(1f)
                 )
 
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowLeft,
                     contentDescription = "Previous month",
-                    tint = White,
+                    tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )
 
@@ -244,7 +244,7 @@ fun CalendarView(
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowRight,
                     contentDescription = "Next month",
-                    tint = White,
+                    tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -263,7 +263,7 @@ fun CalendarView(
                         Text(
                             text = day,
                             fontSize = 16.sp,
-                            color = White
+                            color = Color.White
                         )
                     }
                 }
@@ -288,7 +288,7 @@ fun CalendarView(
                             val date = LocalDate.of(currentYear, currentMonth, dayOfMonth)
                             val isSelected = date.equals(selectedDate)
                             val isWeekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
-                            val textColor = if (isWeekend) Color(0xFFE57373) else White
+                            val textColor = if (isWeekend) Color(0xFFE57373) else Color.White
 
                             Box(
                                 modifier = Modifier
@@ -327,7 +327,7 @@ fun CalendarView(
                 TextButton(
                     onClick = { /* Cancel action */ },
                     colors = ButtonDefaults.textButtonColors(
-                        contentColor = White
+                        contentColor = Color.White
                     )
                 ) {
                     Text("Annulla")
@@ -338,8 +338,8 @@ fun CalendarView(
                 Button(
                     onClick = { /* OK action */ },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = White,
-                        contentColor = TealPrimary
+                        containerColor = Color.White,
+                        contentColor = TealVibrant
                     )
                 ) {
                     Text("OK")
@@ -374,7 +374,7 @@ fun TimeSlotSelector(
                     .height(48.dp)
                     .clip(shape)
                     .background(
-                        if (isSelected) TealPrimary else TealLightest
+                        if (isSelected) TealVibrant else TealLight
                     )
                     .clickable { onTimeSlotSelected(index) }
             ) {
@@ -390,7 +390,7 @@ fun TimeSlotSelector(
                     ) {
                         Text(
                             text = slot,
-                            color = if (isSelected) White else TextGray,
+                            color = if (isSelected) Color.White else GrayBlue,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -416,7 +416,7 @@ fun NotificationBox() {
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        color = TealLightest,
+        color = TealLight,
         border = BorderStroke(1.dp, Color.Gray)
     ) {
         Column(
@@ -425,14 +425,14 @@ fun NotificationBox() {
             Text(
                 text = "Questa non è una prenotazione effettiva:",
                 fontWeight = FontWeight.Medium,
-                color = TextGray
+                color = GrayBlue
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = "La tua richiesta sarà inviata all'inserzionista che si occuperà di ricontattarti.",
-                color = TextGray,
+                color = GrayBlue,
                 fontSize = 14.sp
             )
         }
@@ -449,7 +449,7 @@ fun ContinueButton() {
             .height(56.dp),
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = TealPrimary
+            containerColor = TealVibrant
         )
     ) {
         Text(
