@@ -102,10 +102,25 @@ fun Header(idUtente: String) {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "UNINAESTATES25" + (if (idUtente.isNotEmpty()) " - $idUtente" else ""),
+                text = "UNINAESTATES25",
                 color = colorScheme.onPrimary,
                 style = typography.titleLarge
             )
+
+            if (idUtente.isNotEmpty()) {
+                Column (
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+                    Text(
+                        text = "Benvenuto $idUtente",
+                        color = colorScheme.onPrimary,
+                        style = typography.bodyMedium
+                    )
+                }
+            }
         }
     }
 }

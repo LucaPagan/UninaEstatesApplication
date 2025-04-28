@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Train
@@ -68,7 +69,19 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                 } else {
                     // Normal search screen
                     // Header con "RICERCA"
-                    Header(colorScheme = colorScheme, typography = typography)
+                    Header(
+                        colorScheme = colorScheme,
+                        typography = typography,
+                        onBackToHomeClick = {
+                            // Naviga alla home passando l'idUtente come parametro
+                            navController.navigate("home_screen/$idUtente") {
+                                // Opzionale: pulisce il back stack per evitare di accumulare schermate
+                                popUpTo("home_screen/$idUtente") {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                    )
 
                     Spacer(modifier = Modifier.height(48.dp))
 
@@ -92,6 +105,9 @@ fun SearchScreen(navController: NavController, idUtente: String) {
 
                     // Spazio aggiuntivo per eventuali altri elementi
                     Spacer(modifier = Modifier.weight(1f))
+
+                    // Bottone per tornare alla homepage
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }
@@ -99,7 +115,11 @@ fun SearchScreen(navController: NavController, idUtente: String) {
 }
 
 @Composable
-fun Header(colorScheme: ColorScheme, typography: Typography) {
+fun Header(
+    colorScheme: ColorScheme,
+    typography: Typography,
+    onBackToHomeClick: () -> Unit
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -119,6 +139,19 @@ fun Header(colorScheme: ColorScheme, typography: Typography) {
                 style = typography.titleLarge,
                 letterSpacing = 1.sp
             )
+
+            // Aggiungiamo il bottone per tornare alla homepage nell'header
+            IconButton(
+                onClick = onBackToHomeClick,
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Torna alla home",
+                    tint = colorScheme.onPrimary
+                )
+            }
         }
     }
 }
@@ -347,5 +380,5 @@ fun SearchMetroButton(colorScheme: ColorScheme, typography: Typography) {
 @Composable
 fun PreviewSearchScreen() {
     val navController = rememberNavController()
-    SearchScreen(navController = navController, idUtente = "")
+    SearchScreen(navController = navController, idUtente = "user123")
 }
