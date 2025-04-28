@@ -30,6 +30,5 @@ fun Navigation() {
                 navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente"
             )
         }
-
     }
 }
