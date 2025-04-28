@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 
 @Composable
@@ -74,12 +75,7 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                         typography = typography,
                         onBackToHomeClick = {
                             // Naviga alla home passando l'idUtente come parametro
-                            navController.navigate("home_screen/$idUtente") {
-                                // Opzionale: pulisce il back stack per evitare di accumulare schermate
-                                popUpTo("home_screen/$idUtente") {
-                                    inclusive = true
-                                }
-                            }
+                            navController.popBackStack()
                         }
                     )
 

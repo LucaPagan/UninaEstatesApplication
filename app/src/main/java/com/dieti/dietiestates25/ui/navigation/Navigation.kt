@@ -7,6 +7,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.screen.HomeScreen
+import com.dieti.dietiestates25.ui.screen.SearchFilterScreen
 import com.dieti.dietiestates25.ui.screen.SearchScreen
 import com.dieti.dietiestates25.ui.screen.WelcomeScreen
 
@@ -48,6 +49,26 @@ fun Navigation() {
         ) { entry ->
             SearchScreen(
                 navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente"
+            )
+        }
+
+        composable(
+            route = Screen.SearchFilterScreen.route + "/{idUtente}/{ricerca}",
+            arguments = listOf(
+                navArgument("idUtente") {
+                    type = NavType.StringType
+                    defaultValue = "utente"
+                },
+                navArgument("ricerca") {
+                    type = NavType.StringType
+                    defaultValue = "ricerca"
+                }
+            )
+        ) { entry ->
+            SearchFilterScreen(
+                navController = navController,
+                idUtente = entry.arguments?.getString("idUtente") ?: "utente",
+                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"
             )
         }
     }

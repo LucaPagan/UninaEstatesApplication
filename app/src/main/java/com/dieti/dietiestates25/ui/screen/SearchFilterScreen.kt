@@ -17,10 +17,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 
 @Composable
-fun SearchFilterScreen(onNavigateBack: () -> Unit = {}) {
+fun SearchFilterScreen(
+    navController: NavController,
+    idUtente: String = "utente",
+    ricerca: String = "varcaturo",
+    onNavigateBack: () -> Unit = {}
+) {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
@@ -445,5 +452,10 @@ fun InputField(
 @Preview(showBackground = true)
 @Composable
 fun PreviewFilterScreen() {
-    SearchFilterScreen()
+    val navController = rememberNavController()
+    SearchFilterScreen(
+        navController = navController,
+        idUtente = "utente",
+        ricerca = "varcaturo"
+    )
 }
