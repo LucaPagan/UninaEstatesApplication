@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
+import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 
 // Dati di esempio per la propertyList
@@ -61,12 +62,12 @@ fun HomeScreen(navController: NavController, idUtente: String) {
                 Spacer(modifier = Modifier.height(80.dp))
 
                 // Search Bar Button
-                SearchBar(navController)
+                SearchBar(navController, idUtente)
 
                 Spacer(modifier = Modifier.height(80.dp))
 
                 // Recent Searches Section
-                RecentSearchesSection(navController)
+                RecentSearchesSection(navController, idUtente)
 
                 Spacer(modifier = Modifier.height(48.dp))
 
@@ -76,7 +77,7 @@ fun HomeScreen(navController: NavController, idUtente: String) {
                 Spacer(modifier = Modifier.weight(1f))
 
                 // Bottom Navigation
-                BottomNavigation(navController)
+                BottomNavigation(navController, idUtente)
             }
         }
     }
@@ -110,7 +111,7 @@ fun Header(idUtente: String) {
 }
 
 @Composable
-fun SearchBar(navController: NavController) {
+fun SearchBar(navController: NavController, idUtente: String) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
 
@@ -121,8 +122,7 @@ fun SearchBar(navController: NavController) {
     ) {
         Button(
             onClick = {
-                // TODO: Navigate to search screen
-                // navController.navigate(Screen.SearchScreen.route)
+                navController.navigate(Screen.SearchScreen.withArgs(idUtente))
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -154,7 +154,7 @@ fun SearchBar(navController: NavController) {
 }
 
 @Composable
-fun RecentSearchesSection(navController: NavController) {
+fun RecentSearchesSection(navController: NavController, idUtente: String) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
 
@@ -308,7 +308,7 @@ fun PostAdSection(navController: NavController, idUtente: String) {
 }
 
 @Composable
-fun BottomNavigation(navController: NavController) {
+fun BottomNavigation(navController: NavController, idUtente: String) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
 

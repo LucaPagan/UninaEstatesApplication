@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 
 @Composable
-fun FilterScreen(onNavigateBack: () -> Unit = {}) {
+fun SearchFilterScreen(onNavigateBack: () -> Unit = {}) {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
@@ -445,5 +445,5 @@ fun InputField(
 @Preview(showBackground = true)
 @Composable
 fun PreviewFilterScreen() {
-    FilterScreen()
+    SearchFilterScreen()
 }

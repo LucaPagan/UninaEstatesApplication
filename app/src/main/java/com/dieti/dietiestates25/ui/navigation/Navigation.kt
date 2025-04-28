@@ -7,6 +7,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.screen.HomeScreen
+import com.dieti.dietiestates25.ui.screen.SearchScreen
 import com.dieti.dietiestates25.ui.screen.WelcomeScreen
 
 @Composable
@@ -14,9 +15,13 @@ fun Navigation() {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = Screen.WelcomeScreen.route) {
+
+        // WelcomeScreen
         composable(route = Screen.WelcomeScreen.route) {
             WelcomeScreen(navController = navController)
         }
+
+        // HomeScreen
         composable(
             route = Screen.HomeScreen.route + "/{idUtente}",
             arguments = listOf(
@@ -27,6 +32,21 @@ fun Navigation() {
             )
         ) { entry ->
             HomeScreen(
+                navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente"
+            )
+        }
+
+        // SearchScreen
+        composable(
+            route = Screen.SearchScreen.route + "/{idUtente}",
+            arguments = listOf(
+                navArgument("idUtente") {
+                    type = NavType.StringType
+                    defaultValue = "utente"
+                }
+            )
+        ) { entry ->
+            SearchScreen(
                 navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente"
             )
         }
