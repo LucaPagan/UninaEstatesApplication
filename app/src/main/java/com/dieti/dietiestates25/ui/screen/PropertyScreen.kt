@@ -520,7 +520,7 @@ fun PropertyDetailScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            // La navigazione è commentata nell'originale
+                            navController.popBackStack()
                         },
                         modifier = Modifier
                             .size(40.dp)
