@@ -59,17 +59,19 @@ fun HomeScreen(navController: NavController, idUtente: String) {
             ) {
                 Header(idUtente)
 
-                Spacer(modifier = Modifier.height(80.dp))
+                Spacer(modifier = Modifier.height(50.dp))
 
                 // Search Bar Button
                 SearchBar(navController, idUtente)
 
-                Spacer(modifier = Modifier.height(80.dp))
+                Spacer(modifier = Modifier.height(50.dp))
 
                 // Recent Searches Section
                 RecentSearchesSection(navController, idUtente)
 
-                Spacer(modifier = Modifier.height(48.dp))
+                Divider()
+
+                Spacer(modifier = Modifier.height(50.dp))
 
                 // Post Ad Section
                 PostAdSection(navController, idUtente)
@@ -91,7 +93,7 @@ fun Header(idUtente: String) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp),
+            .height(180.dp),
         color = colorScheme.primary,
         shape = RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp)
     ) {
@@ -105,6 +107,12 @@ fun Header(idUtente: String) {
                 text = "UNINAESTATES25",
                 color = colorScheme.onPrimary,
                 style = typography.titleLarge
+            )
+
+            Text(
+                text = "Benvenuto $idUtente",
+                color = colorScheme.onPrimary,
+                style = typography.bodyMedium
             )
 
             if (idUtente.isNotEmpty()) {
@@ -241,8 +249,7 @@ fun PropertyCard(
             .height(160.dp)
             .clip(RoundedCornerShape(10.dp))
             .clickable {
-                // TODO: Navigate to property details screen
-                // navController.navigate(Screen.PropertyDetailsScreen.withArgs(property.id.toString()))
+                navController.navigate(Screen.PropertyScreen.route)
             }
     ) {
         Image(

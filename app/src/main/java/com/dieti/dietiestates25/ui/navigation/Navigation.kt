@@ -10,6 +10,8 @@ import com.dieti.dietiestates25.ui.screen.HomeScreen
 import com.dieti.dietiestates25.ui.screen.SearchFilterScreen
 import com.dieti.dietiestates25.ui.screen.SearchScreen
 import com.dieti.dietiestates25.ui.screen.WelcomeScreen
+import com.dieti.dietiestates25.ui.screen.PropertyScreen
+
 
 @Composable
 fun Navigation() {
@@ -70,6 +72,11 @@ fun Navigation() {
                 idUtente = entry.arguments?.getString("idUtente") ?: "utente",
                 ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"
             )
+        }
+
+        // PropertyScreen
+        composable(route = Screen.PropertyScreen.route) {
+            PropertyScreen(navController = navController)
         }
     }
 }
