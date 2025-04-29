@@ -31,14 +31,14 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.navigation.NavHostController
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun PropertyDetailScreen(
-    navController: NavHostController
+fun PropertyScreen(
+    navController: NavController
 ) {
     Scaffold(
         topBar = {
@@ -641,5 +641,5 @@ fun SimilarPropertyCard(
 @Composable
 fun PropertyDetailScreenPreview() {
     val navController = rememberNavController()
-    PropertyDetailScreen(navController = navController)
+    PropertyScreen(navController = navController)
 }
