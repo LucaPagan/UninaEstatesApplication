@@ -18,12 +18,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.*
 
 @Composable
 fun PriceProposalScreen(
-    onDismiss: () -> Unit = {},
-    onContinue: (Double) -> Unit = {}
+    navController : NavController
 ) {
     var proposedPrice by remember { mutableStateOf("110.000") }
     val startingPrice = 129500.0
@@ -45,7 +47,9 @@ fun PriceProposalScreen(
                     .padding(bottom = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onDismiss) {
+                IconButton(onClick = {
+                    navController.navigate(Screen.PropertyScreen.route)
+                }) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Chiudi",
@@ -213,7 +217,6 @@ fun PriceProposalScreen(
             Button(
                 onClick = {
                     val price = proposedPrice.replace(".", "").toDoubleOrNull() ?: 0.0
-                    onContinue(price)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -234,9 +237,10 @@ fun PriceProposalScreen(
 @Preview(showBackground = true)
 @Composable
 fun PriceProposalScreenPreview() {
+    val navController = rememberNavController()
     Surface(
         modifier = Modifier.fillMaxSize(),
     ) {
-        PriceProposalScreen()
+        PriceProposalScreen(navController = navController)
     }
 }

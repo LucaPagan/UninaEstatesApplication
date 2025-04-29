@@ -329,7 +329,9 @@ fun PropertyScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedButton(
-                            onClick = { },
+                            onClick = {
+                                navController.navigate(Screen.AppointmentBookingScreen.route)
+                            },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = DarkPurple80,
