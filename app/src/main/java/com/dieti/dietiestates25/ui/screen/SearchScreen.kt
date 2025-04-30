@@ -26,6 +26,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import com.dieti.dietiestates25.ui.theme.typography
 
 @Composable
 fun SearchScreen(navController: NavController, idUtente: String) {
@@ -177,7 +178,9 @@ fun SearchField(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(32.dp))
                 .background(colorScheme.secondary.copy(alpha = 0.3f))
-                .clickable { onSearchClick() },
+                .clickable { onSearchClick(
+                    )
+                           },
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = colorScheme.secondary.copy(alpha = 0.3f),
                 unfocusedContainerColor = colorScheme.secondary.copy(alpha = 0.3f),
