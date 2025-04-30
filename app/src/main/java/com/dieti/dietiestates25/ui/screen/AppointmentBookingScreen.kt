@@ -34,19 +34,14 @@ import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.util.*
 import androidx.compose.foundation.layout.BoxWithConstraints
-
-class AppointmentBookingActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            AppointmentBookingScreen()
-        }
-    }
-}
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun AppointmentBookingScreen() {
+fun AppointmentBookingScreen(
+    navController : NavController
+) {
     var selectedDate by remember { mutableStateOf(LocalDate.of(2025, 8, 17)) }
     var selectedTimeSlot by remember { mutableStateOf<Int?>(0) } // Default to first time slot
     val scrollState = rememberScrollState()
@@ -56,7 +51,7 @@ fun AppointmentBookingScreen() {
             .fillMaxSize()
             .background(NeutralLight)
     ) {
-        AppointmentHeader()
+        AppointmentHeader(navController)
 
         BoxWithConstraints {
             val screenHeight = maxHeight
@@ -121,7 +116,9 @@ fun AppointmentBookingScreen() {
 }
 
 @Composable
-fun AppointmentHeader() {
+fun AppointmentHeader(
+    navController : NavController
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -131,12 +128,18 @@ fun AppointmentHeader() {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close",
-                modifier = Modifier.size(24.dp),
-                tint = GrayBlue
-            )
+            IconButton(
+                onClick = {
+                    navController.popBackStack()
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    modifier = Modifier.size(24.dp),
+                    tint = GrayBlue
+                )
+            }
 
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -154,26 +157,61 @@ fun AppointmentHeader() {
 
 @Composable
 fun CalendarView(
-    selectedDate: LocalDate,
+    selectedDate: LocalDate = LocalDate.now(),
     onDateSelected: (LocalDate) -> Unit
 ) {
-    val currentMonth = remember(selectedDate) { selectedDate.month }
-    val currentYear = remember(selectedDate) { selectedDate.year }
+    // Utilizziamo lo stato per consentire la navigazione tra i mesi
+    var viewingDate by remember { mutableStateOf(selectedDate) }
+
+    // Aggiorniamo la data iniziale per mostrare il mese corrente
+    // Questa è necessaria solo all'avvio dell'app
+    val currentDate = remember { LocalDate.now() }
+
+    // Usiamo LaunchedEffect per impostare la data iniziale solo all'avvio
+    LaunchedEffect(Unit) {
+        viewingDate = currentDate
+        // Se selectedDate è la data di default, aggiorniamola anche
+        if (selectedDate == LocalDate.now()) {
+            onDateSelected(currentDate)
+        }
+    }
+    val currentMonth = remember(viewingDate) { viewingDate.month }
+    val currentYear = remember(viewingDate) { viewingDate.year }
     val firstDayOfMonth = remember(currentMonth, currentYear) {
         LocalDate.of(currentYear, currentMonth, 1)
     }
+
+    // Funzione ausiliaria per verificare se un anno è bisestile
+    fun isLeapYear(year: Int): Boolean {
+        return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
+    }
+
     val daysInMonth = remember(currentMonth, currentYear) {
         when (currentMonth) {
-            Month.FEBRUARY -> if (currentYear % 4 == 0) 29 else 28
+            Month.FEBRUARY -> if (isLeapYear(currentYear)) 29 else 28
             Month.APRIL, Month.JUNE, Month.SEPTEMBER, Month.NOVEMBER -> 30
             else -> 31
         }
     }
+
+
+
+    // In Italia il primo giorno della settimana è lunedì (1), quindi non serve l'aggiustamento
     val firstDayOfWeek = remember(firstDayOfMonth) {
-        firstDayOfMonth.dayOfWeek.value % 7 // Adjust for Sunday as first day
+        firstDayOfMonth.dayOfWeek.value - 1 // 0 per lunedì, 6 per domenica
     }
 
-    val weekdays = listOf("S", "M", "T", "W", "T", "F", "S")
+    // Giorni della settimana in italiano: Lunedì, Martedì, Mercoledì, Giovedì, Venerdì, Sabato, Domenica
+    val weekdays = listOf("L", "M", "M", "G", "V", "S", "D")
+
+    // Funzioni per navigare tra i mesi
+    val goToPreviousMonth = {
+        viewingDate = viewingDate.minusMonths(1)
+    }
+
+    val goToNextMonth = {
+        viewingDate = viewingDate.plusMonths(1)
+    }
 
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -196,7 +234,8 @@ fun CalendarView(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val dateFormatter = DateTimeFormatter.ofPattern("EEE, MMM d", Locale.ENGLISH)
+                // Formato data italiana: gio, 29 apr
+                val dateFormatter = DateTimeFormatter.ofPattern("EEE, d MMM", Locale.ITALIAN)
                 val formattedDate = selectedDate.format(dateFormatter)
 
                 Text(
@@ -206,13 +245,6 @@ fun CalendarView(
                     color = Color.White,
                     modifier = Modifier.weight(1f)
                 )
-
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit date",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -221,7 +253,8 @@ fun CalendarView(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val monthYearFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH)
+                // Formato mese e anno in italiano: Aprile 2025
+                val monthYearFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ITALIAN)
                 val formattedMonthYear = firstDayOfMonth.format(monthYearFormatter)
 
                 Text(
@@ -232,26 +265,32 @@ fun CalendarView(
                     modifier = Modifier.weight(1f)
                 )
 
+                // Pulsante mese precedente con funzionalità
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowLeft,
-                    contentDescription = "Previous month",
+                    contentDescription = "Mese precedente",
                     tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable { goToPreviousMonth() }
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
+                // Pulsante mese successivo con funzionalità
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "Next month",
+                    contentDescription = "Mese successivo",
                     tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable { goToNextMonth() }
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Weekday headers
+            // Intestazioni dei giorni della settimana
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -271,7 +310,7 @@ fun CalendarView(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Calendar grid
+            // Griglia del calendario
             val totalCells = if (firstDayOfWeek + daysInMonth <= 35) 35 else 42
 
             for (i in 0 until totalCells / 7) {
@@ -319,32 +358,6 @@ fun CalendarView(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(
-                    onClick = { /* Cancel action */ },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("Annulla")
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Button(
-                    onClick = { /* OK action */ },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = TealVibrant
-                    )
-                ) {
-                    Text("OK")
-                }
-            }
         }
     }
 }
@@ -463,9 +476,10 @@ fun ContinueButton() {
 @Preview(showBackground = true)
 @Composable
 fun AppointmentBookingActivityPreview() {
+    val navController = rememberNavController()
     Surface(
         modifier = Modifier.fillMaxSize(),
     ) {
-        AppointmentBookingScreen()
+        AppointmentBookingScreen(navController = navController)
     }
 }
