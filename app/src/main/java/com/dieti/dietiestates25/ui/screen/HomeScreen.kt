@@ -18,10 +18,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,10 +54,18 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
 
+        val gradientColors = arrayOf(
+            0.3f to colorScheme.secondary,
+            0.40f to colorScheme.background,
+            0.60f to colorScheme.background,
+            0.80f to colorScheme.background,
+            0.90f to colorScheme.secondary
+        )
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorScheme.background),
+                .background(Brush.verticalGradient(colorStops = gradientColors))
         ) {
             Column(
                 modifier = Modifier.fillMaxSize()
@@ -72,7 +82,17 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                 // Recent Searches Section
                 RecentSearchesSection(navController, idUtente)
 
-                Divider()
+                Divider(
+                    modifier = Modifier
+                        .shadow(
+                            elevation = 2.dp,
+                            shape = RectangleShape,
+                            spotColor = Color.Black.copy(alpha = 0.2f)
+                        )
+                        .height(4.dp)
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                )
 
                 Spacer(modifier = Modifier.height(40.dp))
 
@@ -158,7 +178,7 @@ fun SearchBar(navController: NavController, idUtente: String) {
                 .height(50.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorScheme.secondary
+                containerColor = colorScheme.primary
             )
         ) {
             Row(
@@ -211,7 +231,7 @@ fun RecentSearchesSection(navController: NavController, idUtente: String) {
                 },
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colorScheme.secondary
+                    containerColor = colorScheme.primary
                 ),
                 modifier = Modifier.height(36.dp),
                 contentPadding = PaddingValues(horizontal = 18.dp)
@@ -226,13 +246,13 @@ fun RecentSearchesSection(navController: NavController, idUtente: String) {
 
         Divider(
             modifier = Modifier
-                .padding(vertical = 16.dp)
+                .padding(vertical = 12.dp)
                 .shadow(
                     elevation = 2.dp,
                     shape = RectangleShape,
                     spotColor = Color.Black.copy(alpha = 0.2f)
                 )
-                .height(1.dp)
+                .height(4.dp)
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         )
@@ -259,6 +279,7 @@ fun PropertyCard(
     modifier: Modifier = Modifier
 ) {
     val typography = MaterialTheme.typography
+    val colorScheme = MaterialTheme.colorScheme
 
     Box(
         modifier = modifier
@@ -273,33 +294,51 @@ fun PropertyCard(
             painter = painterResource(id = property.imageRes),
             contentDescription = "Property Image",
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
         )
 
-        // Price and type overlay
-        if (property.price.isNotEmpty() || property.type.isNotEmpty()) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(8.dp)
-            ) {
-                if (property.price.isNotEmpty()) {
-                    Text(
-                        text = property.price,
-                        color = MaterialTheme.colorScheme.surface,
-                        style = typography.titleMedium
+        // Overlay sfumato bianco nella parte inferiore
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            colorScheme.secondary.copy(alpha = 0.6f)
+                        ),
+                        startY = 0f,
+                        endY = 80f
                     )
-                }
+                )
+                .height(60.dp)
+        )
 
-                if (property.type.isNotEmpty()) {
-                    Text(
-                        text = property.type,
-                        color = MaterialTheme.colorScheme.surface,
-                        style = typography.bodySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+        // Prezzo e tipo posizionati sopra l'overlay
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(12.dp)
+        ) {
+            if (property.price.isNotEmpty()) {
+                Text(
+                    text = property.price,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            if (property.type.isNotEmpty()) {
+                Text(
+                    text = property.type,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                    style = typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }

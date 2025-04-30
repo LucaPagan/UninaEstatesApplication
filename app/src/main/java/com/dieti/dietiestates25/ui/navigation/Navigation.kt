@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.screen.ApartmentListingScreen
 import com.dieti.dietiestates25.ui.screen.HomeScreen
 import com.dieti.dietiestates25.ui.screen.PriceProposalScreen
 import com.dieti.dietiestates25.ui.screen.SearchFilterScreen
@@ -73,6 +74,26 @@ fun Navigation() {
                 navController = navController,
                 idUtente = entry.arguments?.getString("idUtente") ?: "utente",
                 ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"
+            )
+        }
+
+        composable(
+            route = Screen.ApartmentListingScreen.route + "/{idUtente}/{comune}",
+            arguments = listOf(
+                navArgument("idUtente") {
+                    type = NavType.StringType
+                    defaultValue = "utente"
+                },
+                navArgument("comune") {
+                    type = NavType.StringType
+                    defaultValue = "Napoli"
+                }
+            )
+        ) { entry ->
+            ApartmentListingScreen(
+                navController = navController,
+                idUtente = entry.arguments?.getString("idUtente") ?: "utente",
+                comune = entry.arguments?.getString("comune") ?: "Napoli"
             )
         }
 

@@ -26,7 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 
 @Composable
-fun ApartmentListingScreen(navController: NavController) {
+fun ApartmentListingScreen(navController: NavController, idUtente: String, comune: String) {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
@@ -38,7 +38,7 @@ fun ApartmentListingScreen(navController: NavController) {
         val gradientColors = arrayOf(
             0.0f to colorScheme.primary,
             0.20f to colorScheme.background,
-            0.60f to colorScheme.background,
+            0.70f to colorScheme.background,
             1.0f to colorScheme.primary
         )
 
@@ -383,5 +383,5 @@ fun AppBottomNavItem(
 @Composable
 fun PreviewApartmentListingScreen() {
     val navController = rememberNavController()
-    ApartmentListingScreen(navController = navController)
+    ApartmentListingScreen(navController = navController, idUtente = "Danilo", comune = "Napoli")
 }
