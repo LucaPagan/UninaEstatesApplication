@@ -17,6 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,7 +47,7 @@ val sampleProperties = listOf(
 )
 
 @Composable
-fun HomeScreen(navController: NavController, idUtente: String) {
+fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
@@ -59,19 +62,19 @@ fun HomeScreen(navController: NavController, idUtente: String) {
             ) {
                 Header(idUtente)
 
-                Spacer(modifier = Modifier.height(50.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 // Search Bar Button
                 SearchBar(navController, idUtente)
 
-                Spacer(modifier = Modifier.height(50.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 // Recent Searches Section
                 RecentSearchesSection(navController, idUtente)
 
                 Divider()
 
-                Spacer(modifier = Modifier.height(50.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 // Post Ad Section
                 PostAdSection(navController, idUtente)
@@ -80,6 +83,9 @@ fun HomeScreen(navController: NavController, idUtente: String) {
 
                 // Bottom Navigation
                 BottomNavigation(navController, idUtente)
+
+
+
             }
         }
     }
@@ -97,37 +103,36 @@ fun Header(idUtente: String) {
         color = colorScheme.primary,
         shape = RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp)
     ) {
-        Box(
+        Column (
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            contentAlignment = Alignment.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Box (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+            )
+
             Text(
                 text = "UNINAESTATES25",
                 color = colorScheme.onPrimary,
                 style = typography.titleLarge
             )
 
-            Text(
-                text = "Benvenuto $idUtente",
-                color = colorScheme.onPrimary,
-                style = typography.bodyMedium
+            Box (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
             )
 
             if (idUtente.isNotEmpty()) {
-                Column (
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ){
-                    Text(
-                        text = "Benvenuto $idUtente",
-                        color = colorScheme.onPrimary,
-                        style = typography.bodyMedium
-                    )
-                }
+                Text(
+                    text = "Benvenuto $idUtente",
+                    color = colorScheme.onPrimary,
+                    style = typography.bodyMedium
+                )
             }
         }
     }
@@ -184,7 +189,7 @@ fun RecentSearchesSection(navController: NavController, idUtente: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(vertical = 16.dp)
     ) {
         Row(
             modifier = Modifier
@@ -219,7 +224,18 @@ fun RecentSearchesSection(navController: NavController, idUtente: String) {
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Divider(
+            modifier = Modifier
+                .padding(vertical = 16.dp)
+                .shadow(
+                    elevation = 2.dp,
+                    shape = RectangleShape,
+                    spotColor = Color.Black.copy(alpha = 0.2f)
+                )
+                .height(1.dp)
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+        )
 
         // ScrollView orizzontale delle proprietà
         LazyRow(
@@ -247,6 +263,7 @@ fun PropertyCard(
     Box(
         modifier = modifier
             .height(160.dp)
+            .padding(8.dp)
             .clip(RoundedCornerShape(10.dp))
             .clickable {
                 navController.navigate(Screen.PropertyScreen.route)
