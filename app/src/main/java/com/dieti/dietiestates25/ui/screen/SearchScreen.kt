@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Train
@@ -26,7 +25,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
-import com.dieti.dietiestates25.ui.theme.typography
 
 @Composable
 fun SearchScreen(navController: NavController, idUtente: String) {
@@ -60,13 +58,15 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                 if (isSearchActive) {
                     // Search results view
                     SearchResultsView(
+                        navController = navController,
                         searchQuery = searchQuery,
                         onSearchQueryChange = { searchQuery = it },
                         onBackPressed = { isSearchActive = false },
                         onClearSearch = { searchQuery = "" },
-                        results = searchResults,
+                        comuni = searchResults,
                         colorScheme = colorScheme,
-                        typography = typography
+                        typography = typography,
+                        idUtente = idUtente
                     )
                 } else {
                     // Normal search screen
@@ -93,12 +93,22 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                     Spacer(modifier = Modifier.height(48.dp))
 
                     // Bottone "Cerca su mappa"
-                    SearchMapButton(colorScheme = colorScheme, typography = typography)
+                    SearchMapButton(
+                        colorScheme = colorScheme,
+                        typography = typography,
+                        navController = navController,
+                        idUtente = idUtente
+                    )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Bottone "Cerca per metro"
-                    SearchMetroButton(colorScheme = colorScheme, typography = typography)
+                    SearchMetroButton(
+                        colorScheme = colorScheme,
+                        typography = typography,
+                        navController = navController,
+                        idUtente = idUtente
+                    )
 
                     // Spazio aggiuntivo per eventuali altri elementi
                     Spacer(modifier = Modifier.weight(1f))
@@ -165,53 +175,73 @@ fun SearchField(
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
     ) {
-        TextField(
-            value = searchQuery,
-            onValueChange = onSearchQueryChange,
-            placeholder = {
-                Text(
-                    text = "Cerca comune",
-                    color = colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            },
+        // Utilizziamo un Box che avvolge il TextField e che gestisce il click
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(32.dp))
                 .background(colorScheme.secondary.copy(alpha = 0.3f))
-                .clickable { onSearchClick(
-                    )
-                           },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = colorScheme.secondary.copy(alpha = 0.3f),
-                unfocusedContainerColor = colorScheme.secondary.copy(alpha = 0.3f),
-                disabledContainerColor = colorScheme.secondary.copy(alpha = 0.3f),
-                focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                cursorColor = colorScheme.primary
-            ),
-            singleLine = true,
-            trailingIcon = {
-                IconButton(onClick = onSearchClick) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Cerca",
-                        tint = colorScheme.onSurface.copy(alpha = 0.6f)
+                .clickable(onClick = onSearchClick)
+        ) {
+            // TextField disabilitato che mostra solo il placeholder
+            if (searchQuery.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 48.dp, top = 16.dp, bottom = 16.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(
+                        text = "Cerca comune",
+                        color = colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 }
             }
-        )
+
+            // TextField reale che diventa visibile solo quando l'utente inizia a digitare
+            TextField(
+                value = searchQuery,
+                onValueChange = onSearchQueryChange,
+                placeholder = {
+                    // Placeholder vuoto perché abbiamo già un placeholder personalizzato
+                },
+                modifier = Modifier
+                    .fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = colorScheme.secondary.copy(alpha = 0.3f),
+                    unfocusedContainerColor = colorScheme.secondary.copy(alpha = 0.3f),
+                    disabledContainerColor = colorScheme.secondary.copy(alpha = 0.3f),
+                    focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                    unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                    cursorColor = colorScheme.primary
+                ),
+                singleLine = true,
+                trailingIcon = {
+                    IconButton(onClick = onSearchClick) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Cerca",
+                            tint = colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                },
+                enabled = searchQuery.isNotEmpty() // Abilita solo quando l'utente ha iniziato a digitare
+            )
+        }
     }
 }
 
 @Composable
 fun SearchResultsView(
+    navController: NavController,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     onBackPressed: () -> Unit,
     onClearSearch: () -> Unit,
-    results: List<String>,
+    comuni: List<String>,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    idUtente: String
 ) {
     Column(
         modifier = Modifier
@@ -272,20 +302,34 @@ fun SearchResultsView(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
-            items(results) { result ->
-                SearchResultItem(result, colorScheme, typography)
+            items(comuni) { comune ->
+                SearchResultItem(
+                    navController = navController,
+                    comune = comune,
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    idUtente = idUtente
+                )
             }
         }
     }
 }
 
 @Composable
-fun SearchResultItem(result: String, colorScheme: ColorScheme, typography: Typography) {
+fun SearchResultItem(
+    navController: NavController,
+    comune: String,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    idUtente: String
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .clickable { /* TODO: Handle result selection */ },
+            .clickable {
+                navController.navigate(Screen.ApartmentListingScreen.withArgs(idUtente, comune))
+            },
         colors = CardDefaults.cardColors(
             containerColor = colorScheme.primary
         ),
@@ -295,7 +339,7 @@ fun SearchResultItem(result: String, colorScheme: ColorScheme, typography: Typog
         )
     ) {
         Text(
-            text = result,
+            text = comune,
             color = colorScheme.onPrimary,
             style = typography.bodyLarge,
             modifier = Modifier.padding(16.dp)
@@ -304,9 +348,17 @@ fun SearchResultItem(result: String, colorScheme: ColorScheme, typography: Typog
 }
 
 @Composable
-fun SearchMapButton(colorScheme: ColorScheme, typography: Typography) {
+fun SearchMapButton(
+    colorScheme: ColorScheme,
+    typography: Typography,
+    navController: NavController,
+    idUtente: String
+) {
     Button(
-        onClick = { /* TODO: Implementa ricerca su mappa */ },
+        onClick = {
+            // Naviga alla schermata della mappa
+            navController.navigate("mapSearch/$idUtente")
+        },
         modifier = Modifier
             .fillMaxWidth()
             .height(60.dp)
@@ -340,9 +392,17 @@ fun SearchMapButton(colorScheme: ColorScheme, typography: Typography) {
 }
 
 @Composable
-fun SearchMetroButton(colorScheme: ColorScheme, typography: Typography) {
+fun SearchMetroButton(
+    colorScheme: ColorScheme,
+    typography: Typography,
+    navController: NavController,
+    idUtente: String
+) {
     Button(
-        onClick = { /* TODO: Implementa ricerca per metro */ },
+        onClick = {
+            // Naviga alla schermata di ricerca per metro
+            navController.navigate("metroSearch/$idUtente")
+        },
         modifier = Modifier
             .fillMaxWidth()
             .height(60.dp)
