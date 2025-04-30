@@ -1,9 +1,6 @@
 package com.dieti.dietiestates25.ui.screen
 
 import android.annotation.SuppressLint
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
@@ -160,21 +156,23 @@ fun CalendarView(
     selectedDate: LocalDate = LocalDate.now(),
     onDateSelected: (LocalDate) -> Unit
 ) {
+    // Stato per tenere traccia della data selezionata internamente nel componente
+    var internalSelectedDate by remember { mutableStateOf(selectedDate) }
+
     // Utilizziamo lo stato per consentire la navigazione tra i mesi
-    var viewingDate by remember { mutableStateOf(selectedDate) }
+    var viewingDate by remember { mutableStateOf(internalSelectedDate) }
 
     // Aggiorniamo la data iniziale per mostrare il mese corrente
-    // Questa è necessaria solo all'avvio dell'app
     val currentDate = remember { LocalDate.now() }
 
     // Usiamo LaunchedEffect per impostare la data iniziale solo all'avvio
     LaunchedEffect(Unit) {
+        // Impostare la data corrente come selezionata all'avvio
+        internalSelectedDate = currentDate
         viewingDate = currentDate
-        // Se selectedDate è la data di default, aggiorniamola anche
-        if (selectedDate == LocalDate.now()) {
-            onDateSelected(currentDate)
-        }
+        onDateSelected(currentDate)
     }
+
     val currentMonth = remember(viewingDate) { viewingDate.month }
     val currentYear = remember(viewingDate) { viewingDate.year }
     val firstDayOfMonth = remember(currentMonth, currentYear) {
@@ -194,8 +192,6 @@ fun CalendarView(
         }
     }
 
-
-
     // In Italia il primo giorno della settimana è lunedì (1), quindi non serve l'aggiustamento
     val firstDayOfWeek = remember(firstDayOfMonth) {
         firstDayOfMonth.dayOfWeek.value - 1 // 0 per lunedì, 6 per domenica
@@ -204,6 +200,10 @@ fun CalendarView(
     // Giorni della settimana in italiano: Lunedì, Martedì, Mercoledì, Giovedì, Venerdì, Sabato, Domenica
     val weekdays = listOf("L", "M", "M", "G", "V", "S", "D")
 
+    // Definizione dei colori
+    val selectedTextColor = Color(0xFF37474F) // Colore del testo quando un giorno è selezionato
+    val weekendColor = Color.White // Stesse colore dei giorni feriali
+
     // Funzioni per navigare tra i mesi
     val goToPreviousMonth = {
         viewingDate = viewingDate.minusMonths(1)
@@ -211,6 +211,12 @@ fun CalendarView(
 
     val goToNextMonth = {
         viewingDate = viewingDate.plusMonths(1)
+    }
+
+    // Funzione per gestire la selezione di una data e aggiornare sia lo stato interno che quello esterno
+    val handleDateSelection = { date: LocalDate ->
+        internalSelectedDate = date
+        onDateSelected(date)
     }
 
     Surface(
@@ -236,7 +242,7 @@ fun CalendarView(
             ) {
                 // Formato data italiana: gio, 29 apr
                 val dateFormatter = DateTimeFormatter.ofPattern("EEE, d MMM", Locale.ITALIAN)
-                val formattedDate = selectedDate.format(dateFormatter)
+                val formattedDate = internalSelectedDate.format(dateFormatter)
 
                 Text(
                     text = formattedDate,
@@ -257,8 +263,13 @@ fun CalendarView(
                 val monthYearFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ITALIAN)
                 val formattedMonthYear = firstDayOfMonth.format(monthYearFormatter)
 
+                // Capitalizzazione prima lettera del mese
+                val capitalizedMonthYear = formattedMonthYear.replaceFirstChar {
+                    if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                }
+
                 Text(
-                    text = formattedMonthYear,
+                    text = capitalizedMonthYear,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White,
@@ -325,9 +336,15 @@ fun CalendarView(
 
                         if (dayOfMonth in 1..daysInMonth) {
                             val date = LocalDate.of(currentYear, currentMonth, dayOfMonth)
-                            val isSelected = date.equals(selectedDate)
+                            val isSelected = date.equals(internalSelectedDate)
+                            val isToday = date.equals(currentDate)
                             val isWeekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
-                            val textColor = if (isWeekend) Color(0xFFE57373) else Color.White
+
+                            // Qui modifichiamo il colore del testo in base alla selezione
+                            val textColor = when {
+                                isSelected -> selectedTextColor // Colore personalizzato quando selezionato
+                                else -> weekendColor // Stesso colore bianco per tutti i giorni
+                            }
 
                             Box(
                                 modifier = Modifier
@@ -335,15 +352,21 @@ fun CalendarView(
                                     .aspectRatio(1f)
                                     .padding(2.dp)
                                     .clip(CircleShape)
-                                    .background(if (isSelected) Color(0x99FFFFFF) else Color.Transparent)
-                                    .clickable { onDateSelected(date) },
+                                    .background(
+                                        when {
+                                            isSelected -> Color(0x99FFFFFF)
+                                            isToday -> Color(0x33FFFFFF)
+                                            else -> Color.Transparent
+                                        }
+                                    )
+                                    .clickable { handleDateSelection(date) },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = dayOfMonth.toString(),
                                     fontSize = 16.sp,
                                     color = textColor,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
                         } else {

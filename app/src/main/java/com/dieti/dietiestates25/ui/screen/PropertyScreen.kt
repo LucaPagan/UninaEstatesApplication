@@ -518,7 +518,9 @@ fun PropertyScreen(
 
             // Fixed top navigation bar (stays visible during scroll)
             TopAppBar(
-                modifier = Modifier.background(Color.Transparent),
+                modifier = Modifier
+                    .background(Color.Transparent)
+                    .padding(horizontal = 10.dp),
                 navigationIcon = {
                     IconButton(
                         onClick = {
