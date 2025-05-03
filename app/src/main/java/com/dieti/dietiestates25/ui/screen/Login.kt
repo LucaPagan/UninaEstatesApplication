@@ -101,6 +101,7 @@ fun LoginScreenPreviewOnly() {
             Text("Remember me")
         }
 
+        //bottone login
         Button(
             onClick = {},
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00695C)),
@@ -113,7 +114,7 @@ fun LoginScreenPreviewOnly() {
 
         Text("OR", color = Color.Gray, modifier = Modifier.padding(bottom = 16.dp))
 
-        // Apple Button
+        // bottone apple
         Button(
             onClick = {},
             colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
@@ -130,7 +131,7 @@ fun LoginScreenPreviewOnly() {
             Text("Continue with Apple", color = Color.White)
         }
 
-        // Google Button
+        // bottone google
         Button(
             onClick = {},
             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
@@ -148,7 +149,7 @@ fun LoginScreenPreviewOnly() {
             Text("Continue with Google", color = Color.Black)
         }
 
-        // Facebook Button
+        // bottone facebook
         Button(
             onClick = {},
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1877F2)),
