@@ -365,8 +365,7 @@ fun PostAdSection(navController: NavController, idUtente: String) {
 
         Button(
             onClick = {
-                // TODO: Navigate to post ad screen
-                // navController.navigate(Screen.PostAdScreen.withArgs(idUtente))
+                navController.navigate(Screen.PropertySellScreen.withArgs(idUtente))
             },
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
