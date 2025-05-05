@@ -8,6 +8,7 @@ sealed class Screen(val route: String) {
     data object ApartmentListingScreen : Screen ("apartment_listing_screen")
     data object PropertyScreen : Screen ("property_screen")
     data object PriceProposalScreen : Screen ("price_screen")
+    data object PropertySellScreen : Screen ("property_sell_screen")
     data object AppointmentBookingScreen : Screen ("appointment_screen")
 
     fun withArgs(vararg args: String): String {

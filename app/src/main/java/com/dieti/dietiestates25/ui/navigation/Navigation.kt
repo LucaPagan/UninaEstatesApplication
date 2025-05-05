@@ -14,6 +14,7 @@ import com.dieti.dietiestates25.ui.screen.SearchScreen
 import com.dieti.dietiestates25.ui.screen.WelcomeScreen
 import com.dieti.dietiestates25.ui.screen.PropertyScreen
 import com.dieti.dietiestates25.ui.screen.AppointmentBookingScreen
+import com.dieti.dietiestates25.ui.screen.PropertySellScreen
 
 
 @Composable
@@ -56,6 +57,22 @@ fun Navigation() {
                 navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente"
             )
         }
+
+        // PropertySellScreen
+        composable(
+            route = Screen.PropertySellScreen.route + "/{idUtente}",
+            arguments = listOf(
+                navArgument("idUtente") {
+                    type = NavType.StringType
+                    defaultValue = "utente"
+                }
+            )
+        ) { entry ->
+            PropertySellScreen(
+                navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente"
+            )
+        }
+
 
         composable(
             route = Screen.SearchFilterScreen.route + "/{idUtente}/{ricerca}",

@@ -36,7 +36,7 @@ import com.dieti.dietiestates25.ui.theme.TealVibrant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PropertySellScreen(navController: NavController) {
+fun PropertySellScreen(navController: NavController, idUtente: String) {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
@@ -80,9 +80,8 @@ fun PropertySellScreen(navController: NavController) {
         // Gradient background
         val gradientColors = arrayOf(
             0.0f to colorScheme.primary,
-            0.20f to colorScheme.background,
-            0.70f to colorScheme.background,
-            1.0f to colorScheme.primary
+            0.15f to colorScheme.background,
+            1.0f to colorScheme.background
         )
 
         Box(
@@ -814,5 +813,5 @@ fun CheckboxField(
 @Composable
 fun PreviewPropertySellScreen() {
     val navController = rememberNavController()
-    PropertySellScreen(navController = navController)
+    PropertySellScreen(navController = navController, idUtente = "Danilo")
 }
