@@ -227,7 +227,7 @@ fun PriceProposalScreen(
                     try {
                         val proposedPriceValue = proposedPrice.replace(".", "").toDouble()
                         val difference = (proposedPriceValue - startingPrice) / startingPrice * 100
-                        String.format("%.0f", difference) + "%"
+                        String.format("%.0d", difference) + "%"
                     } catch (e: Exception) {
                         "0%"
                     }

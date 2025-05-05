@@ -202,7 +202,42 @@ fun CalendarView(
 
     // Definizione dei colori
     val selectedTextColor = Color(0xFF37474F) // Colore del testo quando un giorno è selezionato
-    val weekendColor = Color.White // Stesse colore dei giorni feriali
+    val weekendColor = Color.White // Colore dei giorni feriali
+    val holidayColor = Color.Red // Colore per i giorni festivi
+
+    // Funzione per verificare se una data è un giorno festivo in Italia
+    fun isHoliday(date: LocalDate): Boolean {
+        val month = date.monthValue
+        val day = date.dayOfMonth
+
+        // Festività fisse in Italia
+        return when {
+            // Capodanno
+            month == 1 && day == 1 -> true
+            // Epifania
+            month == 1 && day == 6 -> true
+            // Festa della Liberazione
+            month == 4 && day == 25 -> true
+            // Festa dei lavoratori
+            month == 5 && day == 1 -> true
+            // Festa della Repubblica
+            month == 6 && day == 2 -> true
+            // Ferragosto
+            month == 8 && day == 15 -> true
+            // Tutti i Santi
+            month == 11 && day == 1 -> true
+            // Immacolata Concezione
+            month == 12 && day == 8 -> true
+            // Natale
+            month == 12 && day == 25 -> true
+            // Santo Stefano
+            month == 12 && day == 26 -> true
+            // Pasqua e Lunedì dell'Angelo richiederebbero un calcolo più complesso
+            // Domenica (è già un weekend ma in alcuni casi potrebbe essere considerato festivo)
+            date.dayOfWeek == DayOfWeek.SUNDAY -> true
+            else -> false
+        }
+    }
 
     // Funzioni per navigare tra i mesi
     val goToPreviousMonth = {
@@ -338,12 +373,13 @@ fun CalendarView(
                             val date = LocalDate.of(currentYear, currentMonth, dayOfMonth)
                             val isSelected = date.equals(internalSelectedDate)
                             val isToday = date.equals(currentDate)
-                            val isWeekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
+                            val isHoliday = isHoliday(date)
 
-                            // Qui modifichiamo il colore del testo in base alla selezione
+                            // Determina il colore del testo in base alla data
                             val textColor = when {
                                 isSelected -> selectedTextColor // Colore personalizzato quando selezionato
-                                else -> weekendColor // Stesso colore bianco per tutti i giorni
+                                isHoliday -> holidayColor // Colore rosso per i giorni festivi
+                                else -> weekendColor // Colore bianco per i giorni normali
                             }
 
                             Box(
