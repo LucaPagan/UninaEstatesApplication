@@ -32,7 +32,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
-import com.dieti.dietiestates25.ui.theme.TealVibrant
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.platform.LocalFocusManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +43,8 @@ fun PropertySellScreen(navController: NavController, idUtente: String) {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
         val scrollState = rememberScrollState()
+
+        val focusManager = LocalFocusManager.current
 
         // Stato per tutti i campi del form
         var propertyType by remember { mutableStateOf("Vendita") }
@@ -88,6 +92,12 @@ fun PropertySellScreen(navController: NavController, idUtente: String) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Brush.verticalGradient(colorStops = gradientColors))
+                // Questo permetterà di rimuovere il focus quando si clicca sullo sfondo
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                    })
+                }
         ) {
             Column(
                 modifier = Modifier.fillMaxSize()
@@ -197,6 +207,7 @@ fun PropertySellScreen(navController: NavController, idUtente: String) {
                     Divider()
 
                     // Caratteristiche principali
+                    // Modifica completa della sezione "Caratteristiche principali"
                     Text(
                         text = "Caratteristiche principali $requiredFieldMark",
                         style = typography.titleMedium,
@@ -211,19 +222,26 @@ fun PropertySellScreen(navController: NavController, idUtente: String) {
                             value = squareMeters,
                             onValueChange = { squareMeters = it },
                             label = { Text("Metri quadri") },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1.2f),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = colorScheme.primary,
                                 unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
                             ),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            trailingIcon = {
+                                Text(
+                                    text = "mq",
+                                    style = typography.bodyMedium,
+                                    color = colorScheme.onSurfaceVariant
+                                )
+                            }
                         )
 
                         OutlinedTextField(
                             value = floor,
                             onValueChange = { floor = it },
                             label = { Text("Piano") },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(0.8f),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = colorScheme.primary,
                                 unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
@@ -375,7 +393,7 @@ fun PropertySellScreen(navController: NavController, idUtente: String) {
                     )
 
                     DropdownMenuField(
-                        label = "Stato proprietà $requiredFieldMark",
+                        label = "Stato proprietà",
                         value = propertyCondition,
                         onValueChange = { propertyCondition = it },
                         options = listOf("Nuovo", "Ristrutturato", "Da ristrutturare", "Buono stato", "Ottimo stato"),
@@ -417,7 +435,7 @@ fun PropertySellScreen(navController: NavController, idUtente: String) {
                     OutlinedTextField(
                         value = price,
                         onValueChange = { price = it },
-                        label = { Text("Prezzo €") },
+                        label = { Text("Prezzo") },
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = colorScheme.primary,
