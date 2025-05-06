@@ -32,7 +32,9 @@ private val LightColors = lightColorScheme(
     background = NeutralLight,
     onBackground = GrayBlue,
     surface = Color.White,
-    onSurface = GrayBlue
+    onSurface = GrayBlue,
+    scrim = Orange,
+    error = Color.Red
 )
 
 // Dark theme colors
@@ -46,10 +48,12 @@ private val DarkColors = darkColorScheme(
     background = Color(0xFF121212),
     onBackground = Color.White,
     surface = Color(0xFF1E1E1E),
-    onSurface = Color.White
+    onSurface = Color.White,
+    scrim = Orange,
+    error = Color.Red
 )
-// Typography
 
+// Typography
 val typography = Typography(
     bodyLarge = TextStyle(
         fontFamily = FontFamily.Default,

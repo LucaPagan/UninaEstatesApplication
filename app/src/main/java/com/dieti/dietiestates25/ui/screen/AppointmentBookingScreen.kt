@@ -1,4 +1,11 @@
 package com.dieti.dietiestates25.ui.screen
+import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.Month
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
@@ -22,13 +29,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.dieti.dietiestates25.ui.theme.*
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.Month
-import java.time.format.DateTimeFormatter
-import java.util.*
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -36,76 +36,82 @@ import androidx.navigation.compose.rememberNavController
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun AppointmentBookingScreen(
-    navController : NavController
+    navController: NavController
 ) {
-    var selectedDate by remember { mutableStateOf(LocalDate.of(2025, 8, 17)) }
-    var selectedTimeSlot by remember { mutableStateOf<Int?>(0) } // Default to first time slot
-    val scrollState = rememberScrollState()
+    DietiEstatesTheme {
+        val colorScheme = MaterialTheme.colorScheme
+        val typography = MaterialTheme.typography
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(NeutralLight)
-    ) {
-        AppointmentHeader(navController)
+        var selectedDate by remember { mutableStateOf(LocalDate.of(2025, 8, 17)) }
+        var selectedTimeSlot by remember { mutableStateOf<Int?>(0) } // Default to first time slot
+        val scrollState = rememberScrollState()
 
-        BoxWithConstraints {
-            val screenHeight = maxHeight
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colorScheme.background)
+        ) {
+            AppointmentHeader(navController, colorScheme, typography)
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(screenHeight - 80.dp) // Riserva spazio per header e button
-                    .verticalScroll(scrollState)
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "Seleziona il tuo giorno disponibile",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = GrayBlue
-                )
+            BoxWithConstraints {
+                val screenHeight = maxHeight
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(screenHeight - 80.dp) // Riserva spazio per header e button
+                        .verticalScroll(scrollState)
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Seleziona il tuo giorno disponibile",
+                        style = typography.titleMedium,
+                        color = colorScheme.onBackground
+                    )
 
-                CalendarView(
-                    selectedDate = selectedDate,
-                    onDateSelected = { selectedDate = it }
-                )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    CalendarView(
+                        selectedDate = selectedDate,
+                        onDateSelected = { selectedDate = it },
+                        colorScheme = colorScheme,
+                        typography = typography
+                    )
 
-                Text(
-                    text = "Scegli la fascia oraria",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = GrayBlue
-                )
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Scegli la fascia oraria",
+                        style = typography.titleMedium,
+                        color = colorScheme.onBackground
+                    )
 
-                TimeSlotSelector(
-                    selectedTimeSlot = selectedTimeSlot,
-                    onTimeSlotSelected = { selectedTimeSlot = it }
-                )
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    TimeSlotSelector(
+                        selectedTimeSlot = selectedTimeSlot,
+                        onTimeSlotSelected = { selectedTimeSlot = it },
+                        colorScheme = colorScheme
+                    )
 
-                NotificationBox()
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    NotificationBox(colorScheme, typography)
+                }
             }
-        }
-        Column(modifier = Modifier.fillMaxWidth()) {
-            HorizontalDivider(
-                color = Color.LightGray,
-                thickness = 1.dp
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(NeutralLight)
-                    .padding(16.dp),
-            ) {
-                ContinueButton()
+            Column(modifier = Modifier.fillMaxWidth()) {
+                HorizontalDivider(
+                    color = Color.LightGray,
+                    thickness = 1.dp
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(colorScheme.background)
+                        .padding(16.dp),
+                ) {
+                    ContinueButton(colorScheme, typography)
+                }
             }
         }
     }
@@ -113,12 +119,14 @@ fun AppointmentBookingScreen(
 
 @Composable
 fun AppointmentHeader(
-    navController : NavController
+    navController: NavController,
+    colorScheme: ColorScheme,
+    typography: Typography
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(colorScheme.surface)
             .padding(16.dp)
     ) {
         Row(
@@ -133,7 +141,7 @@ fun AppointmentHeader(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Close",
                     modifier = Modifier.size(24.dp),
-                    tint = GrayBlue
+                    tint = colorScheme.onSurface
                 )
             }
 
@@ -141,9 +149,8 @@ fun AppointmentHeader(
 
             Text(
                 text = "Prenota una visita",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                color = GrayBlue
+                style = typography.titleMedium,
+                color = colorScheme.onSurface
             )
         }
     }
@@ -154,7 +161,9 @@ fun AppointmentHeader(
 @Composable
 fun CalendarView(
     selectedDate: LocalDate = LocalDate.now(),
-    onDateSelected: (LocalDate) -> Unit
+    onDateSelected: (LocalDate) -> Unit,
+    colorScheme: ColorScheme,
+    typography: Typography
 ) {
     // Stato per tenere traccia della data selezionata internamente nel componente
     var internalSelectedDate by remember { mutableStateOf(selectedDate) }
@@ -201,9 +210,9 @@ fun CalendarView(
     val weekdays = listOf("L", "M", "M", "G", "V", "S", "D")
 
     // Definizione dei colori
-    val selectedTextColor = Color(0xFF37474F) // Colore del testo quando un giorno è selezionato
-    val weekendColor = Color.White // Colore dei giorni feriali
-    val holidayColor = Color.Red // Colore per i giorni festivi
+    val selectedTextColor = colorScheme.onPrimaryContainer
+    val weekendColor = Color.White
+    val holidayColor = Color.Red
 
     // Funzione per verificare se una data è un giorno festivo in Italia
     fun isHoliday(date: LocalDate): Boolean {
@@ -232,9 +241,10 @@ fun CalendarView(
             month == 12 && day == 25 -> true
             // Santo Stefano
             month == 12 && day == 26 -> true
-            // Pasqua e Lunedì dell'Angelo richiederebbero un calcolo più complesso
-            // Domenica (è già un weekend ma in alcuni casi potrebbe essere considerato festivo)
+            // Weekend (Sabato e Domenica)
+            date.dayOfWeek == DayOfWeek.SATURDAY -> true
             date.dayOfWeek == DayOfWeek.SUNDAY -> true
+            // Pasqua e Lunedì dell'Angelo richiederebbero un calcolo più complesso
             else -> false
         }
     }
@@ -257,16 +267,15 @@ fun CalendarView(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = TealVibrant
+        color = colorScheme.primary
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
                 text = "Seleziona una data",
-                color = Color.White,
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp
+                color = colorScheme.onPrimary,
+                style = typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -281,9 +290,8 @@ fun CalendarView(
 
                 Text(
                     text = formattedDate,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    style = typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = colorScheme.onPrimary,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -305,9 +313,8 @@ fun CalendarView(
 
                 Text(
                     text = capitalizedMonthYear,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White,
+                    style = typography.titleMedium,
+                    color = colorScheme.onPrimary,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -315,7 +322,7 @@ fun CalendarView(
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowLeft,
                     contentDescription = "Mese precedente",
-                    tint = Color.White,
+                    tint = colorScheme.onPrimary,
                     modifier = Modifier
                         .size(24.dp)
                         .clickable { goToPreviousMonth() }
@@ -327,7 +334,7 @@ fun CalendarView(
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowRight,
                     contentDescription = "Mese successivo",
-                    tint = Color.White,
+                    tint = colorScheme.onPrimary,
                     modifier = Modifier
                         .size(24.dp)
                         .clickable { goToNextMonth() }
@@ -340,15 +347,19 @@ fun CalendarView(
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                weekdays.forEach { day ->
+                weekdays.forEachIndexed { index, day ->
+                    // Colora di rosso Sabato (index 5) e Domenica (index 6)
+                    val isWeekend = index == 5 || index == 6
+                    val dayColor = if (isWeekend) holidayColor else colorScheme.onPrimary
+
                     Box(
                         modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = day,
-                            fontSize = 16.sp,
-                            color = Color.White
+                            style = typography.bodyMedium,
+                            color = dayColor
                         )
                     }
                 }
@@ -400,9 +411,10 @@ fun CalendarView(
                             ) {
                                 Text(
                                     text = dayOfMonth.toString(),
-                                    fontSize = 16.sp,
-                                    color = textColor,
-                                    fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal
+                                    style = typography.bodyMedium.copy(
+                                        fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal
+                                    ),
+                                    color = textColor
                                 )
                             }
                         } else {
@@ -424,7 +436,8 @@ fun CalendarView(
 @Composable
 fun TimeSlotSelector(
     selectedTimeSlot: Int?,
-    onTimeSlotSelected: (Int) -> Unit
+    onTimeSlotSelected: (Int) -> Unit,
+    colorScheme: ColorScheme
 ) {
     val timeSlots = listOf("9-12", "12-14", "14-17", "17-20")
 
@@ -446,7 +459,7 @@ fun TimeSlotSelector(
                     .height(48.dp)
                     .clip(shape)
                     .background(
-                        if (isSelected) TealVibrant else TealLight
+                        if (isSelected) colorScheme.primary else colorScheme.secondary
                     )
                     .clickable { onTimeSlotSelected(index) }
             ) {
@@ -462,7 +475,7 @@ fun TimeSlotSelector(
                     ) {
                         Text(
                             text = slot,
-                            color = if (isSelected) Color.White else GrayBlue,
+                            color = if (isSelected) colorScheme.onPrimary else colorScheme.onSecondary,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -483,12 +496,15 @@ fun TimeSlotSelector(
 }
 
 @Composable
-fun NotificationBox() {
+fun NotificationBox(
+    colorScheme: ColorScheme,
+    typography: Typography
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        color = TealLight,
+        color = colorScheme.secondary,
         border = BorderStroke(1.dp, Color.Gray)
     ) {
         Column(
@@ -496,24 +512,26 @@ fun NotificationBox() {
         ) {
             Text(
                 text = "Questa non è una prenotazione effettiva:",
-                fontWeight = FontWeight.Medium,
-                color = GrayBlue
+                style = typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                color = colorScheme.onSecondary
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = "La tua richiesta sarà inviata all'inserzionista che si occuperà di ricontattarti.",
-                color = GrayBlue,
-                fontSize = 14.sp
+                style = typography.bodySmall,
+                color = colorScheme.onSecondary
             )
         }
     }
 }
 
 @Composable
-fun ContinueButton() {
-
+fun ContinueButton(
+    colorScheme: ColorScheme,
+    typography: Typography
+) {
     Button(
         onClick = { /* Continue action */ },
         modifier = Modifier
@@ -521,13 +539,12 @@ fun ContinueButton() {
             .height(56.dp),
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = TealVibrant
+            containerColor = colorScheme.primary
         )
     ) {
         Text(
             text = "Prosegui",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Medium
+            style = typography.titleMedium
         )
     }
 }
