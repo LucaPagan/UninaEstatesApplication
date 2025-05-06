@@ -17,9 +17,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -27,18 +31,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import kotlin.math.roundToInt
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.material3.MaterialTheme.colorScheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApartmentListingScreen(navController: NavController, idUtente: String, comune: String) {
     DietiEstatesTheme {
-        val colorScheme = MaterialTheme.colorScheme
+        val colorScheme = colorScheme
         val typography = MaterialTheme.typography
 
         val scrollState = rememberScrollState()
@@ -63,7 +72,7 @@ fun ApartmentListingScreen(navController: NavController, idUtente: String, comun
         val gradientColors = arrayOf(
             0.0f to colorScheme.primary,
             0.20f to colorScheme.background,
-            0.70f to colorScheme.background,
+            0.60f to colorScheme.background,
             1.0f to colorScheme.primary
         )
 
@@ -75,13 +84,14 @@ fun ApartmentListingScreen(navController: NavController, idUtente: String, comun
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Top Header
+                // Top Header with more elegant style
                 HeaderBar(
                     navController = navController,
                     colorScheme = colorScheme,
                     typography = typography,
                     onFilterClick = { showFilterSheet = true },
-                    filtersApplied = filtersApplied
+                    filtersApplied = filtersApplied,
+                    comune = comune
                 )
 
                 // Spacer
@@ -93,9 +103,18 @@ fun ApartmentListingScreen(navController: NavController, idUtente: String, comun
                         .weight(1f)
                         .verticalScroll(scrollState)
                         .padding(top = 8.dp)
-                        .padding(horizontal = 8.dp),
+                        .padding(horizontal = 16.dp),
                 ) {
-                    // Apartment listings
+                    // Welcome message to user
+                    Text(
+                        text = "Trova la tua casa dei sogni",
+                        style = typography.titleLarge,
+                        color = colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    // Apartment listings with enhanced visuals
                     ApartmentCard(
                         navController = navController,
                         price = "€180.000",
@@ -172,17 +191,15 @@ fun ApartmentListingScreen(navController: NavController, idUtente: String, comun
                     // Bottom padding to ensure last item is visible above bottom bar
                     Spacer(modifier = Modifier.height(80.dp))
                 }
-
-                // Fixed Bottom Bar
-                BottomBar(colorScheme = colorScheme, typography = typography)
             }
 
-            // Filtri Bottom Sheet
+            // Filtri Bottom Sheet with welcome style theme
             if (showFilterSheet) {
                 ModalBottomSheet(
                     onDismissRequest = { showFilterSheet = false },
                     containerColor = colorScheme.background,
-                    tonalElevation = 8.dp
+                    tonalElevation = 8.dp,
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
                 ) {
                     FilterSheet(
                         colorScheme = colorScheme,
@@ -236,14 +253,16 @@ fun HeaderBar(
     colorScheme: ColorScheme,
     typography: Typography,
     onFilterClick: () -> Unit,
-    filtersApplied: Boolean
+    filtersApplied: Boolean,
+    comune: String
 ) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp),
+            .height(70.dp),
         color = colorScheme.primary,
-        shape = RoundedCornerShape(bottomStart = 15.dp, bottomEnd = 15.dp)
+        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
+        shadowElevation = 8.dp
     ) {
         Row(
             modifier = Modifier
@@ -255,47 +274,324 @@ fun HeaderBar(
                 onClick = {
                     navController.popBackStack()
                 },
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier
+                    .size(42.dp)
+                    .background(colorScheme.secondary.copy(alpha = 0.2f), CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Indietro",
-                    tint = colorScheme.onPrimary
+                    tint = colorScheme.onPrimary,
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
-            Text(
-                text = "Napoli - Comune",
-                color = colorScheme.onPrimary,
-                style = typography.titleMedium,
+            Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 8.dp)
-            )
-
-            Badge(
-                modifier = Modifier
-                    .size(16.dp)
-                    .align(Alignment.Top)
-                    .offset(x = (-8).dp, y = 8.dp),
-                containerColor = if (filtersApplied) colorScheme.tertiary else Color.Transparent
+                    .padding(start = 12.dp)
             ) {
-                if (filtersApplied) {
-                    Text("")
-                }
-            }
-
-            IconButton(
-                onClick = { onFilterClick() },
-                modifier = Modifier.size(36.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Filtra",
-                    tint = colorScheme.onPrimary
+                Text(
+                    text = "Napoli - $comune",
+                    color = colorScheme.onPrimary,
+                    style = typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Immobili disponibili",
+                    color = colorScheme.onPrimary.copy(alpha = 0.7f),
+                    style = typography.bodySmall
                 )
             }
+
+            Box {
+                IconButton(
+                    onClick = { onFilterClick() },
+                    modifier = Modifier
+                        .size(42.dp)
+                        .background(colorScheme.secondary.copy(alpha = 0.2f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Tune,
+                        contentDescription = "Filtra",
+                        tint = colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                if (filtersApplied) {
+                    Badge(
+                        modifier = Modifier
+                            .size(16.dp)
+                            .align(Alignment.TopEnd)
+                            .offset(x = (-4).dp, y = 4.dp),
+                        containerColor = colorScheme.tertiary
+                    ) { }
+                }
+            }
         }
+    }
+}
+
+@Composable
+fun LuxuryPriceRangeSlider(
+    colorScheme: ColorScheme,
+    priceRange: ClosedFloatingPointRange<Float>,
+    onPriceRangeChange: (ClosedFloatingPointRange<Float>) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val minPrice = 50000f
+    val maxPrice = 400000f
+
+    // Stati per le animazioni
+    var isDragging by remember { mutableStateOf(false) }
+    val animatedScale by animateFloatAsState(
+        targetValue = if (isDragging) 1.1f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+    )
+
+    // Formattazione del prezzo
+    val formatPrice = { value: Float -> "€${(value / 1000).roundToInt()}K" }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        // Header con valori correnti
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Budget immobiliare",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "${formatPrice(priceRange.start)} - ${formatPrice(priceRange.endInclusive)}",
+                style = MaterialTheme.typography.titleMedium,
+                color = colorScheme.primary
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Card contenitore per lo slider con effetto elevazione
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(
+                    elevation = if (isDragging) 8.dp else 4.dp,
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            colors = CardDefaults.cardColors(
+                containerColor = colorScheme.surface
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                // Componente slider personalizzato
+                Box(
+                    modifier = Modifier
+                        .height(80.dp)
+                        .fillMaxWidth()
+                ) {
+                    // Slider di base per la logica
+                    RangeSlider(
+                        value = priceRange,
+                        onValueChange = { newRange ->
+                            // Arrotonda i valori ai multipli di 500 più vicini
+                            val startValue = (newRange.start / 500f).roundToInt() * 500f
+                            val endValue = (newRange.endInclusive / 500f).roundToInt() * 500f
+                            onPriceRangeChange(startValue..endValue)
+                        },
+                        valueRange = minPrice..maxPrice,
+                        steps = 700,
+                        colors = SliderDefaults.colors(
+                            thumbColor = colorScheme.secondary,
+                            activeTrackColor = colorScheme.secondary.copy(alpha = 0.5f),
+                            inactiveTrackColor = colorScheme.surfaceVariant
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp)
+                            .pointerInput(Unit) {
+                                detectDragGestures(
+                                    onDragStart = { isDragging = true },
+                                    onDragEnd = { isDragging = false },
+                                    onDragCancel = { isDragging = false },
+                                    onDrag = { _, _ -> }
+                                )
+                            }
+                    )
+
+                    // Etichette con prezzi attuali sopra i thumb
+                    BoxWithConstraints(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                    ) {
+                        val boxWidth = maxWidth
+
+                        // Label per il prezzo iniziale
+                        Box(
+                            modifier = Modifier
+                                .offset(
+                                    x = ((priceRange.start - minPrice) / (maxPrice - minPrice) *
+                                            (boxWidth.value - 32f)).dp
+                                )
+                        ) {
+                            Surface(
+                                modifier = Modifier
+                                    .shadow(4.dp, RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(8.dp)),
+                                color = colorScheme.primaryContainer
+                            ) {
+                                Text(
+                                    text = formatPrice(priceRange.start),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    color = colorScheme.onPrimaryContainer,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+
+                        // Label per il prezzo finale
+                        Box(
+                            modifier = Modifier
+                                .offset(
+                                    x = ((priceRange.endInclusive - minPrice) / (maxPrice - minPrice) *
+                                            (boxWidth.value - 32f)).dp
+                                )
+                        ) {
+                            Surface(
+                                modifier = Modifier
+                                    .padding(bottom = 8.dp)
+                                    .shadow(4.dp, RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(8.dp)),
+                                color = colorScheme.primaryContainer
+                            ) {
+                                Text(
+                                    text = formatPrice(priceRange.endInclusive),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    color = colorScheme.onPrimaryContainer,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = formatPrice(minPrice),
+                        fontSize = 10.sp,
+                        color = colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = formatPrice(maxPrice),
+                        fontSize = 10.sp,
+                        color = colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Range preimpostati per una selezione rapida
+        Text(
+            text = "Selezioni rapide",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            PresetRangeChip(
+                text = "€100K - €200K",
+                selected = priceRange.start == 100000f && priceRange.endInclusive == 200000f,
+                onClick = { onPriceRangeChange(100000f..200000f) },
+                modifier = Modifier.weight(1f)
+            )
+
+            PresetRangeChip(
+                text = "€200K - €300K",
+                selected = priceRange.start == 200000f && priceRange.endInclusive == 300000f,
+                onClick = { onPriceRangeChange(200000f..300000f) },
+                modifier = Modifier.weight(1f)
+            )
+
+            PresetRangeChip(
+                text = "€300K+",
+                selected = priceRange.start == 300000f && priceRange.endInclusive == 400000f,
+                onClick = { onPriceRangeChange(300000f..400000f) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+fun PresetRangeChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = if (selected)
+        colorScheme.secondaryContainer
+    else
+        colorScheme.surfaceVariant
+
+    val textColor = if (selected)
+        colorScheme.onSecondaryContainer
+    else
+        colorScheme.onSurfaceVariant
+
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        color = backgroundColor,
+        modifier = modifier
+    ) {
+        Text(
+            text = text,
+            color = textColor,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            fontSize = 12.sp,
+            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
+        )
     }
 }
 
@@ -332,42 +628,26 @@ fun FilterSheet(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        // Titolo
+        // Titolo con stile del welcome screen
         Text(
             text = "Filtri di ricerca",
-            style = typography.headlineSmall,
+            style = typography.headlineMedium,
             fontWeight = FontWeight.Bold,
-            color = colorScheme.primary
+            color = colorScheme.primary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Prezzo
         Text(
-            text = "Prezzo",
-            style = typography.titleMedium,
-            color = colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "€${priceRange.start.toInt()} - €${priceRange.endInclusive.toInt()}",
+            text = "Personalizza la tua ricerca",
             style = typography.bodyMedium,
-            color = colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        RangeSlider(
-            value = priceRange,
-            onValueChange = { onPriceRangeChange(it) },
-            valueRange = 50000f..400000f,
-            steps = 0,
-            colors = SliderDefaults.colors(
-                thumbColor = colorScheme.primary,
-                activeTrackColor = colorScheme.primary
-            )
+            color = colorScheme.onBackground.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
         )
 
         Divider(
@@ -375,14 +655,40 @@ fun FilterSheet(
             color = colorScheme.onBackground.copy(alpha = 0.1f)
         )
 
-        // Numero di locali
+        // Prezzo con stile aggiornato
         Text(
-            text = "Numero di locali",
+            text = "Prezzo",
             style = typography.titleMedium,
-            color = colorScheme.onBackground
+            color = colorScheme.onBackground,
+            fontWeight = FontWeight.Bold
         )
 
         Spacer(modifier = Modifier.height(8.dp))
+
+        Surface(
+            color = MaterialTheme.colorScheme.background
+        ) {
+            LuxuryPriceRangeSlider(
+                colorScheme = colorScheme,
+                priceRange = priceRange,
+                onPriceRangeChange = onPriceRangeChange
+            )
+        }
+
+        Divider(
+            modifier = Modifier.padding(vertical = 16.dp),
+            color = colorScheme.onBackground.copy(alpha = 0.1f)
+        )
+
+        // Numero di locali con stile aggiornato
+        Text(
+            text = "Numero di locali",
+            style = typography.titleMedium,
+            color = colorScheme.onBackground,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -421,14 +727,15 @@ fun FilterSheet(
             color = colorScheme.onBackground.copy(alpha = 0.1f)
         )
 
-        // Numero di bagni
+        // Numero di bagni con stile aggiornato
         Text(
             text = "Bagni",
             style = typography.titleMedium,
-            color = colorScheme.onBackground
+            color = colorScheme.onBackground,
+            fontWeight = FontWeight.Bold
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -461,11 +768,12 @@ fun FilterSheet(
             color = colorScheme.onBackground.copy(alpha = 0.1f)
         )
 
-        // Piano
+        // Piano con stile aggiornato
         Text(
             text = "Piano",
             style = typography.titleMedium,
-            color = colorScheme.onBackground
+            color = colorScheme.onBackground,
+            fontWeight = FontWeight.Bold
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -533,6 +841,7 @@ fun FilterSheet(
             text = "$minArea - $maxArea mq",
             style = typography.bodyMedium,
             color = colorScheme.onBackground
+
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -816,77 +1125,6 @@ fun ApartmentCard(
                 )
             }
         }
-    }
-}
-
-@Composable
-fun BottomBar(colorScheme: ColorScheme, typography: Typography) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        color = colorScheme.primary,
-        shadowElevation = 8.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AppBottomNavItem(
-                icon = Icons.Default.Home,
-                label = "Home",
-                selected = true,
-                colorScheme = colorScheme,
-                typography = typography
-            )
-
-            AppBottomNavItem(
-                icon = Icons.Default.FavoriteBorder,
-                label = "Preferiti",
-                selected = false,
-                colorScheme = colorScheme,
-                typography = typography
-            )
-
-            AppBottomNavItem(
-                icon = Icons.Default.Person,
-                label = "Profilo",
-                selected = false,
-                colorScheme = colorScheme,
-                typography = typography
-            )
-        }
-    }
-}
-
-@Composable
-fun AppBottomNavItem(
-    icon: ImageVector,
-    label: String,
-    selected: Boolean,
-    colorScheme: ColorScheme,
-    typography: Typography
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.padding(horizontal = 8.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (selected) colorScheme.onPrimary else colorScheme.onPrimary.copy(alpha = 0.6f),
-            modifier = Modifier.size(24.dp)
-        )
-
-        Text(
-            text = label,
-            color = if (selected) colorScheme.onPrimary else colorScheme.onPrimary.copy(alpha = 0.6f),
-            style = typography.labelSmall
-        )
     }
 }
 
