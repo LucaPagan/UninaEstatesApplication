@@ -12,6 +12,7 @@ val TealLight = Color(0xFFB2DFDB) // Teal chiaro
 val TealVibrant = Color(0xFF009688) // Teal vibrante
 val NeutralLight = Color(0xFFFAFAFA) // Neutro chiaro
 val GrayBlue = Color(0xFF37474F) // Grigio-blu
+val Orange = Color(0xFFFF9800)
 
 val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
