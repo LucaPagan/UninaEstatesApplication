@@ -34,7 +34,8 @@ private val LightColors = lightColorScheme(
     surface = Color.White,
     onSurface = GrayBlue,
     scrim = Orange,
-    error = Color.Red
+    error = Color.Red,
+    surfaceDim = Color.Transparent
 )
 
 // Dark theme colors
@@ -50,7 +51,8 @@ private val DarkColors = darkColorScheme(
     surface = Color(0xFF1E1E1E),
     onSurface = Color.White,
     scrim = Orange,
-    error = Color.Red
+    error = Color.Red,
+    surfaceDim = Color.Transparent
 )
 
 // Typography
@@ -84,13 +86,13 @@ val typography = Typography(
     ),
     titleMedium = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.Bold,
         fontSize = 18.sp,
         lineHeight = 24.sp
     ),
     titleSmall = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.Bold,
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.1.sp
@@ -115,6 +117,12 @@ val typography = Typography(
         fontSize = 10.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.5.sp
+    ),
+    displayLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Bold,
+        fontSize = 24.sp,
+        lineHeight = 16.sp
     )
 )
 
