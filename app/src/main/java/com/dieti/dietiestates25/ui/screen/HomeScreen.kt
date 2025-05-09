@@ -54,18 +54,17 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
 
-        val gradientColors = arrayOf(
-            0.3f to colorScheme.secondary,
-            0.40f to colorScheme.background,
-            0.60f to colorScheme.background,
-            0.80f to colorScheme.background,
-            0.90f to colorScheme.secondary
+        val gradientColors = listOf(
+            colorScheme.primary.copy(alpha = 0.85f),
+            colorScheme.background,
+            colorScheme.background,
+            colorScheme.primary.copy(alpha = 0.75f)
         )
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(colorStops = gradientColors))
+                .background(Brush.verticalGradient(colors = gradientColors))
         ) {
             Column(
                 modifier = Modifier.fillMaxSize()
@@ -174,11 +173,16 @@ fun SearchBar(navController: NavController, idUtente: String) {
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 64.dp)
-                .height(50.dp),
-            shape = RoundedCornerShape(14.dp),
+                .padding(horizontal = 32.dp)
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorScheme.primary
+                containerColor = colorScheme.primary,
+                contentColor = colorScheme.onPrimary
+            ),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 8.dp,
+                pressedElevation = 4.dp
             )
         ) {
             Row(
@@ -188,12 +192,12 @@ fun SearchBar(navController: NavController, idUtente: String) {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "Search",
-                    tint = colorScheme.onSecondary
+                    tint = colorScheme.onPrimary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Cerca casa",
-                    color = colorScheme.onSecondary,
+                    color = colorScheme.onPrimary,
                     style = typography.bodyMedium
                 )
             }
