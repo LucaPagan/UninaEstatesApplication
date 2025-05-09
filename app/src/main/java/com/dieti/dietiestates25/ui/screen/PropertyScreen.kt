@@ -46,6 +46,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import com.dieti.dietiestates25.ui.theme.typography
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -126,12 +127,12 @@ fun PropertyScreen(
                                     },
                                     modifier = Modifier
                                         .size(40.dp)
-                                        .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                                        .background(colorScheme.onBackground.copy(alpha = 0.6f), CircleShape)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.KeyboardArrowLeft,
                                         contentDescription = "Previous Image",
-                                        tint = Color.White
+                                        tint = colorScheme.background
                                     )
                                 }
 
@@ -139,16 +140,15 @@ fun PropertyScreen(
                                 Box(
                                     modifier = Modifier
                                         .background(
-                                            Color.Black.copy(alpha = 0.6f),
+                                            colorScheme.onBackground.copy(alpha = 0.6f),
                                             RoundedCornerShape(12.dp)
                                         )
                                         .padding(horizontal = 12.dp, vertical = 4.dp)
                                 ) {
                                     Text(
                                         text = "${currentImageIndex.value + 1}/$totalImages",
-                                        color = Color.White,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium
+                                        color = colorScheme.background,
+                                        style = typography.labelMedium
                                     )
                                 }
 
@@ -164,12 +164,12 @@ fun PropertyScreen(
                                     },
                                     modifier = Modifier
                                         .size(40.dp)
-                                        .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                                        .background(colorScheme.onBackground.copy(alpha = 0.6f), CircleShape)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.KeyboardArrowRight,
                                         contentDescription = "Next Image",
-                                        tint = Color.White
+                                        tint = colorScheme.background
                                     )
                                 }
                             }
@@ -185,8 +185,7 @@ fun PropertyScreen(
                         ) {
                             Text(
                                 text = "€129,500",
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
+                                style = typography.displayLarge,
                                 color = colorScheme.onBackground
                             )
 
@@ -202,7 +201,7 @@ fun PropertyScreen(
                                 )
                                 Text(
                                     text = "Appartamento Napoli, Via Francesco Girardi 90",
-                                    fontSize = 14.sp,
+                                    style = typography.bodyMedium,
                                     color = colorScheme.onBackground,
                                     modifier = Modifier.padding(start = 4.dp)
                                 )
@@ -244,8 +243,7 @@ fun PropertyScreen(
                         ) {
                             Text(
                                 text = "Caratteristiche",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
+                                style = typography.titleMedium,
                                 color = colorScheme.onBackground,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
@@ -268,17 +266,15 @@ fun PropertyScreen(
                         ) {
                             Text(
                                 text = "Descrizione",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
+                                style = typography.titleMedium,
                                 color = colorScheme.onBackground,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
 
                             Text(
                                 text = "Scopri questo accogliente appartamento situato nel cuore di Napoli, ideale per chi cerca comfort e comodità. L'immobile è situato al terzo piano di un edificio con ascensore, è perfetto per famiglie o coppie alla ricerca di uno spazio ben organizzato e luminoso.",
-                                fontSize = 14.sp,
-                                color = colorScheme.onBackground,
-                                lineHeight = 20.sp
+                                style = typography.labelLarge,
+                                color = colorScheme.onBackground
                             )
                         }
                     }
@@ -303,20 +299,19 @@ fun PropertyScreen(
                                 Column(modifier = Modifier.padding(start = 8.dp)) {
                                     Text(
                                         text = "Agenzia: Gianfranco Lombardi",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
+                                        style = typography.bodyLarge,
                                         color = colorScheme.onBackground
                                     )
 
                                     Text(
                                         text = "Telefono: 081 192 6079",
-                                        fontSize = 14.sp,
+                                        style = typography.labelLarge,
                                         color = colorScheme.onBackground
                                     )
 
                                     Text(
                                         text = "VIA G. PORZIO ISOLA Es 3, Napoli (NA), Campania, 80143",
-                                        fontSize = 12.sp,
+                                        style = typography.labelMedium,
                                         color = colorScheme.onBackground.copy(alpha = 0.7f)
                                     )
                                 }
@@ -414,9 +409,9 @@ fun PropertyScreen(
                                     .background(
                                         brush = Brush.horizontalGradient(
                                             colors = listOf(
-                                                Color.Transparent,
-                                                Color.Red.copy(alpha = 0.6f),
-                                                Color.Transparent
+                                                colorScheme.surfaceDim,
+                                                colorScheme.error.copy(alpha = 0.6f),
+                                                colorScheme.surfaceDim
                                             )
                                         )
                                     )
@@ -439,14 +434,13 @@ fun PropertyScreen(
                                     Icon(
                                         imageVector = Icons.Default.Warning,
                                         contentDescription = "Report",
-                                        tint = Color.Red,
+                                        tint = colorScheme.error,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
                                         text = "Segnala Annuncio",
-                                        color = Color.Red,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Medium,
+                                        color = colorScheme.error,
+                                        style = typography.labelLarge,
                                         modifier = Modifier.padding(start = 8.dp)
                                     )
                                 }
@@ -461,9 +455,9 @@ fun PropertyScreen(
                                     .background(
                                         brush = Brush.horizontalGradient(
                                             colors = listOf(
-                                                Color.Transparent,
-                                                Color.Red.copy(alpha = 0.6f),
-                                                Color.Transparent
+                                                colorScheme.surfaceDim,
+                                                colorScheme.error.copy(alpha = 0.6f),
+                                                colorScheme.surfaceDim
                                             )
                                         )
                                     )
@@ -480,8 +474,7 @@ fun PropertyScreen(
                         ) {
                             Text(
                                 text = "Annunci simili",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
+                                style = typography.titleMedium,
                                 color = colorScheme.onBackground,
                                 modifier = Modifier.padding(bottom = 8.dp)
                             )
@@ -502,7 +495,8 @@ fun PropertyScreen(
                                         modifier = Modifier
                                             .width(200.dp)
                                             .height(150.dp),
-                                        navController = navController
+                                        navController = navController,
+                                        colorScheme = colorScheme
                                     )
                                 }
 
@@ -530,8 +524,7 @@ fun PropertyScreen(
                                         Text(
                                             text = "Vedi tutti",
                                             color = colorScheme.primary,
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.Medium,
+                                            style = typography.labelLarge,
                                             modifier = Modifier.padding(top = 4.dp)
                                         )
                                     }
@@ -549,7 +542,7 @@ fun PropertyScreen(
                 // Fixed top navigation bar (stays visible during scroll)
                 TopAppBar(
                     modifier = Modifier
-                        .background(Color.Transparent)
+                        .background(colorScheme.surfaceDim)
                         .padding(horizontal = 10.dp),
                     navigationIcon = {
                         IconButton(
@@ -585,7 +578,7 @@ fun PropertyScreen(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
+                        containerColor = colorScheme.surfaceDim
                     )
                 )
             }
@@ -610,7 +603,7 @@ fun PropertyFeature(
         )
         Text(
             text = label,
-            fontSize = 14.sp,
+            style = typography.labelMedium,
             color = colorScheme.onBackground
         )
     }
@@ -631,7 +624,7 @@ fun PropertyCharacteristic(text: String) {
         )
         Text(
             text = text,
-            fontSize = 14.sp,
+            style = typography.labelLarge,
             color = colorScheme.onBackground,
             modifier = Modifier.padding(start = 8.dp)
         )
@@ -642,7 +635,8 @@ fun PropertyCharacteristic(text: String) {
 fun SimilarPropertyCard(
     navController: NavController,
     price: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    colorScheme: ColorScheme
 ) {
     Card(
         modifier = modifier
@@ -663,14 +657,13 @@ fun SimilarPropertyCard(
             if (price.isNotEmpty()) {
                 Text(
                     text = price,
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
+                    color = colorScheme.onBackground,
+                    style = typography.titleMedium,
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .padding(8.dp)
                         .background(
-                            Color.Black.copy(alpha = 0.6f),
+                            colorScheme.background.copy(alpha = 0.6f),
                             RoundedCornerShape(4.dp)
                         )
                         .padding(4.dp)
