@@ -502,7 +502,7 @@ fun PropertyScreen(
                                         modifier = Modifier
                                             .width(200.dp)
                                             .height(150.dp),
-                                        navController = TODO()
+                                        navController = navController
                                     )
                                 }
 
@@ -512,7 +512,10 @@ fun PropertyScreen(
                                         .width(120.dp)
                                         .height(150.dp)
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(colorScheme.background),
+                                        .background(colorScheme.background)
+                                        .clickable {
+                                            navController.navigate(Screen.ApartmentListingScreen.withArgs("", ""))
+                                        },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Column(
