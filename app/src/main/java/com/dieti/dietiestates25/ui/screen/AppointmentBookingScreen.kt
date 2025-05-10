@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.theme.typography
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
@@ -101,7 +102,7 @@ fun AppointmentBookingScreen(
             }
             Column(modifier = Modifier.fillMaxWidth()) {
                 HorizontalDivider(
-                    color = Color.LightGray,
+                    color = colorScheme.onBackground,
                     thickness = 1.dp
                 )
                 Box(
@@ -155,7 +156,7 @@ fun AppointmentHeader(
         }
     }
 
-    HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
+    HorizontalDivider(thickness = 1.dp, color = colorScheme.onBackground)
 }
 
 @Composable
@@ -211,8 +212,8 @@ fun CalendarView(
 
     // Definizione dei colori
     val selectedTextColor = colorScheme.onPrimaryContainer
-    val weekendColor = Color.White
-    val holidayColor = Color.Red
+    val weekendColor = colorScheme.onPrimary
+    val holidayColor = colorScheme.error
 
     // Funzione per verificare se una data è un giorno festivo in Italia
     fun isHoliday(date: LocalDate): Boolean {
@@ -403,7 +404,7 @@ fun CalendarView(
                                         when {
                                             isSelected -> Color(0x99FFFFFF)
                                             isToday -> Color(0x33FFFFFF)
-                                            else -> Color.Transparent
+                                            else -> colorScheme.surfaceDim
                                         }
                                     )
                                     .clickable { handleDateSelection(date) },
@@ -476,7 +477,7 @@ fun TimeSlotSelector(
                         Text(
                             text = slot,
                             color = if (isSelected) colorScheme.onPrimary else colorScheme.onSecondary,
-                            fontWeight = FontWeight.Medium
+                            style = typography.labelLarge
                         )
                     }
 
@@ -486,7 +487,7 @@ fun TimeSlotSelector(
                             modifier = Modifier
                                 .width(1.dp)
                                 .height(24.dp) // Altezza del divisore ridotta
-                                .background(Color.Black)
+                                .background(color = colorScheme.onBackground)
                         )
                     }
                 }
@@ -505,7 +506,7 @@ fun NotificationBox(
             .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         color = colorScheme.secondary,
-        border = BorderStroke(1.dp, Color.Gray)
+        border = BorderStroke(1.dp, colorScheme.outline)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)

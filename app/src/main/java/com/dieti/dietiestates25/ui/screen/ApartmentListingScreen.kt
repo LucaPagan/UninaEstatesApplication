@@ -18,11 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -39,9 +36,11 @@ import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import kotlin.math.roundToInt
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme.colorScheme
+import com.dieti.dietiestates25.ui.theme.typography
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,8 +63,8 @@ fun ApartmentListingScreen(navController: NavController, idUtente: String, comun
         var hasParking by remember { mutableStateOf(false) }
         var hasBalcony by remember { mutableStateOf(false) }
         var hasTerrace by remember { mutableStateOf(false) }
-        var minArea by remember { mutableStateOf(50) }
-        var maxArea by remember { mutableStateOf(150) }
+        var minArea by remember { mutableIntStateOf(10) }
+        var maxArea by remember { mutableIntStateOf(250) }
         var filtersApplied by remember { mutableStateOf(false) }
 
         // Gradient background like WelcomeScreen
@@ -199,6 +198,7 @@ fun ApartmentListingScreen(navController: NavController, idUtente: String, comun
                     onDismissRequest = { showFilterSheet = false },
                     containerColor = colorScheme.background,
                     tonalElevation = 8.dp,
+                    scrimColor = Color.Transparent, // Rimuove il filtro/scrim colorato
                     shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
                 ) {
                     FilterSheet(
@@ -334,15 +334,32 @@ fun HeaderBar(
 }
 
 @Composable
-fun LuxuryPriceRangeSlider(
-    colorScheme: ColorScheme,
-    priceRange: ClosedFloatingPointRange<Float>,
-    onPriceRangeChange: (ClosedFloatingPointRange<Float>) -> Unit,
+fun CustomRangeSlider(
+    // Parametri essenziali
+    value: ClosedFloatingPointRange<Float>,
+    onValueChange: (ClosedFloatingPointRange<Float>) -> Unit,
+    valueRange: ClosedFloatingPointRange<Float>,
+
+    // Parametri di personalizzazione
+    title: String? = null,
+    formatValue: (Float) -> String = { it.toString() },
+    roundToNearest: Float? = null,
+    steps: Int = 0,
+
+    // Parametri di stile
+    showPresets: Boolean = false,
+    presets: List<Pair<String, ClosedFloatingPointRange<Float>>> = emptyList(),
+
+    // Colori personalizzabili
+    thumbColor: Color = colorScheme.primary, // Thumb con colore primario
+    activeTrackColor: Color = colorScheme.primary, // Range interno con colore primario
+    inactiveTrackColor: Color = colorScheme.secondary, // Range esterno con colore secondario
+    labelBackgroundColor: Color = colorScheme.primaryContainer,
+    labelTextColor: Color = colorScheme.onPrimaryContainer,
+
+    // Altri parametri
     modifier: Modifier = Modifier
 ) {
-    val minPrice = 50000f
-    val maxPrice = 400000f
-
     // Stati per le animazioni
     var isDragging by remember { mutableStateOf(false) }
     val animatedScale by animateFloatAsState(
@@ -350,28 +367,22 @@ fun LuxuryPriceRangeSlider(
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
     )
 
-    // Formattazione del prezzo
-    val formatPrice = { value: Float -> "€${(value / 1000).roundToInt()}K" }
-
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        // Header con valori correnti
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        // Header con titolo se fornito
+        if (title != null) {
             Text(
-                text = "Budget immobiliare",
+                text = title,
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
         }
+
+        // Valori correnti
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -380,8 +391,8 @@ fun LuxuryPriceRangeSlider(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${formatPrice(priceRange.start)} - ${formatPrice(priceRange.endInclusive)}",
-                style = MaterialTheme.typography.titleMedium,
+                text = "${formatValue(value.start)} - ${formatValue(value.endInclusive)}",
+                style = typography.titleMedium,
                 color = colorScheme.primary
             )
         }
@@ -414,19 +425,23 @@ fun LuxuryPriceRangeSlider(
                 ) {
                     // Slider di base per la logica
                     RangeSlider(
-                        value = priceRange,
+                        value = value,
                         onValueChange = { newRange ->
-                            // Arrotonda i valori ai multipli di 500 più vicini
-                            val startValue = (newRange.start / 500f).roundToInt() * 500f
-                            val endValue = (newRange.endInclusive / 500f).roundToInt() * 500f
-                            onPriceRangeChange(startValue..endValue)
+                            if (roundToNearest != null) {
+                                // Arrotonda i valori al multiplo più vicino se specificato
+                                val startValue = (newRange.start / roundToNearest).roundToInt() * roundToNearest
+                                val endValue = (newRange.endInclusive / roundToNearest).roundToInt() * roundToNearest
+                                onValueChange(startValue..endValue)
+                            } else {
+                                onValueChange(newRange)
+                            }
                         },
-                        valueRange = minPrice..maxPrice,
-                        steps = 700,
+                        valueRange = valueRange,
+                        steps = steps,
                         colors = SliderDefaults.colors(
-                            thumbColor = colorScheme.secondary,
-                            activeTrackColor = colorScheme.secondary.copy(alpha = 0.5f),
-                            inactiveTrackColor = colorScheme.surfaceVariant
+                            thumbColor = thumbColor,
+                            activeTrackColor = activeTrackColor,
+                            inactiveTrackColor = inactiveTrackColor
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -441,19 +456,22 @@ fun LuxuryPriceRangeSlider(
                             }
                     )
 
-                    // Etichette con prezzi attuali sopra i thumb
+                    // Etichette con valori attuali sopra i thumb
                     BoxWithConstraints(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp)
                     ) {
                         val boxWidth = maxWidth
+                        val minValue = valueRange.start
+                        val maxValue = valueRange.endInclusive
+                        val valueRange = maxValue - minValue
 
-                        // Label per il prezzo iniziale
+                        // Label per il valore iniziale
                         Box(
                             modifier = Modifier
                                 .offset(
-                                    x = ((priceRange.start - minPrice) / (maxPrice - minPrice) *
+                                    x = ((value.start - minValue) / valueRange *
                                             (boxWidth.value - 32f)).dp
                                 )
                         ) {
@@ -461,23 +479,23 @@ fun LuxuryPriceRangeSlider(
                                 modifier = Modifier
                                     .shadow(4.dp, RoundedCornerShape(8.dp))
                                     .clip(RoundedCornerShape(8.dp)),
-                                color = colorScheme.primaryContainer
+                                color = labelBackgroundColor
                             ) {
                                 Text(
-                                    text = formatPrice(priceRange.start),
+                                    text = formatValue(value.start),
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    color = colorScheme.onPrimaryContainer,
+                                    color = labelTextColor,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 12.sp
                                 )
                             }
                         }
 
-                        // Label per il prezzo finale
+                        // Label per il valore finale
                         Box(
                             modifier = Modifier
                                 .offset(
-                                    x = ((priceRange.endInclusive - minPrice) / (maxPrice - minPrice) *
+                                    x = ((value.endInclusive - minValue) / valueRange *
                                             (boxWidth.value - 32f)).dp
                                 )
                         ) {
@@ -486,12 +504,12 @@ fun LuxuryPriceRangeSlider(
                                     .padding(bottom = 8.dp)
                                     .shadow(4.dp, RoundedCornerShape(8.dp))
                                     .clip(RoundedCornerShape(8.dp)),
-                                color = colorScheme.primaryContainer
+                                color = labelBackgroundColor
                             ) {
                                 Text(
-                                    text = formatPrice(priceRange.endInclusive),
+                                    text = formatValue(value.endInclusive),
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    color = colorScheme.onPrimaryContainer,
+                                    color = labelTextColor,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 12.sp
                                 )
@@ -502,6 +520,7 @@ fun LuxuryPriceRangeSlider(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Mostra il range minimo e massimo in basso
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -509,12 +528,12 @@ fun LuxuryPriceRangeSlider(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = formatPrice(minPrice),
+                        text = formatValue(valueRange.start),
                         fontSize = 10.sp,
                         color = colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = formatPrice(maxPrice),
+                        text = formatValue(valueRange.endInclusive),
                         fontSize = 10.sp,
                         color = colorScheme.onSurfaceVariant
                     )
@@ -522,39 +541,29 @@ fun LuxuryPriceRangeSlider(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        // Range preimpostati per una selezione rapida (opzionale)
+        if (showPresets && presets.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // Range preimpostati per una selezione rapida
-        Text(
-            text = "Selezioni rapide",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            PresetRangeChip(
-                text = "€100K - €200K",
-                selected = priceRange.start == 100000f && priceRange.endInclusive == 200000f,
-                onClick = { onPriceRangeChange(100000f..200000f) },
-                modifier = Modifier.weight(1f)
+            Text(
+                text = "Selezioni rapide",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            PresetRangeChip(
-                text = "€200K - €300K",
-                selected = priceRange.start == 200000f && priceRange.endInclusive == 300000f,
-                onClick = { onPriceRangeChange(200000f..300000f) },
-                modifier = Modifier.weight(1f)
-            )
-
-            PresetRangeChip(
-                text = "€300K+",
-                selected = priceRange.start == 300000f && priceRange.endInclusive == 400000f,
-                onClick = { onPriceRangeChange(300000f..400000f) },
-                modifier = Modifier.weight(1f)
-            )
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(presets) { preset ->
+                    PresetRangeChip(
+                        text = preset.first,
+                        selected = value.start == preset.second.start && value.endInclusive == preset.second.endInclusive,
+                        onClick = { onValueChange(preset.second) },
+                        modifier = Modifier
+                    )
+                }
+            }
         }
     }
 }
@@ -566,36 +575,18 @@ fun PresetRangeChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (selected)
-        colorScheme.secondaryContainer
-    else
-        colorScheme.surfaceVariant
-
-    val textColor = if (selected)
-        colorScheme.onSecondaryContainer
-    else
-        colorScheme.onSurfaceVariant
-
-    Surface(
+    FilterChip(
+        selected = selected,
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        color = backgroundColor,
-        modifier = modifier
-    ) {
-        Text(
-            text = text,
-            color = textColor,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            fontSize = 12.sp,
-            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
+        label = { Text(text) },
+        modifier = modifier,
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = colorScheme.primaryContainer,
+            selectedLabelColor = colorScheme.onPrimaryContainer
         )
-    }
+    )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilterSheet(
     colorScheme: ColorScheme,
@@ -622,6 +613,8 @@ fun FilterSheet(
     onApplyFilters: () -> Unit,
     onResetFilters: () -> Unit
 ) {
+    var priceRangeMut by remember { mutableStateOf(100000f..200000f) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -666,12 +659,22 @@ fun FilterSheet(
         Spacer(modifier = Modifier.height(8.dp))
 
         Surface(
-            color = MaterialTheme.colorScheme.background
+            color = colorScheme.background
         ) {
-            LuxuryPriceRangeSlider(
-                colorScheme = colorScheme,
-                priceRange = priceRange,
-                onPriceRangeChange = onPriceRangeChange
+            CustomRangeSlider(
+                value = priceRangeMut,
+                onValueChange = { priceRangeMut = it },
+                valueRange = 50000f..400000f,
+                title = "Budget immobiliare",
+                formatValue = { "€${(it / 1000).roundToInt()}K" },
+                roundToNearest = 500f,
+                steps = 700,
+                showPresets = true,
+                presets = listOf(
+                    "€100K - €200K" to (100000f..200000f),
+                    "€200K - €300K" to (200000f..300000f),
+                    "€300K+" to (300000f..400000f)
+                )
             )
         }
 
@@ -828,41 +831,31 @@ fun FilterSheet(
             color = colorScheme.onBackground.copy(alpha = 0.1f)
         )
 
-        // Superficie
-        Text(
-            text = "Superficie (mq)",
-            style = typography.titleMedium,
-            color = colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "$minArea - $maxArea mq",
-            style = typography.bodyMedium,
-            color = colorScheme.onBackground
-
-        )
+        // Superfice
 
         Spacer(modifier = Modifier.height(8.dp))
 
         var sliderPosition by remember { mutableStateOf(minArea.toFloat()..maxArea.toFloat()) }
-        RangeSlider(
-            value = sliderPosition,
-            onValueChange = {
-                sliderPosition = it
-                onAreaRangeChange(
-                    it.start.roundToInt(),
-                    it.endInclusive.roundToInt()
+
+        Surface(
+            color = colorScheme.background
+        ) {
+            CustomRangeSlider(
+                value = sliderPosition,
+                onValueChange = { sliderPosition = it },
+                valueRange = 1f..250f,
+                title = "Superficie (mq)",
+                formatValue = { "${it.roundToInt()} mq" },
+                roundToNearest = 0.5f,
+                steps = 98,
+                showPresets = true,
+                presets = listOf(
+                    "10mq-100mq" to (10f..100f),
+                    "100mq-200mq" to (100f..200f),
+                    "200mq-250+mq" to (200f..250f)
                 )
-            },
-            valueRange = 30f..200f,
-            steps = 0,
-            colors = SliderDefaults.colors(
-                thumbColor = colorScheme.primary,
-                activeTrackColor = colorScheme.primary
             )
-        )
+        }
 
         Divider(
             modifier = Modifier.padding(vertical = 16.dp),
