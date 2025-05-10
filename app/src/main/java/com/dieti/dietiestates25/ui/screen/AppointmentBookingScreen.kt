@@ -33,6 +33,13 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.theme.typography
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.statusBarsPadding
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
@@ -47,71 +54,97 @@ fun AppointmentBookingScreen(
         var selectedTimeSlot by remember { mutableStateOf<Int?>(0) } // Default to first time slot
         val scrollState = rememberScrollState()
 
-        Column(
+        // Get system insets
+        val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+        val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        val displayCutoutPadding = WindowInsets.displayCutout.asPaddingValues()
+
+        // Calculate actual safe area padding
+        val topPadding = maxOf(statusBarHeight, displayCutoutPadding.calculateTopPadding()) + 4.dp
+        val bottomPadding = navigationBarHeight + 4.dp
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(colorScheme.background)
         ) {
-            AppointmentHeader(navController, colorScheme, typography)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding() // Add padding for status bar
+            ) {
+                AppointmentHeader(navController, colorScheme, typography)
 
-            BoxWithConstraints {
-                val screenHeight = maxHeight
+                BoxWithConstraints {
+                    val screenHeight = maxHeight
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(screenHeight - 140.dp) // Reserve space for header, button and navigation bar
+                            .verticalScroll(scrollState)
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Seleziona il tuo giorno disponibile",
+                            style = typography.titleMedium,
+                            color = colorScheme.onBackground
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        CalendarView(
+                            selectedDate = selectedDate,
+                            onDateSelected = { selectedDate = it },
+                            colorScheme = colorScheme,
+                            typography = typography
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = "Scegli la fascia oraria",
+                            style = typography.titleMedium,
+                            color = colorScheme.onBackground
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        TimeSlotSelector(
+                            selectedTimeSlot = selectedTimeSlot,
+                            onTimeSlotSelected = { selectedTimeSlot = it },
+                            colorScheme = colorScheme
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        NotificationBox(colorScheme, typography)
+
+                        // Add extra space at bottom to prevent content from being hidden by navigation bar
+                        Spacer(modifier = Modifier.height(navigationBarHeight))
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
 
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(screenHeight - 80.dp) // Riserva spazio per header e button
-                        .verticalScroll(scrollState)
-                        .padding(16.dp)
+                        .imePadding() // Handle keyboard appearance
                 ) {
-                    Text(
-                        text = "Seleziona il tuo giorno disponibile",
-                        style = typography.titleMedium,
-                        color = colorScheme.onBackground
+                    HorizontalDivider(
+                        color = colorScheme.onBackground,
+                        thickness = 1.dp
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    CalendarView(
-                        selectedDate = selectedDate,
-                        onDateSelected = { selectedDate = it },
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Text(
-                        text = "Scegli la fascia oraria",
-                        style = typography.titleMedium,
-                        color = colorScheme.onBackground
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    TimeSlotSelector(
-                        selectedTimeSlot = selectedTimeSlot,
-                        onTimeSlotSelected = { selectedTimeSlot = it },
-                        colorScheme = colorScheme
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    NotificationBox(colorScheme, typography)
-                }
-            }
-            Column(modifier = Modifier.fillMaxWidth()) {
-                HorizontalDivider(
-                    color = colorScheme.onBackground,
-                    thickness = 1.dp
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(colorScheme.background)
-                        .padding(16.dp),
-                ) {
-                    ContinueButton(colorScheme, typography)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(colorScheme.background)
+                            .padding(16.dp)
+                            .padding(bottom = bottomPadding) // Add padding for navigation bar
+                    ) {
+                        ContinueButton(colorScheme, typography)
+                    }
                 }
             }
         }
@@ -128,7 +161,7 @@ fun AppointmentHeader(
         modifier = Modifier
             .fillMaxWidth()
             .background(colorScheme.surface)
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -487,7 +520,7 @@ fun TimeSlotSelector(
                             modifier = Modifier
                                 .width(1.dp)
                                 .height(24.dp) // Altezza del divisore ridotta
-                                .background(color = colorScheme.onBackground)
+                                .background(color = colorScheme.background)
                         )
                     }
                 }
