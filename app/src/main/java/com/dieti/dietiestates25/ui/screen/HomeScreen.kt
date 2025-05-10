@@ -76,7 +76,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                 // Search Bar Button
                 SearchBar(navController, idUtente)
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(30.dp))
 
                 // Recent Searches Section
                 RecentSearchesSection(navController, idUtente)
@@ -93,7 +93,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                 )
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(30.dp))
 
                 // Post Ad Section
                 PostAdSection(navController, idUtente)
@@ -118,26 +118,46 @@ fun Header(idUtente: String) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp),
+            .height(160.dp),
         color = colorScheme.primary,
         shape = RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp)
     ) {
         Column (
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Box (
+            Surface(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)
-            )
+                    .size(70.dp), // Container size remains the same
+                shape = RoundedCornerShape(24.dp), // Rounded rectangular shape
+                color = colorScheme.surface, // Surface color as background
+                shadowElevation = 8.dp // Subtle shadow
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(4.dp) // Padding minimo per icona grande
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.appicon1),
+                        contentDescription = "App Icon",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(4.dp)),
+                        contentScale = ContentScale.Fit // Adatta l'icona mantenendo l'aspect ratio
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "UNINAESTATES25",
+                text = "Bentornato $idUtente",
                 color = colorScheme.onPrimary,
-                style = typography.titleLarge
+                style = typography.bodyMedium
             )
 
             Box (
@@ -198,7 +218,7 @@ fun SearchBar(navController: NavController, idUtente: String) {
                 Text(
                     text = "Cerca casa",
                     color = colorScheme.onPrimary,
-                    style = typography.bodyMedium
+                    style = typography.labelLarge
                 )
             }
         }
@@ -233,17 +253,22 @@ fun RecentSearchesSection(navController: NavController, idUtente: String) {
                     // TODO: Navigate to recent searches screen
                     // navController.navigate(Screen.RecentSearchesScreen.route)
                 },
-                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier
+                    .height(40.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colorScheme.primary
+                    containerColor = colorScheme.primary,
+                    contentColor = colorScheme.onPrimary
                 ),
-                modifier = Modifier.height(36.dp),
-                contentPadding = PaddingValues(horizontal = 18.dp)
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 8.dp,
+                    pressedElevation = 4.dp
+                )
             ) {
                 Text(
                     text = "Vai ad ultime ricerche",
-                    color = colorScheme.onSecondary,
-                    style = typography.labelSmall
+                    color = colorScheme.onPrimary,
+                    style = typography.labelMedium
                 )
             }
         }
@@ -371,18 +396,24 @@ fun PostAdSection(navController: NavController, idUtente: String) {
             onClick = {
                 navController.navigate(Screen.PropertySellScreen.withArgs(idUtente))
             },
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colorScheme.primary
-            ),
             modifier = Modifier
-                .width(200.dp)
-                .height(40.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 36.dp)
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorScheme.primary,
+                contentColor = colorScheme.onPrimary
+            ),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 8.dp,
+                pressedElevation = 4.dp
+            )
         ) {
             Text(
                 text = "Pubblica annuncio",
                 color = colorScheme.onPrimary,
-                style = typography.labelMedium
+                style = typography.labelLarge
             )
         }
     }
