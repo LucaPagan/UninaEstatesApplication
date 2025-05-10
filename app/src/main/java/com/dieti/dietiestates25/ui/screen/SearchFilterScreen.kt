@@ -1,7 +1,11 @@
 package com.dieti.dietiestates25.ui.screen
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.RowScopeInstance.weight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -13,6 +17,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+// Corretto l'import per KeyboardOptions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,384 +30,393 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 
+// Aggiungiamo le opt-in necessarie per le API sperimentali di Material 3, se usate
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchFilterScreen(
     navController: NavController,
     idUtente: String = "utente",
-    ricerca: String = "varcaturo",
-    onNavigateBack: () -> Unit = {}
+    ricerca: String = "varcaturo", // Questo valore potrebbe essere usato per pre-impostare filtri o mostrare contesto
+    onNavigateBack: () -> Unit = { navController.popBackStack() } // Default back navigation
 ) {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colorScheme.background)
-        ) {
-            // Header
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp),
-                color = colorScheme.primary,
-                shape = RoundedCornerShape(bottomStart = 15.dp, bottomEnd = 15.dp)
-            ) {
+        // State per i filtri selezionati
+        var selectedPurchaseType by remember { mutableStateOf<String?>(null) }
+        var selectedBathrooms by remember { mutableStateOf<Int?>(null) }
+        var selectedCondition by remember { mutableStateOf<String?>(null) }
+
+        // State per i valori dei campi di input (es. prezzo, superficie, locali)
+        var minPrice by remember { mutableStateOf("") }
+        var maxPrice by remember { mutableStateOf("") }
+        var minSurface by remember { mutableStateOf("") }
+        var maxSurface by remember { mutableStateOf("") }
+        var minRooms by remember { mutableStateOf("") }
+        var maxRooms by remember { mutableStateOf("") }
+
+
+        Scaffold( // Usiamo Scaffold per una struttura standard con top bar e content
+            topBar = {
+                // Header migliorato come TopAppBar standard
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "SELEZIONA FILTRI",
+                            color = colorScheme.onPrimary,
+                            style = typography.titleMedium,
+                            letterSpacing = 1.sp,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center // Centra il titolo nella TopAppBar
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Indietro",
+                                tint = colorScheme.onPrimary
+                            )
+                        }
+                    },
+                    // Aggiungiamo un pulsante azioni opzionale (es. Reset)
+                    actions = {
+                        TextButton(
+                            onClick = {
+                                // Reset di tutti i filtri
+                                selectedPurchaseType = null
+                                selectedBathrooms = null
+                                selectedCondition = null
+                                minPrice = ""
+                                maxPrice = ""
+                                minSurface = ""
+                                maxSurface = ""
+                                minRooms = ""
+                                maxRooms = ""
+                            },
+                            colors = ButtonDefaults.textButtonColors(contentColor = colorScheme.onPrimary)
+                        ) {
+                            Text(
+                                text = "Reset",
+                                style = typography.labelLarge // Usiamo labelLarge per coerenza con i pulsanti
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = colorScheme.primary // Sfondo Primary
+                    )
+                )
+            },
+            bottomBar = {
+                // Pulsante Cerca fisso in fondo
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxWidth()
+                        .background(colorScheme.background) // Sfondo per la bottom bar
                         .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "SELEZIONA FILTRI",
-                        color = colorScheme.onPrimary,
-                        style = typography.titleMedium,
-                        letterSpacing = 1.sp
-                    )
-                }
-            }
-
-            // Navigation and action buttons
-            var selectedPurchaseType by remember { mutableStateOf<String?>(null) }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Pulsante indietro
-                IconButton(
-                    onClick = onNavigateBack,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Indietro",
-                        tint = colorScheme.onBackground
-                    )
-                }
-
-                // Box centrale per i pulsanti Compra/Affitta
-                Box(
-                    modifier = Modifier
-                        .padding(start = 26.dp)
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
+                    Button(
+                        onClick = {
+                            // TODO: Applica i filtri selezionati e naviga ai risultati
+                            // Esempio: Naviga alla schermata dei risultati con i filtri
+                            // navController.navigate("apartmentListing/${idUtente}?comune=${ricerca}&type=${selectedPurchaseType ?: ""}&minPrice=${minPrice}&maxPrice=${maxPrice}...")
+                        },
                         modifier = Modifier
-                            .wrapContentWidth()
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(colorScheme.onBackground.copy(alpha = 0.1f))
-                            .padding(4.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorScheme.primary,
+                            contentColor = colorScheme.onPrimary
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 8.dp,
+                            pressedElevation = 4.dp
+                        )
                     ) {
-                        listOf("Compra", "Affitta").forEach { option ->
-                            val selected = option == selectedPurchaseType
-                            Button(
-                                onClick = {
-                                    selectedPurchaseType = if (selectedPurchaseType == option) null else option
-                                },
-                                modifier = Modifier
-                                    .height(36.dp)
-                                    .padding(horizontal = 2.dp),
-                                shape = RoundedCornerShape(20.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selected) colorScheme.primary else colorScheme.surface,
-                                    contentColor = if (selected) colorScheme.onPrimary else colorScheme.onSurface
-                                ),
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
-                            ) {
-                                Text(
-                                    text = option,
-                                    style = typography.labelMedium
-                                )
-                            }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Cerca",
+                                tint = colorScheme.onPrimary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Mostra risultati", // Testo più descrittivo
+                                color = colorScheme.onPrimary,
+                                style = typography.labelLarge
+                            )
                         }
                     }
-                }
-
-                // Pulsante Cancella
-                TextButton(onClick = { /* Reset filters */ }) {
-                    Text(
-                        text = "Cancella",
-                        color = colorScheme.primary,
-                        style = typography.labelMedium
-                    )
                 }
             }
-
-            // Scrollable filter content
-            Box(
+        ) { paddingValues ->
+            // Contenuto scrollabile dei filtri
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f, fill = true)
+                    .padding(paddingValues) // Applica il padding dello Scaffold
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .background(colorScheme.background) // Sfondo per il contenuto
+                    .padding(horizontal = 16.dp) // Padding orizzontale per i filtri
             ) {
-                // State per i vari filtri
-                var selectedBathrooms by remember { mutableStateOf<Int?>(null) }
-                var selectedCondition by remember { mutableStateOf<String?>(null) }
+                Spacer(modifier = Modifier.height(16.dp)) // Spazio sotto la TopAppBar
 
-                // Contenuto scrollabile per i filtri
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp)
-                ) {
-                    // Range di prezzo
-                    FilterSection(title = "Prezzo", typography = typography, colorScheme = colorScheme) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                InputField(
-                                    label = "Minimo",
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colorScheme = colorScheme,
-                                    typography = typography
-                                )
-                            }
-                            Box(modifier = Modifier.weight(1f)) {
-                                InputField(
-                                    label = "Massimo",
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colorScheme = colorScheme,
-                                    typography = typography
-                                )
-                            }
-                        }
-                    }
-
-                    // Range di superficie
-                    FilterSection(title = "Superficie (mq)", typography = typography, colorScheme = colorScheme) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                InputField(
-                                    label = "Minimo",
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colorScheme = colorScheme,
-                                    typography = typography
-                                )
-                            }
-                            Box(modifier = Modifier.weight(1f)) {
-                                InputField(
-                                    label = "Massimo",
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colorScheme = colorScheme,
-                                    typography = typography
-                                )
-                            }
-                        }
-                    }
-
-                    // Range di locali
-                    FilterSection(title = "Locali", typography = typography, colorScheme = colorScheme) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                InputField(
-                                    label = "Minimo",
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colorScheme = colorScheme,
-                                    typography = typography
-                                )
-                            }
-                            Box(modifier = Modifier.weight(1f)) {
-                                InputField(
-                                    label = "Massimo",
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colorScheme = colorScheme,
-                                    typography = typography
-                                )
-                            }
-                        }
-                    }
-
-                    // Selezione dei bagni
-                    FilterSection(title = "Bagni", typography = typography, colorScheme = colorScheme) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            listOf(1, 2, 3, ">3").forEach { count ->
-                                val isSelected = when {
-                                    count is Int && selectedBathrooms == count -> true
-                                    count is String && selectedBathrooms != null && selectedBathrooms!! > 3 && count == ">3" -> true
-                                    else -> false
-                                }
-
-                                Box(modifier = Modifier.weight(1f)) {
-                                    Button(
-                                        onClick = {
-                                            selectedBathrooms = if (selectedBathrooms == (if (count is String) 4 else count as Int)) {
-                                                null // Deseleziona se già selezionato
-                                            } else {
-                                                if (count is String) 4 else count as Int
-                                            }
-                                        },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(16.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (isSelected) colorScheme.secondary else colorScheme.secondary.copy(alpha = 0.5f)
-                                        ),
-                                        contentPadding = PaddingValues(0.dp)
-                                    ) {
-                                        Text(
-                                            text = count.toString(),
-                                            color = colorScheme.onSecondary,
-                                            style = typography.labelMedium
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Stato immobile - layout migliorato
-                    FilterSection(title = "Stato immobile", typography = typography, colorScheme = colorScheme) {
-                        // Grid layout organizzato con 2 elementi per riga
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            // Prima riga: 2 elementi
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                // Nuovo
-                                Box(modifier = Modifier.weight(1f)) {
-                                    Button(
-                                        onClick = { selectedCondition = if (selectedCondition == "Nuovo") null else "Nuovo" },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(16.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (selectedCondition == "Nuovo") colorScheme.secondary else colorScheme.secondary.copy(alpha = 0.5f)
-                                        )
-                                    ) {
-                                        Text(
-                                            text = "Nuovo",
-                                            color = colorScheme.onSecondary,
-                                            style = typography.labelMedium
-                                        )
-                                    }
-                                }
-
-                                // Ottimo
-                                Box(modifier = Modifier.weight(1f)) {
-                                    Button(
-                                        onClick = { selectedCondition = if (selectedCondition == "Ottimo") null else "Ottimo" },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(16.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (selectedCondition == "Ottimo") colorScheme.secondary else colorScheme.secondary.copy(alpha = 0.5f)
-                                        )
-                                    ) {
-                                        Text(
-                                            text = "Ottimo",
-                                            color = colorScheme.onSecondary,
-                                            style = typography.labelMedium
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Seconda riga: 2 elementi
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                // Buono
-                                Box(modifier = Modifier.weight(1f)) {
-                                    Button(
-                                        onClick = { selectedCondition = if (selectedCondition == "Buono") null else "Buono" },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(16.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (selectedCondition == "Buono") colorScheme.secondary else colorScheme.secondary.copy(alpha = 0.5f)
-                                        )
-                                    ) {
-                                        Text(
-                                            text = "Buono",
-                                            color = colorScheme.onSecondary,
-                                            style = typography.labelMedium
-                                        )
-                                    }
-                                }
-
-                                // Da ristrutturare
-                                Box(modifier = Modifier.weight(1f)) {
-                                    Button(
-                                        onClick = { selectedCondition = if (selectedCondition == "Da ristrutturare") null else "Da ristrutturare" },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(16.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (selectedCondition == "Da ristrutturare") colorScheme.secondary else colorScheme.secondary.copy(alpha = 0.5f)
-                                        )
-                                    ) {
-                                        Text(
-                                            text = "Da ristrutturare",
-                                            color = colorScheme.onSecondary,
-                                            style = typography.labelMedium,
-                                            textAlign = TextAlign.Center
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Spazio aggiuntivo per eventuali altri filtri
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-            }
-
-            // Search button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Button(
-                    onClick = { /* TODO: Applica filtri e esegui la ricerca */ },
+                // Pulsanti Compra/Affitta migliorati
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colorScheme.primary
-                    )
+                        .clip(RoundedCornerShape(8.dp)) // Contenitore con angoli arrotondati
+                        .background(colorScheme.surface) // Sfondo chiaro per il contenitore
+                        .padding(4.dp), // Padding interno
+                    horizontalArrangement = Arrangement.spacedBy(4.dp), // Spazio tra i pulsanti
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    listOf("Compra", "Affitta").forEach { option ->
+                        val selected = option == selectedPurchaseType
+                        Button(
+                            onClick = {
+                                selectedPurchaseType = if (selected) null else option
+                            },
+                            modifier = Modifier
+                                .weight(1f) // Occupano lo spazio disponibile equamente
+                                .height(40.dp), // Altezza fissa
+                            shape = RoundedCornerShape(6.dp), // Angoli leggermente meno arrotondati per i pulsanti interni
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (selected) colorScheme.primary else Color.Transparent, // Sfondo primary se selezionato, trasparente altrimenti
+                                contentColor = if (selected) colorScheme.onPrimary else colorScheme.onSurface // Testo onPrimary se selezionato, onSurface altrimenti
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 0.dp, // Nessuna ombra predefinita
+                                pressedElevation = 0.dp // Nessuna ombra alla pressione
+                            ),
+                            contentPadding = PaddingValues(horizontal = 8.dp) // Padding ridotto
+                        ) {
+                            Text(
+                                text = option,
+                                style = typography.labelLarge, // Usiamo labelLarge
+                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal // Grassetto se selezionato
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp)) // Spazio sotto i pulsanti Compra/Affitta
+
+                // Sezione Filtri: Prezzo
+                FilterSection(title = "Prezzo", typography = typography, colorScheme = colorScheme) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp) // Spazio tra i campi di input
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Cerca",
-                            tint = colorScheme.onPrimary
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Cerca",
-                            color = colorScheme.onPrimary,
-                            style = typography.labelLarge
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = minPrice,
+                                onValueChange = { minPrice = it },
+                                label = { Text("Minimo") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = colorScheme.primary,
+                                    unfocusedBorderColor = colorScheme.onSurface.copy(alpha = 0.3f),
+                                    focusedLabelColor = colorScheme.primary,
+                                    unfocusedLabelColor = colorScheme.onSurface.copy(alpha = 0.6f),
+                                    cursorColor = colorScheme.primary
+                                ),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number) // Riferimento corretto
+                            )
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = maxPrice,
+                                onValueChange = { maxPrice = it },
+                                label = { Text("Massimo") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = colorScheme.primary,
+                                    unfocusedBorderColor = colorScheme.onSurface.copy(alpha = 0.3f),
+                                    focusedLabelColor = colorScheme.primary,
+                                    unfocusedLabelColor = colorScheme.onSurface.copy(alpha = 0.6f),
+                                    cursorColor = colorScheme.primary
+                                ),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number) // Riferimento corretto
+                            )
+                        }
+                    }
+                }
+
+                // Sezione Filtri: Superficie
+                FilterSection(title = "Superficie (mq)", typography = typography, colorScheme = colorScheme) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = minSurface,
+                                onValueChange = { minSurface = it },
+                                label = { Text("Minimo") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = colorScheme.primary,
+                                    unfocusedBorderColor = colorScheme.onSurface.copy(alpha = 0.3f),
+                                    focusedLabelColor = colorScheme.primary,
+                                    unfocusedLabelColor = colorScheme.onSurface.copy(alpha = 0.6f),
+                                    cursorColor = colorScheme.primary
+                                ),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number) // Riferimento corretto
+                            )
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = maxSurface,
+                                onValueChange = { maxSurface = it },
+                                label = { Text("Massimo") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = colorScheme.primary,
+                                    unfocusedBorderColor = colorScheme.onSurface.copy(alpha = 0.3f),
+                                    focusedLabelColor = colorScheme.primary,
+                                    unfocusedLabelColor = colorScheme.onSurface.copy(alpha = 0.6f),
+                                    cursorColor = colorScheme.primary
+                                ),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number) // Riferimento corretto
+                            )
+                        }
+                    }
+                }
+
+                // Sezione Filtri: Locali
+                FilterSection(title = "Locali", typography = typography, colorScheme = colorScheme) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = minRooms,
+                                onValueChange = { minRooms = it },
+                                label = { Text("Minimo") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = colorScheme.primary,
+                                    unfocusedBorderColor = colorScheme.onSurface.copy(alpha = 0.3f),
+                                    focusedLabelColor = colorScheme.primary,
+                                    unfocusedLabelColor = colorScheme.onSurface.copy(alpha = 0.6f),
+                                    cursorColor = colorScheme.primary
+                                ),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number) // Riferimento corretto
+                            )
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = maxRooms,
+                                onValueChange = { maxRooms = it },
+                                label = { Text("Massimo") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = colorScheme.primary,
+                                    unfocusedBorderColor = colorScheme.onSurface.copy(alpha = 0.3f),
+                                    focusedLabelColor = colorScheme.primary,
+                                    unfocusedLabelColor = colorScheme.onSurface.copy(alpha = 0.6f),
+                                    cursorColor = colorScheme.primary
+                                ),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number) // Riferimento corretto
+                            )
+                        }
+                    }
+                }
+
+                // Sezione Filtri: Bagni
+                FilterSection(title = "Bagni", typography = typography, colorScheme = colorScheme) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp) // Spazio ridotto per più elementi
+                    ) {
+                        listOf(1, 2, 3).forEach { count ->
+                            val isSelected = selectedBathrooms == count
+                            FilterOptionButton(
+                                text = count.toString(),
+                                isSelected = isSelected,
+                                onClick = {
+                                    selectedBathrooms = if (isSelected) null else count
+                                },
+                                colorScheme = colorScheme,
+                                typography = typography
+                            )
+                        }
+                        // Pulsante ">3" separato
+                        val isSelectedMoreThan3 = selectedBathrooms != null && selectedBathrooms!! > 3
+                        FilterOptionButton(
+                            text = ">3",
+                            isSelected = isSelectedMoreThan3,
+                            onClick = {
+                                selectedBathrooms = if (isSelectedMoreThan3) null else 4 // Usiamo un valore arbitrario > 3 per rappresentare ">3"
+                            },
+                            colorScheme = colorScheme,
+                            typography = typography
                         )
                     }
                 }
+
+                // Sezione Filtri: Stato immobile
+                FilterSection(title = "Stato immobile", typography = typography, colorScheme = colorScheme) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            FilterOptionButton(
+                                text = "Nuovo",
+                                isSelected = selectedCondition == "Nuovo",
+                                onClick = { selectedCondition = if (selectedCondition == "Nuovo") null else "Nuovo" },
+                                colorScheme = colorScheme,
+                                typography = typography
+                            )
+                            FilterOptionButton(
+                                text = "Ottimo",
+                                isSelected = selectedCondition == "Ottimo",
+                                onClick = { selectedCondition = if (selectedCondition == "Ottimo") null else "Ottimo" },
+                                colorScheme = colorScheme,
+                                typography = typography
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            FilterOptionButton(
+                                text = "Buono",
+                                isSelected = selectedCondition == "Buono",
+                                onClick = { selectedCondition = if (selectedCondition == "Buono") null else "Buono" },
+                                colorScheme = colorScheme,
+                                typography = typography
+                            )
+                            FilterOptionButton(
+                                text = "Da ristrutturare",
+                                isSelected = selectedCondition == "Da ristrutturare",
+                                onClick = { selectedCondition = if (selectedCondition == "Da ristrutturare") null else "Da ristrutturare" },
+                                colorScheme = colorScheme,
+                                typography = typography
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp)) // Spazio aggiuntivo
             }
         }
     }
@@ -418,36 +436,48 @@ fun FilterSection(
     ) {
         Text(
             text = title,
-            style = typography.bodyLarge.copy(fontWeight = typography.titleSmall.fontWeight),
+            style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold), // Titolo sezione più definito
+            color = colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 8.dp)
         )
         content()
     }
 }
 
+// Composable riutilizzabile per i pulsanti delle opzioni di filtro (Bagni, Stato immobile)
 @Composable
-fun InputField(
-    label: String,
-    modifier: Modifier = Modifier,
+fun FilterOptionButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
     colorScheme: ColorScheme,
     typography: Typography
 ) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(colorScheme.secondary.copy(alpha = 0.5f))
-            .height(48.dp)
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier
+            .weight(1f), // Occupano lo spazio disponibile equamente
+        shape = RoundedCornerShape(8.dp), // Angoli leggermente arrotondati
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = if (isSelected) colorScheme.primary else Color.Transparent, // Sfondo primary se selezionato, trasparente altrimenti
+            contentColor = if (isSelected) colorScheme.onPrimary else colorScheme.onSurface // Testo onPrimary se selezionato, onSurface altrimenti
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (isSelected) colorScheme.primary else colorScheme.onSurface.copy(alpha = 0.5f) // Bordo primary se selezionato, onSurface altrimenti
+        ),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp) // Padding interno
     ) {
         Text(
-            text = label,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 4.dp),
-            style = typography.labelSmall,
-            color = colorScheme.onSurface.copy(alpha = 0.7f)
+            text = text,
+            style = typography.labelLarge, // Usiamo labelLarge
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal, // Grassetto se selezionato
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth() // Assicura che il testo occupi lo spazio disponibile
         )
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
