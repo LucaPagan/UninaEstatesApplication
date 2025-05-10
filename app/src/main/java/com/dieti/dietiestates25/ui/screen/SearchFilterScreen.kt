@@ -2,11 +2,9 @@ package com.dieti.dietiestates25.ui.screen
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.RowScopeInstance.weight
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -73,11 +71,21 @@ fun SearchFilterScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Indietro",
-                                tint = colorScheme.onPrimary
-                            )
+                            IconButton(
+                                onClick = {
+                                    navController.popBackStack()
+                                },
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .background(colorScheme.secondary.copy(alpha = 0.2f), CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Indietro",
+                                    tint = colorScheme.onPrimary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         }
                     },
                     // Aggiungiamo un pulsante azioni opzionale (es. Reset)
@@ -352,7 +360,8 @@ fun SearchFilterScreen(
                                     selectedBathrooms = if (isSelected) null else count
                                 },
                                 colorScheme = colorScheme,
-                                typography = typography
+                                typography = typography,
+                                modifier = Modifier.weight(1f) // Passa il weight qui
                             )
                         }
                         // Pulsante ">3" separato
@@ -364,7 +373,8 @@ fun SearchFilterScreen(
                                 selectedBathrooms = if (isSelectedMoreThan3) null else 4 // Usiamo un valore arbitrario > 3 per rappresentare ">3"
                             },
                             colorScheme = colorScheme,
-                            typography = typography
+                            typography = typography,
+                            modifier = Modifier.weight(1f) // Passa il weight qui
                         )
                     }
                 }
@@ -384,14 +394,16 @@ fun SearchFilterScreen(
                                 isSelected = selectedCondition == "Nuovo",
                                 onClick = { selectedCondition = if (selectedCondition == "Nuovo") null else "Nuovo" },
                                 colorScheme = colorScheme,
-                                typography = typography
+                                typography = typography,
+                                modifier = Modifier.weight(1f) // Passa il weight qui
                             )
                             FilterOptionButton(
                                 text = "Ottimo",
                                 isSelected = selectedCondition == "Ottimo",
                                 onClick = { selectedCondition = if (selectedCondition == "Ottimo") null else "Ottimo" },
                                 colorScheme = colorScheme,
-                                typography = typography
+                                typography = typography,
+                                modifier = Modifier.weight(1f) // Passa il weight qui
                             )
                         }
                         Row(
@@ -403,14 +415,16 @@ fun SearchFilterScreen(
                                 isSelected = selectedCondition == "Buono",
                                 onClick = { selectedCondition = if (selectedCondition == "Buono") null else "Buono" },
                                 colorScheme = colorScheme,
-                                typography = typography
+                                typography = typography,
+                                modifier = Modifier.weight(1f) // Passa il weight qui
                             )
                             FilterOptionButton(
                                 text = "Da ristrutturare",
                                 isSelected = selectedCondition == "Da ristrutturare",
                                 onClick = { selectedCondition = if (selectedCondition == "Da ristrutturare") null else "Da ristrutturare" },
                                 colorScheme = colorScheme,
-                                typography = typography
+                                typography = typography,
+                                modifier = Modifier.weight(1f) // Passa il weight qui
                             )
                         }
                     }
@@ -451,12 +465,12 @@ fun FilterOptionButton(
     isSelected: Boolean,
     onClick: () -> Unit,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    modifier: Modifier = Modifier // Aggiunto parametro modifier per accettare weight dal chiamante
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = Modifier
-            .weight(1f), // Occupano lo spazio disponibile equamente
+        modifier = modifier, // Utilizziamo il modifier passato dall'esterno
         shape = RoundedCornerShape(8.dp), // Angoli leggermente arrotondati
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = if (isSelected) colorScheme.primary else Color.Transparent, // Sfondo primary se selezionato, trasparente altrimenti

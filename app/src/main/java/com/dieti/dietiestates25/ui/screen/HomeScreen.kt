@@ -6,7 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
@@ -21,9 +23,11 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -33,19 +37,20 @@ import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 
-// Dati di esempio per la propertyList
+// Dati di esempio per la propertyList (mantenuti)
 data class Property(
     val id: Int,
     val price: String,
     val type: String,
-    val imageRes: Int
+    val imageRes: Int,
+    val location: String // Added location for better card info
 )
 
 val sampleProperties = listOf(
-    Property(1, "400.000", "Appartamento...", R.drawable.property1),
-    Property(2, "320.000", "Villa...", R.drawable.property2),
-    Property(3, "250.000", "Attico...", R.drawable.property1),
-    Property(4, "180.000", "Bilocale...", R.drawable.property2)
+    Property(1, "400.000 €", "Appartamento", R.drawable.property1, "Napoli"),
+    Property(2, "320.000 €", "Villa", R.drawable.property2, "Roma"),
+    Property(3, "250.000 €", "Attico", R.drawable.property1, "Milano"),
+    Property(4, "180.000 €", "Bilocale", R.drawable.property2, "Torino")
 )
 
 @Composable
@@ -54,57 +59,52 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
 
+        // Refined gradient colors for a softer look
         val gradientColors = listOf(
-            colorScheme.primary.copy(alpha = 0.85f),
-            colorScheme.background,
-            colorScheme.background,
-            colorScheme.primary.copy(alpha = 0.75f)
+            colorScheme.primary.copy(alpha = 0.7f), // Primary with more transparency at top
+            colorScheme.background,              // Background in the middle
+            colorScheme.background,              // Stay background
+            colorScheme.primary.copy(alpha = 0.6f) // Primary with more transparency at bottom
         )
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Brush.verticalGradient(colors = gradientColors))
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Header(idUtente)
 
-                Spacer(modifier = Modifier.height(40.dp))
-
-                // Search Bar Button
-                SearchBar(navController, idUtente)
-
-                Spacer(modifier = Modifier.height(30.dp))
-
-                // Recent Searches Section
-                RecentSearchesSection(navController, idUtente)
-
-                Divider(
-                    modifier = Modifier
-                        .shadow(
-                            elevation = 2.dp,
-                            shape = RectangleShape,
-                            spotColor = Color.Black.copy(alpha = 0.2f)
-                        )
-                        .height(4.dp)
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                )
-
-                Spacer(modifier = Modifier.height(30.dp))
-
-                // Post Ad Section
-                PostAdSection(navController, idUtente)
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Bottom Navigation
+        Scaffold( // Use Scaffold for standard structure
+            bottomBar = {
                 BottomNavigation(navController, idUtente)
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Brush.verticalGradient(colors = gradientColors))
+                    .padding(paddingValues) // Apply padding from Scaffold
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()) // Make content scrollable
+                ) {
+                    Header(idUtente)
 
+                    Spacer(modifier = Modifier.height(32.dp)) // Adjusted spacing
 
+                    // Search Bar Button (Clickable Box)
+                    SearchBar(navController, idUtente)
 
+                    Spacer(modifier = Modifier.height(32.dp)) // Adjusted spacing
+
+                    // Recent Searches Section
+                    RecentSearchesSection(navController, idUtente, sampleProperties)
+
+                    // Removed the heavy Divider with shadow, rely on spacing instead
+
+                    Spacer(modifier = Modifier.height(32.dp)) // Spacing before next section
+
+                    // Post Ad Section
+                    PostAdSection(navController, idUtente)
+
+                    // Removed the weight(1f) Spacer at the end, let content define height with scroll
+                }
             }
         }
     }
@@ -115,118 +115,108 @@ fun Header(idUtente: String) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
 
-    Surface(
+    // Header with softer bottom shape and better aligned content
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(160.dp),
-        color = colorScheme.primary,
-        shape = RoundedCornerShape(bottomStart = 14.dp, bottomEnd = 14.dp)
+            .background(colorScheme.primary) // Solid primary background for simplicity
+            .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)) // Softer rounding
+            .padding(horizontal = 24.dp) // Horizontal padding for content
+            .padding(top = 40.dp, bottom = 24.dp), // Vertical padding
+        contentAlignment = Alignment.BottomStart // Align content to bottom start
     ) {
-        Column (
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween // Space out icon and text
         ) {
+            // App Icon within a clean, smaller container
             Surface(
                 modifier = Modifier
-                    .size(70.dp), // Container size remains the same
-                shape = RoundedCornerShape(24.dp), // Rounded rectangular shape
+                    .size(60.dp), // Smaller size for header icon
+                shape = RoundedCornerShape(16.dp), // Slightly rounded corners
                 color = colorScheme.surface, // Surface color as background
-                shadowElevation = 8.dp // Subtle shadow
+                shadowElevation = 4.dp // Subtle shadow
             ) {
                 Box(
                     modifier = Modifier
-                        .padding(4.dp) // Padding minimo per icona grande
+                        .padding(8.dp) // Padding inside the surface
                         .fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.appicon1),
+                        painter = painterResource(id = R.drawable.appicon1), // Using appicon1
                         contentDescription = "App Icon",
                         modifier = Modifier
                             .fillMaxSize()
-                            .clip(RoundedCornerShape(4.dp)),
-                        contentScale = ContentScale.Fit // Adatta l'icona mantenendo l'aspect ratio
+                            .clip(RoundedCornerShape(8.dp)), // Clip image with slight rounding
+                        contentScale = ContentScale.Fit
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.width(16.dp)) // Spacing between icon and text
 
-            Text(
-                text = "Bentornato $idUtente",
-                color = colorScheme.onPrimary,
-                style = typography.bodyMedium
-            )
-
-            Box (
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp)
-            )
-
-            if (idUtente.isNotEmpty()) {
+            Column(
+                modifier = Modifier.weight(1f) // Allow text column to take available space
+            ) {
                 Text(
-                    text = "Benvenuto $idUtente",
+                    text = "Bentornato",
+                    color = colorScheme.onPrimary.copy(alpha = 0.8f), // Slightly less opaque
+                    style = typography.titleSmall // Adjusted typography
+                )
+                Text(
+                    text = idUtente.ifEmpty { "Utente" }, // Display "Utente" if idUtente is empty
                     color = colorScheme.onPrimary,
-                    style = typography.bodyMedium
+                    style = typography.titleLarge, // More prominent user name
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
     }
 }
+
 
 @Composable
 fun SearchBar(navController: NavController, idUtente: String) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
 
+    // Visually styled search bar (clickable Box)
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
-    ) {
-        Button(
-            onClick = {
+            .clip(RoundedCornerShape(28.dp)) // Highly rounded corners
+            .background(colorScheme.surface) // Use surface color for the bar
+            .clickable {
+                // Navigate to SearchScreen on click
                 navController.navigate(Screen.SearchScreen.withArgs(idUtente))
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 32.dp)
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colorScheme.primary,
-                contentColor = colorScheme.onPrimary
-            ),
-            elevation = ButtonDefaults.buttonElevation(
-                defaultElevation = 8.dp,
-                pressedElevation = 4.dp
-            )
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    tint = colorScheme.onPrimary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Cerca casa",
-                    color = colorScheme.onPrimary,
-                    style = typography.labelLarge
-                )
             }
+            .padding(horizontal = 16.dp, vertical = 12.dp) // Padding inside the bar
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp) // Spacing between icon and text
+        ) {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Cerca",
+                tint = colorScheme.onSurface.copy(alpha = 0.7f) // Softer icon tint
+            )
+            Text(
+                text = "Cerca comune, zona...", // Placeholder text
+                color = colorScheme.onSurface.copy(alpha = 0.7f), // Softer text color
+                style = typography.bodyLarge // Adjusted typography
+            )
         }
     }
 }
 
+
 @Composable
-fun RecentSearchesSection(navController: NavController, idUtente: String) {
+fun RecentSearchesSection(navController: NavController, idUtente: String, properties: List<Property>) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
 
@@ -237,7 +227,7 @@ fun RecentSearchesSection(navController: NavController, idUtente: String) {
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 24.dp) // Consistent horizontal padding
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -245,56 +235,41 @@ fun RecentSearchesSection(navController: NavController, idUtente: String) {
             Text(
                 text = "Ultime ricerche",
                 color = colorScheme.onBackground,
-                style = typography.bodyLarge
+                style = typography.titleMedium, // Use titleMedium for section title
+                fontWeight = FontWeight.SemiBold
             )
 
-            Button(
+            TextButton(
                 onClick = {
                     // TODO: Navigate to recent searches screen
                     // navController.navigate(Screen.RecentSearchesScreen.route)
                 },
-                modifier = Modifier
-                    .height(40.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colorScheme.primary,
-                    contentColor = colorScheme.onPrimary
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 8.dp,
-                    pressedElevation = 4.dp
+                // Removed explicit height and shape, using TextButton defaults
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = colorScheme.primary // Primary color for text button
                 )
             ) {
                 Text(
-                    text = "Vai ad ultime ricerche",
-                    color = colorScheme.onPrimary,
-                    style = typography.labelMedium
+                    text = "Vedi tutte", // More concise text
+                    style = typography.labelLarge // Using labelLarge
                 )
             }
         }
 
-        Divider(
-            modifier = Modifier
-                .padding(vertical = 12.dp)
-                .shadow(
-                    elevation = 2.dp,
-                    shape = RectangleShape,
-                    spotColor = Color.Black.copy(alpha = 0.2f)
-                )
-                .height(4.dp)
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        )
+        // Removed the heavy Divider here
+
+        Spacer(modifier = Modifier.height(12.dp)) // Spacing between title/button and list
 
         // ScrollView orizzontale delle proprietà
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            contentPadding = PaddingValues(horizontal = 24.dp), // Horizontal padding for the LazyRow content
+            horizontalArrangement = Arrangement.spacedBy(16.dp) // Spacing between cards
         ) {
-            items(sampleProperties) { property ->
+            items(properties) { property ->
                 PropertyCard(
                     property = property,
                     navController = navController,
-                    modifier = Modifier.width(240.dp)
+                    modifier = Modifier.width(260.dp) // Slightly wider cards
                 )
             }
         }
@@ -310,68 +285,82 @@ fun PropertyCard(
     val typography = MaterialTheme.typography
     val colorScheme = MaterialTheme.colorScheme
 
-    Box(
+    Card( // Use Material 3 Card
         modifier = modifier
-            .height(160.dp)
-            .padding(8.dp)
-            .clip(RoundedCornerShape(10.dp))
+            .height(200.dp) // Increased card height
             .clickable {
-                navController.navigate(Screen.PropertyScreen.route)
-            }
+                // TODO: Navigate to Property Detail Screen
+                // navController.navigate(Screen.PropertyScreen.withArgs(property.id.toString()))
+            },
+        shape = RoundedCornerShape(12.dp), // Rounded corners for the card
+        colors = CardDefaults.cardColors(
+            containerColor = colorScheme.surface // Use surface color for card background
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp // Subtle elevation
+        )
     ) {
-        Image(
-            painter = painterResource(id = property.imageRes),
-            contentDescription = "Property Image",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-        )
-
-        // Overlay sfumato bianco nella parte inferiore
         Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            colorScheme.secondary.copy(alpha = 0.6f)
-                        ),
-                        startY = 0f,
-                        endY = 80f
-                    )
-                )
-                .height(60.dp)
-        )
-
-        // Prezzo e tipo posizionati sopra l'overlay
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(12.dp)
+            modifier = Modifier.fillMaxSize()
         ) {
-            if (property.price.isNotEmpty()) {
+            Image(
+                painter = painterResource(id = property.imageRes),
+                contentDescription = "Property Image",
+                contentScale = ContentScale.Crop, // Crop to fill the card
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp) // Fixed height for the image
+            )
+
+            // Overlay sfumato nella parte inferiore dell'immagine
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(60.dp) // Height of the gradient overlay
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.7f) // Gradient to a darker, more opaque color for better text contrast
+                            )
+                        )
+                    )
+            )
+
+            // Prezzo, tipo e location posizionati sopra l'overlay scuro
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(12.dp)
+            ) {
                 Text(
                     text = property.price,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color.White, // White text for better contrast on dark overlay
                     style = typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-            }
-
-            if (property.type.isNotEmpty()) {
                 Text(
                     text = property.type,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                    style = typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.9f), // Slightly less opaque white
+                    style = typography.bodyMedium, // Adjusted typography
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                if (property.location.isNotEmpty()) {
+                    Text(
+                        text = property.location,
+                        color = Color.White.copy(alpha = 0.7f), // Even less opaque white for location
+                        style = typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun PostAdSection(navController: NavController, idUtente: String) {
@@ -381,16 +370,28 @@ fun PostAdSection(navController: NavController, idUtente: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 24.dp) // Consistent horizontal padding
             .padding(vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Inserisci il tuo annuncio nell'app",
+            text = "Vuoi vendere o affittare il tuo immobile?",
             color = colorScheme.onBackground,
-            style = typography.bodyLarge
+            style = typography.titleMedium, // Use titleMedium for section title
+            fontWeight = FontWeight.SemiBold,
+            textAlign =  TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp)) // Adjusted spacing
+
+        Text(
+            text = "Inserisci il tuo annuncio in pochi semplici passaggi.",
+            color = colorScheme.onBackground.copy(alpha = 0.8f),
+            style = typography.bodyMedium,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(24.dp)) // Adjusted spacing
 
         Button(
             onClick = {
@@ -398,21 +399,20 @@ fun PostAdSection(navController: NavController, idUtente: String) {
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 36.dp)
                 .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(8.dp), // More standard rounded corners
             colors = ButtonDefaults.buttonColors(
-                containerColor = colorScheme.primary,
-                contentColor = colorScheme.onPrimary
+                containerColor = colorScheme.secondary, // Use secondary color for a different call to action
+                contentColor = colorScheme.onSecondary
             ),
             elevation = ButtonDefaults.buttonElevation(
-                defaultElevation = 8.dp,
-                pressedElevation = 4.dp
+                defaultElevation = 4.dp, // Subtle elevation
+                pressedElevation = 2.dp
             )
         ) {
             Text(
                 text = "Pubblica annuncio",
-                color = colorScheme.onPrimary,
+                color = colorScheme.onSecondary,
                 style = typography.labelLarge
             )
         }
@@ -421,88 +421,84 @@ fun PostAdSection(navController: NavController, idUtente: String) {
 
 @Composable
 fun BottomNavigation(navController: NavController, idUtente: String) {
-    val colorScheme = MaterialTheme.colorScheme
-    val typography = MaterialTheme.typography
-
-    Surface(
-        color = colorScheme.primary,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp)
+    // Using Material 3 NavigationBar and NavigationBarItem
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.primary // Primary color for bottom bar
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BottomNavItem(
-                icon = Icons.Default.Home,
-                label = "Esplora",
-                selected = true,
-                onClick = {
-                    // Già nella schermata home
-                }
-            )
+        // Use weight to distribute items evenly
+        AddItem(
+            icon = Icons.Default.Home,
+            label = "Esplora",
+            selected = true, // Indicate this is the current screen
+            onClick = {
+                // Already on Home, can add logic to scroll to top if needed
+            },
+            colorScheme = MaterialTheme.colorScheme // Pass color scheme
+        )
 
-            BottomNavItem(
-                icon = Icons.Default.Notifications,
-                label = "Notifiche",
-                selected = false,
-                onClick = {
-                    // TODO: Navigate to notifications screen
-                    // navController.navigate(Screen.NotificationsScreen.route)
-                }
-            )
+        AddItem(
+            icon = Icons.Default.Notifications,
+            label = "Notifiche",
+            selected = false,
+            onClick = {
+                // TODO: Navigate to notifications screen
+                // navController.navigate(Screen.NotificationsScreen.route)
+            },
+            colorScheme = MaterialTheme.colorScheme // Pass color scheme
+        )
 
-            BottomNavItem(
-                icon = Icons.Default.Person,
-                label = "Profilo",
-                selected = false,
-                onClick = {
-                    // TODO: Navigate to profile screen
-                    // navController.navigate(Screen.ProfileScreen.route)
-                }
-            )
-        }
+        AddItem(
+            icon = Icons.Default.Person,
+            label = "Profilo",
+            selected = false,
+            onClick = {
+                // TODO: Navigate to profile screen
+                // navController.navigate(Screen.ProfileScreen.route)
+            },
+            colorScheme = MaterialTheme.colorScheme // Pass color scheme
+        )
     }
 }
 
 @Composable
-fun BottomNavItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+fun RowScope.AddItem( // Extension function to use weight
+    icon: ImageVector,
     label: String,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    colorScheme: ColorScheme // Receive color scheme
 ) {
-    val colorScheme = MaterialTheme.colorScheme
-    val typography = MaterialTheme.typography
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .padding(8.dp)
-            .clickable(onClick = onClick)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (selected) colorScheme.onPrimaryContainer else colorScheme.onPrimary,
-            modifier = Modifier.size(24.dp)
-        )
-
-        Text(
-            text = label,
-            color = if (selected) colorScheme.onPrimaryContainer else colorScheme.onPrimary,
-            style = typography.labelSmall
-        )
-    }
+    NavigationBarItem(
+        icon = {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+            )
+        },
+        label = {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall
+            )
+        },
+        selected = selected,
+        onClick = onClick,
+        colors = NavigationBarItemDefaults.colors(
+            selectedIconColor = colorScheme.onPrimary, // Icon color when selected
+            selectedTextColor = colorScheme.onPrimary, // Text color when selected
+            unselectedIconColor = colorScheme.onPrimary.copy(alpha = 0.6f), // Icon color when unselected
+            unselectedTextColor = colorScheme.onPrimary.copy(alpha = 0.6f), // Text color when unselected
+            indicatorColor = colorScheme.primaryContainer // Indicator color (optional, can be set to transparent)
+        ),
+        modifier = Modifier.weight(1f) // Distribute space evenly
+    )
 }
+
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewHomeScreen() {
     // Per la preview, creiamo un NavController fittizio
     val navController = rememberNavController()
-    HomeScreen(navController = navController, idUtente = "")
+    HomeScreen(navController = navController, idUtente = "Danilo") // Example user name
 }
