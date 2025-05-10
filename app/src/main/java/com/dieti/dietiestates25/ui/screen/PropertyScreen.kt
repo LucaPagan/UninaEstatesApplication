@@ -15,13 +15,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.draw.clip
@@ -29,8 +26,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import android.content.Intent
@@ -39,14 +34,21 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import com.dieti.dietiestates25.ui.theme.typography
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -76,30 +78,38 @@ fun PropertyScreen(
                         .padding(innerPadding)
                 ) {
                     // Property Images Section with navigation buttons
+                    // Property Images Section with navigation buttons
                     item {
-                        // State for tracking current image
-                        val totalImages = 10 // Esempio con 10 immagini
-                        val currentImageIndex = remember { mutableStateOf(0) }
+                        val coroutineScope = rememberCoroutineScope()
+
+                        // Elenco delle immagini da mostrare
+                        val propertyImages = listOf(
+                            R.drawable.property1,
+                            R.drawable.property2,
+                            // Aggiungi qui altre immagini
+                            // R.drawable.property4,
+                            // R.drawable.property5,
+                            // ecc.
+                        )
+
+                        val totalImages = propertyImages.size
+                        // Crea un PagerState controllabile
+                        val pagerState = rememberPagerState(initialPage = 0) { totalImages }
 
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(250.dp)
                         ) {
-                            // HorizontalPager for images
+                            // HorizontalPager per le immagini
                             HorizontalPager(
-                                state = rememberPagerState { totalImages },
+                                state = pagerState,
                                 modifier = Modifier.fillMaxSize()
                             ) { page ->
-                                // Update the current index
-                                currentImageIndex.value = page
-
-                                // Property Image
+                                // Immagine della proprietà
                                 Image(
                                     painter = painterResource(
-                                        // Qui dovresti caricare l'immagine corretta in base all'indice
-                                        // Per questo esempio usiamo un placeholder
-                                        id = R.drawable.property2
+                                        id = propertyImages[page]
                                     ),
                                     contentDescription = "Property Image ${page + 1}",
                                     modifier = Modifier.fillMaxSize(),
@@ -107,7 +117,7 @@ fun PropertyScreen(
                                 )
                             }
 
-                            // Image Navigation
+                            // Navigazione immagini
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -115,14 +125,17 @@ fun PropertyScreen(
                                     .padding(16.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                // Previous image button
+                                // Pulsante immagine precedente
                                 IconButton(
                                     onClick = {
-                                        if (currentImageIndex.value > 0) {
-                                            currentImageIndex.value -= 1
-                                        } else {
-                                            // Loop to the last image
-                                            currentImageIndex.value = totalImages - 1
+                                        // Usa coroutine per animare lo scorrimento
+                                        coroutineScope.launch {
+                                            val targetPage = if (pagerState.currentPage > 0) {
+                                                pagerState.currentPage - 1
+                                            } else {
+                                                totalImages - 1 // Torna all'ultima immagine
+                                            }
+                                            pagerState.animateScrollToPage(targetPage)
                                         }
                                     },
                                     modifier = Modifier
@@ -130,13 +143,13 @@ fun PropertyScreen(
                                         .background(colorScheme.onBackground.copy(alpha = 0.6f), CircleShape)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.KeyboardArrowLeft,
+                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                                         contentDescription = "Previous Image",
                                         tint = colorScheme.background
                                     )
                                 }
 
-                                // Image counter indicator
+                                // Indicatore del contatore immagini
                                 Box(
                                     modifier = Modifier
                                         .background(
@@ -146,20 +159,24 @@ fun PropertyScreen(
                                         .padding(horizontal = 12.dp, vertical = 4.dp)
                                 ) {
                                     Text(
-                                        text = "${currentImageIndex.value + 1}/$totalImages",
+                                        // Usa pagerState.currentPage invece di currentImageIndex
+                                        text = "${pagerState.currentPage + 1}/$totalImages",
                                         color = colorScheme.background,
                                         style = typography.labelMedium
                                     )
                                 }
 
-                                // Next image button
+                                // Pulsante immagine successiva
                                 IconButton(
                                     onClick = {
-                                        if (currentImageIndex.value < totalImages - 1) {
-                                            currentImageIndex.value += 1
-                                        } else {
-                                            // Loop to the first image
-                                            currentImageIndex.value = 0
+                                        // Usa coroutine per animare lo scorrimento
+                                        coroutineScope.launch {
+                                            val targetPage = if (pagerState.currentPage < totalImages - 1) {
+                                                pagerState.currentPage + 1
+                                            } else {
+                                                0 // Torna alla prima immagine
+                                            }
+                                            pagerState.animateScrollToPage(targetPage)
                                         }
                                     },
                                     modifier = Modifier
@@ -167,7 +184,7 @@ fun PropertyScreen(
                                         .background(colorScheme.onBackground.copy(alpha = 0.6f), CircleShape)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.KeyboardArrowRight,
+                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                         contentDescription = "Next Image",
                                         tint = colorScheme.background
                                     )
@@ -562,9 +579,12 @@ fun PropertyScreen(
                     },
                     title = { /* Empty title */ },
                     actions = {
+                        val isFavorite = remember { mutableStateOf(false) }
+
                         IconButton(
                             onClick = {
 
+                                isFavorite.value = !isFavorite.value
                             },
                             modifier = Modifier
                                 .size(40.dp)
@@ -573,7 +593,7 @@ fun PropertyScreen(
                             Icon(
                                 imageVector = Icons.Default.Favorite,
                                 contentDescription = "Favorite",
-                                tint = colorScheme.onPrimary
+                                tint = if (isFavorite.value) colorScheme.error else colorScheme.onPrimary
                             )
                         }
                     },
