@@ -289,8 +289,7 @@ fun PropertyCard(
         modifier = modifier
             .height(200.dp) // Increased card height
             .clickable {
-                // TODO: Navigate to Property Detail Screen
-                // navController.navigate(Screen.PropertyScreen.withArgs(property.id.toString()))
+                navController.navigate(Screen.PropertyScreen.route)
             },
         shape = RoundedCornerShape(12.dp), // Rounded corners for the card
         colors = CardDefaults.cardColors(
