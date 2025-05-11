@@ -59,6 +59,7 @@ dependencies {
 
     // Gson per la serializzazione JSON (usato in PreferenceManager)
     implementation(libs.gson)
+    implementation(libs.androidx.espresso.core)
 
     // Debug
     debugImplementation(libs.ui.tooling)

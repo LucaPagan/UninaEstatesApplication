@@ -697,7 +697,5 @@ fun SimilarPropertyCard(
 @Composable
 fun PropertyDetailScreenPreview() {
     val navController = rememberNavController()
-    DietiEstatesTheme {
-        PropertyScreen(navController = navController)
-    }
+    PropertyScreen(navController = navController)
 }
