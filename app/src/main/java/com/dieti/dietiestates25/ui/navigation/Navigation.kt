@@ -126,5 +126,9 @@ fun Navigation() {
         composable(route = Screen.AppointmentBookingScreen.route){
             AppointmentBookingScreen(navController = navController)
         }
+
+        composable(route = Screen.NotificationScreen.route){
+            Screen.NotificationScreen(navController = navController)
+        }
     }
 }

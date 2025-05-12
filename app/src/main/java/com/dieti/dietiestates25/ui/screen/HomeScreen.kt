@@ -10,20 +10,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
+import com.dieti.dietiestates25.ui.components.AppBottomNavigation
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 
@@ -70,7 +65,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
 
         Scaffold( // Use Scaffold for standard structure
             bottomBar = {
-                BottomNavigation(navController, idUtente)
+                AppBottomNavigation(navController = navController)
             }
         ) { paddingValues ->
             Box(
@@ -417,82 +412,6 @@ fun PostAdSection(navController: NavController, idUtente: String) {
         }
     }
 }
-
-@Composable
-fun BottomNavigation(navController: NavController, idUtente: String) {
-    // Using Material 3 NavigationBar and NavigationBarItem
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.primary // Primary color for bottom bar
-    ) {
-        // Use weight to distribute items evenly
-        AddItem(
-            icon = Icons.Default.Home,
-            label = "Esplora",
-            selected = true, // Indicate this is the current screen
-            onClick = {
-                // Already on Home, can add logic to scroll to top if needed
-            },
-            colorScheme = MaterialTheme.colorScheme // Pass color scheme
-        )
-
-        AddItem(
-            icon = Icons.Default.Notifications,
-            label = "Notifiche",
-            selected = false,
-            onClick = {
-                // TODO: Navigate to notifications screen
-                // navController.navigate(Screen.NotificationsScreen.route)
-            },
-            colorScheme = MaterialTheme.colorScheme // Pass color scheme
-        )
-
-        AddItem(
-            icon = Icons.Default.Person,
-            label = "Profilo",
-            selected = false,
-            onClick = {
-                // TODO: Navigate to profile screen
-                // navController.navigate(Screen.ProfileScreen.route)
-            },
-            colorScheme = MaterialTheme.colorScheme // Pass color scheme
-        )
-    }
-}
-
-@Composable
-fun RowScope.AddItem( // Extension function to use weight
-    icon: ImageVector,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    colorScheme: ColorScheme // Receive color scheme
-) {
-    NavigationBarItem(
-        icon = {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-            )
-        },
-        label = {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall
-            )
-        },
-        selected = selected,
-        onClick = onClick,
-        colors = NavigationBarItemDefaults.colors(
-            selectedIconColor = colorScheme.onPrimary, // Icon color when selected
-            selectedTextColor = colorScheme.onPrimary, // Text color when selected
-            unselectedIconColor = colorScheme.onPrimary.copy(alpha = 0.6f), // Icon color when unselected
-            unselectedTextColor = colorScheme.onPrimary.copy(alpha = 0.6f), // Text color when unselected
-            indicatorColor = colorScheme.primaryContainer // Indicator color (optional, can be set to transparent)
-        ),
-        modifier = Modifier.weight(1f) // Distribute space evenly
-    )
-}
-
 
 @Preview(showBackground = true)
 @Composable
