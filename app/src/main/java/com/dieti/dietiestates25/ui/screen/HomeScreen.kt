@@ -65,7 +65,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
 
         Scaffold( // Use Scaffold for standard structure
             bottomBar = {
-                AppBottomNavigation(navController = navController)
+                AppBottomNavigation(navController = navController, idUtente = idUtente)
             }
         ) { paddingValues ->
             Box(

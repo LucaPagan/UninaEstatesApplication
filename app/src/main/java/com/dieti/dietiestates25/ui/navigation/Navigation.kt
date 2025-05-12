@@ -15,6 +15,7 @@ import com.dieti.dietiestates25.ui.screen.WelcomeScreen
 import com.dieti.dietiestates25.ui.screen.PropertyScreen
 import com.dieti.dietiestates25.ui.screen.AppointmentBookingScreen
 import com.dieti.dietiestates25.ui.screen.PropertySellScreen
+import com.dieti.dietiestates25.ui.screen.NotificationScreen
 
 
 @Composable
@@ -128,7 +129,7 @@ fun Navigation() {
         }
 
         composable(route = Screen.NotificationScreen.route){
-            Screen.NotificationScreen(navController = navController)
+            NotificationScreen(navController = navController)
         }
     }
 }

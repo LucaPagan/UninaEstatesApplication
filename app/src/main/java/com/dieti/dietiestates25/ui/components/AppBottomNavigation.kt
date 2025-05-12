@@ -25,12 +25,12 @@ import com.dieti.dietiestates25.ui.navigation.Screen
 // Definisci i tuoi elementi di navigazione
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
     object Home : BottomNavItem(Screen.HomeScreen.route, Icons.Default.Home, "Esplora")
-    object Notification : BottomNavItem(Screen.NotificationScreen.route, Icons.Default.Notifications, "Notifiche")
+    object Notifications : BottomNavItem(Screen.NotificationScreen.route, Icons.Default.Notifications, "Notifiche")
     //object Profile : BottomNavItem(Screen.ProfileScreen.route, Icons.Default.Person, "Profilo")
 }
 
 @Composable
-fun AppBottomNavigation(navController: NavController) {
+fun AppBottomNavigation(navController: NavController, idUtente: String = "sconosciuto") {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -40,12 +40,12 @@ fun AppBottomNavigation(navController: NavController) {
     ) {
         val items = listOf(
             BottomNavItem.Home,
-            BottomNavItem.Notification,
+            BottomNavItem.Notifications,
             //BottomNavItem.Profile
         )
 
         items.forEach { item ->
-            val selected = currentRoute == item.route
+            val selected = isRouteSelected(currentRoute, item.route)
             AddItem(
                 item = item,
                 currentRoute = currentRoute,
@@ -54,6 +54,13 @@ fun AppBottomNavigation(navController: NavController) {
             )
         }
     }
+}
+
+// Funzione per verificare la corrispondenza della route
+fun isRouteSelected(currentRoute: String?, itemRoute: String): Boolean {
+    // Se la route contiene argomenti (come home_screen/{idUtente}),
+    // verifica che inizi con la route base
+    return currentRoute?.startsWith(itemRoute) == true
 }
 
 @Composable
@@ -92,13 +99,13 @@ fun RowScope.AddItem(
             },
             selected = selected,
             onClick = {
-                if (currentRoute != item.route) {
-                    navController.navigate(item.route) {
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
+                if (!isRouteSelected(currentRoute, item.route)) {
+                    // Se siamo nella home, potremmo dover gestire l'argomento idUtente
+                    if (item.route == Screen.HomeScreen.route) {
+                        // Passa un valore di default per idUtente
+                        navController.navigate("${item.route}/utente")
+                    } else {
+                        navController.navigate(item.route)
                     }
                 }
             },
