@@ -145,7 +145,7 @@ fun NotificationScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = TealVibrant, // Usa il colore personalizzato
+                    containerColor = TealVibrant,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White,
                     actionIconContentColor = Color.White

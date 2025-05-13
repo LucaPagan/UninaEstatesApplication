@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION", "DEPRECATION")
+
 package com.dieti.dietiestates25.ui.screen
 
 import androidx.compose.foundation.Image
@@ -42,12 +44,30 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme.colorScheme
 import com.dieti.dietiestates25.ui.theme.typography
 
+//Status bar
+import android.app.Activity
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApartmentListingScreen(navController: NavController, idUtente: String, comune: String) {
     DietiEstatesTheme {
         val colorScheme = colorScheme
         val typography = MaterialTheme.typography
+
+        val view = LocalView.current
+        if (!view.isInEditMode) {
+            SideEffect {
+                val window = (view.context as Activity).window
+                colorScheme.primary.toArgb().also { window.statusBarColor = it }
+                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+                colorScheme.primary.toArgb().also { window.navigationBarColor = it }
+                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
+            }
+        }
 
         val scrollState = rememberScrollState()
 
@@ -78,6 +98,7 @@ fun ApartmentListingScreen(navController: NavController, idUtente: String, comun
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .background(Brush.verticalGradient(colorStops = gradientColors))
         ) {
             Column(
@@ -325,7 +346,7 @@ fun HeaderBar(
                             .size(16.dp)
                             .align(Alignment.TopEnd)
                             .offset(x = (-4).dp, y = 4.dp),
-                        containerColor = colorScheme.tertiary
+                        containerColor = colorScheme.onBackground
                     ) { }
                 }
             }
