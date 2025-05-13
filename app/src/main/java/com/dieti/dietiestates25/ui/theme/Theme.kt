@@ -35,7 +35,8 @@ private val LightColors = lightColorScheme(
     onSurface = GrayBlue,
     scrim = Orange,
     error = Color.Red,
-    surfaceDim = Color.Transparent
+    surfaceDim = Color.Transparent,
+    surfaceTint = Color(0xFFFFD700)
 )
 
 // Dark theme colors
@@ -52,7 +53,8 @@ private val DarkColors = darkColorScheme(
     onSurface = Color.White,
     scrim = Orange,
     error = Color.Red,
-    surfaceDim = Color.Transparent
+    surfaceDim = Color.Transparent,
+    surfaceTint = Color(0xFFFFD700)
 )
 
 // Typography

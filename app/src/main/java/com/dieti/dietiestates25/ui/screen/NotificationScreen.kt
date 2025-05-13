@@ -1,4 +1,9 @@
 package com.dieti.dietiestates25.ui.screen
+import com.dieti.dietiestates25.ui.components.AppBottomNavigation
+import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
@@ -8,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.More // Icona usata per BADGE
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
@@ -20,7 +24,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,13 +31,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.ui.components.AppBottomNavigation
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-
-// Definizione colori (sostituire con quelli del tema se disponibili)
-val TealVibrant = Color(0xFF00796B) // Esempio di colore Teal Vibrante
-val TealLight = Color(0xFFB2DFDB)  // Esempio di colore Teal Chiaro
+import com.dieti.dietiestates25.ui.navigation.Screen
 
 // Data class to represent a notification
 data class Notification(
@@ -119,8 +116,14 @@ fun NotificationScreen(
     idUtente: String = "sconosciuto",
     viewModel: NotificationsViewModel = viewModel()
 ) {
-    val currentTab by viewModel.currentTab.collectAsState()
-    val notifications = viewModel.getFilteredNotifications()
+    DietiEstatesTheme {
+
+
+        val colorScheme = MaterialTheme.colorScheme
+        val typography = MaterialTheme.typography
+
+        val currentTab by viewModel.currentTab.collectAsState()
+        val notifications = viewModel.getFilteredNotifications()
 
     Scaffold(
         topBar = {
@@ -170,19 +173,71 @@ fun NotificationScreen(
                 onTabSelected = { viewModel.setCurrentTab(it) }
             )
 
-            // Notification list
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp) // Padding per la lista
-            ) {
-                items(notifications, key = { it.id }) { notification -> // Aggiunta key per performance
-                    NotificationItem(
-                        notification = notification,
-                        onToggleFavorite = { viewModel.toggleFavorite(notification.id) }
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(text = "Notifiche")
+                    },
+                    actions = {
+                        IconButton(onClick = { /* Apri menu opzioni */ }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Menu"
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = colorScheme.primary, // Usa il colore personalizzato
+                        titleContentColor = colorScheme.onPrimary,
+                        navigationIconContentColor = colorScheme.onPrimary,
+                        actionIconContentColor = colorScheme.onPrimary
                     )
-                    Spacer(modifier = Modifier.height(16.dp)) // Spazio tra item
+                )
+            },
+            bottomBar = {
+                // Usa il Composable BottomNavigation definito sotto
+                AppBottomNavigation(navController = navController, idUtente = idUtente)
+            }
+        ) { paddingValues ->
+            // Applica paddingValues al contenitore principale per evitare sovrapposizioni
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues) // Applicare qui i padding
+                    .fillMaxSize()
+                    .background(colorScheme.background) // Sfondo bianco per l'area contenuto
+            ) {
+                // Tab selectors
+                NotificationTabs(
+                    currentTab = currentTab,
+                    onTabSelected = { viewModel.setCurrentTab(it) },
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    navController = navController
+                )
+
+                // Notification list
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentPadding = PaddingValues(
+                        horizontal = 16.dp,
+                        vertical = 16.dp
+                    ) // Padding per la lista
+                ) {
+                    items(
+                        notifications,
+                        key = { it.id }) { notification -> // Aggiunta key per performance
+                        NotificationItem(
+                            notification = notification,
+                            onToggleFavorite = { viewModel.toggleFavorite(notification.id) },
+                            colorScheme = colorScheme,
+                            typography = typography
+                        )
+                        Spacer(modifier = Modifier.height(16.dp)) // Spazio tra item
+                    }
                 }
             }
         }
@@ -192,14 +247,18 @@ fun NotificationScreen(
 @Composable
 fun NotificationTabs(
     currentTab: NotificationsViewModel.NotificationTab,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    navController: NavController,
     onTabSelected: (NotificationsViewModel.NotificationTab) -> Unit
 ) {
     Row(
         modifier = Modifier
+            .clickable(onClick = { navController.navigate(Screen.NotificationDetailScreen.route) })
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 16.dp) // Padding esterno per i tabs
             .clip(RoundedCornerShape(25.dp))
-            .background(TealVibrant)
+            .background(colorScheme.primary)
             .padding(4.dp), // Padding interno per i bottoni
         horizontalArrangement = Arrangement.SpaceEvenly // Distribuzione uniforme
     ) {
@@ -207,21 +266,27 @@ fun NotificationTabs(
             text = "Recenti",
             isSelected = currentTab == NotificationsViewModel.NotificationTab.RECENT,
             onClick = { onTabSelected(NotificationsViewModel.NotificationTab.RECENT) },
-            modifier = Modifier.weight(1f) // Occupa spazio equamente
+            modifier = Modifier.weight(1f),
+            colorScheme = colorScheme,
+            typography = typography
         )
 
         TabButton(
             text = "Vecchie",
             isSelected = currentTab == NotificationsViewModel.NotificationTab.OLD,
             onClick = { onTabSelected(NotificationsViewModel.NotificationTab.OLD) },
-            modifier = Modifier.weight(1f) // Occupa spazio equamente
+            modifier = Modifier.weight(1f),
+            colorScheme = colorScheme,
+            typography = typography
         )
 
         TabButton(
             text = "Salvate",
             isSelected = currentTab == NotificationsViewModel.NotificationTab.SAVED,
             onClick = { onTabSelected(NotificationsViewModel.NotificationTab.SAVED) },
-            modifier = Modifier.weight(1f) // Occupa spazio equamente
+            modifier = Modifier.weight(1f),
+            colorScheme = colorScheme,
+            typography = typography
         )
     }
 }
@@ -231,22 +296,23 @@ fun TabButton(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    colorScheme: ColorScheme,
+    typography: Typography,
 ) {
     Box(
         modifier = modifier
             .padding(horizontal = 4.dp) // Spazio tra i bottoni
             .clip(RoundedCornerShape(25.dp))
-            .background(if (isSelected) TealLight else Color.Transparent)
+            .background(if (isSelected) colorScheme.secondary else colorScheme.surfaceDim)
             .clickable(onClick = onClick)
             .padding(vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.labelLarge,
-            color = if (isSelected) Color.Black else Color.White,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            style = if (isSelected) typography.labelLarge.copy(fontWeight = FontWeight.Bold) else typography.labelLarge,
+            color = if (isSelected) colorScheme.onSecondary else colorScheme.onPrimary,
         )
     }
 }
@@ -254,6 +320,8 @@ fun TabButton(
 @Composable
 fun NotificationItem(
     notification: Notification,
+    colorScheme: ColorScheme,
+    typography: Typography,
     onToggleFavorite: () -> Unit
 ) {
     Card(
@@ -261,7 +329,7 @@ fun NotificationItem(
             .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = TealVibrant // Sfondo della card
+            containerColor = colorScheme.primary // Sfondo della card
         )
     ) {
         Row(
@@ -275,7 +343,7 @@ fun NotificationItem(
                 modifier = Modifier
                     .size(64.dp) // Leggermente ridotto per bilanciare
                     .clip(RoundedCornerShape(12.dp))
-                    .background(TealLight)
+                    .background(colorScheme.secondary)
                     .padding(8.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -287,7 +355,7 @@ fun NotificationItem(
                     },
                     contentDescription = "Notification Icon",
                     modifier = Modifier.size(32.dp),
-                    tint = Color.Black
+                    tint = colorScheme.onSecondary
                 )
             }
 
@@ -300,17 +368,17 @@ fun NotificationItem(
             ) {
                 Text(
                     text = notification.senderType,
-                    style = MaterialTheme.typography.titleMedium, // Leggermente più grande
+                    style = typography.titleMedium, // Leggermente più grande
                     fontWeight = FontWeight.Bold,
-                    color = Color.White // Cambiato in bianco per contrasto su TealVibrant
+                    color = colorScheme.onPrimary
                 )
 
                 Spacer(modifier = Modifier.height(4.dp)) // Spazio tra i testi
 
                 Text(
                     text = notification.message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.8f) // Bianco semi-trasparente per il messaggio
+                    style = typography.bodyMedium,
+                    color = colorScheme.onPrimary.copy(alpha = 0.8f) // Bianco semi-trasparente per il messaggio
                 )
             }
 
@@ -320,7 +388,7 @@ fun NotificationItem(
                     imageVector = if (notification.isFavorite)
                         Icons.Filled.Star else Icons.Outlined.Star,
                     contentDescription = "Toggle Favorite",
-                    tint = if (notification.isFavorite) Color(0xFFFFD700) else Color.White // Giallo oro e Bianco
+                    tint = if (notification.isFavorite) colorScheme.surfaceTint else colorScheme.onPrimary // Giallo oro e Bianco
                 )
             }
         }

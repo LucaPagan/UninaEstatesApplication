@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,6 +41,9 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
@@ -62,6 +66,17 @@ fun AppointmentBookingScreen(
         // Calculate actual safe area padding
         val topPadding = maxOf(statusBarHeight, displayCutoutPadding.calculateTopPadding()) + 4.dp
         val bottomPadding = navigationBarHeight + 4.dp
+        val view = LocalView.current
+
+        if (!view.isInEditMode) {
+            SideEffect {
+                val window = (view.context as Activity).window
+                colorScheme.primary.toArgb().also { window.statusBarColor = it }
+                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+                colorScheme.primary.toArgb().also { window.navigationBarColor = it }
+                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
+            }
+        }
 
         Box(
             modifier = Modifier
@@ -72,6 +87,7 @@ fun AppointmentBookingScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding() // Add padding for status bar
+                    .navigationBarsPadding()
             ) {
                 AppointmentHeader(navController, colorScheme, typography)
 

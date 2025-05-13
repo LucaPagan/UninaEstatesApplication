@@ -1,4 +1,7 @@
 package com.dieti.dietiestates25.ui.screen
+import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+
+import android.app.Activity
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.infiniteRepeatable
@@ -67,7 +70,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,10 +91,24 @@ fun PriceProposalScreen(
         val keyboardController = LocalSoftwareKeyboardController.current
         val focusManager = LocalFocusManager.current
         val haptic = LocalHapticFeedback.current
+        val view = LocalView.current
+
+        if (!view.isInEditMode) {
+            SideEffect {
+                val window = (view.context as Activity).window
+                colorScheme.primary.toArgb().also { window.statusBarColor = it }
+                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+                colorScheme.primary.toArgb().also { window.navigationBarColor = it }
+                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
+            }
+        }
 
         Scaffold(
             // Gestisce automaticamente insets per status bar, navigation bar e keyboard
+
             modifier = Modifier.fillMaxSize(),
+
+
             topBar = {
                 TopAppBar(
                     title = {
@@ -119,7 +139,7 @@ fun PriceProposalScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .navigationBarsPadding() // Gestisce la navigation bar di Android
+                        .navigationBarsPadding()
                 ) {
                     HorizontalDivider(color = colorScheme.onBackground, thickness = 1.dp)
                     Box(
