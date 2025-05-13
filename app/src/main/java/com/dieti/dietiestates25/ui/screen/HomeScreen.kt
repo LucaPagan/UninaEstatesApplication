@@ -1,5 +1,6 @@
 package com.dieti.dietiestates25.ui.screen
 
+import android.app.Activity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,35 +14,79 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+// import androidx.compose.ui.res.stringResource // Import if you use stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
+import com.dieti.dietiestates25.ui.AppIconDisplay
+import com.dieti.dietiestates25.ui.AppSecondaryButton
+import com.dieti.dietiestates25.ui.ClickableSearchBar
+import com.dieti.dietiestates25.ui.TitledSection
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 
-// Dati di esempio per la propertyList (mantenuti)
+// --- Dimensions for HomeScreen ---
+private val HeaderClipBottomRadius_Home = 24.dp
+private val HeaderPaddingHorizontal_Home = 24.dp
+private val HeaderPaddingTop_Home = 40.dp
+private val HeaderPaddingBottom_Home = 24.dp
+private val HeaderIconSize_Home = 60.dp // Parameter for AppIconDisplay
+private val HeaderIconShapeRadius_Home = 16.dp // Parameter for AppIconDisplay
+private val HeaderIconTextSpacing_Home = 16.dp
+
+private val MainContentSpacerHeight_Home = 32.dp
+
+// SearchBar dimensions are now mostly within ClickableSearchBar or its parameters
+// private val SearchBarOuterPaddingHorizontal_Home = 24.dp // Used by ClickableSearchBar default
+
+private val SectionPaddingVertical_Home = 16.dp
+// SectionTitlePaddingHorizontal_Home now DefaultSectionTitlePaddingHorizontal from TitledSection
+// SectionTitleContentSpacing_Home now DefaultSectionTitleContentSpacing from TitledSection
+
+private val HorizontalListPadding_Home = 24.dp
+private val HorizontalListItemSpacing_Home = 16.dp
+
+private val PropertyCardWidth_Home = 260.dp
+private val PropertyCardHeight_Home = 200.dp
+private val PropertyCardShapeRadius_Home = 12.dp
+private val PropertyCardElevation_Home = 4.dp
+private val PropertyCardImageHeight_Home = 140.dp
+private val PropertyCardGradientOverlayHeight_Home = 60.dp
+private val PropertyCardTextPadding_Home = 12.dp
+
+private val PostAdSectionOuterPaddingHorizontal_Home = 24.dp
+private val PostAdSectionOuterPaddingVertical_Home = 24.dp
+private val PostAdTitleSubtitleSpacing_Home = 12.dp
+private val PostAdSubtitleButtonSpacing_Home = 24.dp
+// PostAdButtonHeight and ShapeRadius now part of AppSecondaryButton defaults
+
+// Sample Data for HomeScreen (remains the same)
 data class Property(
     val id: Int,
     val price: String,
     val type: String,
     val imageRes: Int,
-    val location: String // Added location for better card info
+    val location: String
 )
 
-val sampleProperties = listOf(
+val sampleProperties_Home = listOf( // Renamed to avoid conflict if in same file scope
     Property(1, "400.000 €", "Appartamento", R.drawable.property1, "Napoli"),
     Property(2, "320.000 €", "Villa", R.drawable.property2, "Roma"),
     Property(3, "250.000 €", "Attico", R.drawable.property1, "Milano"),
@@ -52,18 +97,28 @@ val sampleProperties = listOf(
 fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
-        val typography = MaterialTheme.typography
+        // val typography = MaterialTheme.typography // Retrieve if needed directly
 
-        // Refined gradient colors for a softer look
+        val view = LocalView.current
+        if (!view.isInEditMode) {
+            SideEffect {
+                val window = (view.context as Activity).window
+                val primaryColorArgb = colorScheme.primary.toArgb()
+                window.statusBarColor = primaryColorArgb
+                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+                window.navigationBarColor = primaryColorArgb
+                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
+            }
+        }
+
         val gradientColors = listOf(
-            colorScheme.primary.copy(alpha = 0.7f), // Primary with more transparency at top
-            colorScheme.background,              // Background in the middle
-            colorScheme.background,              // Stay background
-            colorScheme.primary.copy(alpha = 0.6f) // Primary with more transparency at bottom
+            colorScheme.primary.copy(alpha = 0.7f),
+            colorScheme.background,
+            colorScheme.background,
+            colorScheme.primary.copy(alpha = 0.6f)
         )
 
-
-        Scaffold( // Use Scaffold for standard structure
+        Scaffold(
             bottomBar = {
                 AppBottomNavigation(navController = navController, idUtente = idUtente)
             }
@@ -72,33 +127,36 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Brush.verticalGradient(colors = gradientColors))
-                    .padding(paddingValues) // Apply padding from Scaffold
+                    .padding(paddingValues)
+                    .statusBarsPadding()
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(rememberScrollState()) // Make content scrollable
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    Header(idUtente)
+                    HomeScreenHeader(idUtente = idUtente) // Renamed to avoid conflict if Header is too generic
+                    Spacer(modifier = Modifier.height(MainContentSpacerHeight_Home))
 
-                    Spacer(modifier = Modifier.height(32.dp)) // Adjusted spacing
+                    ClickableSearchBar(
+                        // placeholderText = stringResource(R.string.home_search_placeholder),
+                        placeholderText = "Cerca comune, zona...",
+                        onClick = { navController.navigate(Screen.SearchScreen.withArgs(idUtente)) }
+                        // Modifier can be passed if specific layout needs beyond default padding are required
+                    )
 
-                    // Search Bar Button (Clickable Box)
-                    SearchBar(navController, idUtente)
+                    Spacer(modifier = Modifier.height(MainContentSpacerHeight_Home))
 
-                    Spacer(modifier = Modifier.height(32.dp)) // Adjusted spacing
+                    HomeScreenRecentSearchesSection( // Renamed
+                        navController = navController,
+                        idUtente = idUtente,
+                        properties = sampleProperties_Home
+                    )
 
-                    // Recent Searches Section
-                    RecentSearchesSection(navController, idUtente, sampleProperties)
+                    Spacer(modifier = Modifier.height(MainContentSpacerHeight_Home))
 
-                    // Removed the heavy Divider with shadow, rely on spacing instead
-
-                    Spacer(modifier = Modifier.height(32.dp)) // Spacing before next section
-
-                    // Post Ad Section
-                    PostAdSection(navController, idUtente)
-
-                    // Removed the weight(1f) Spacer at the end, let content define height with scroll
+                    HomeScreenPostAdSection(navController = navController, idUtente = idUtente) // Renamed
+                    Spacer(modifier = Modifier.height(MainContentSpacerHeight_Home))
                 }
             }
         }
@@ -106,64 +164,43 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
 }
 
 @Composable
-fun Header(idUtente: String) {
+fun HomeScreenHeader(idUtente: String) { // Renamed from Header
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
 
-    // Header with softer bottom shape and better aligned content
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colorScheme.primary) // Solid primary background for simplicity
-            .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)) // Softer rounding
-            .padding(horizontal = 24.dp) // Horizontal padding for content
-            .padding(top = 40.dp, bottom = 24.dp), // Vertical padding
-        contentAlignment = Alignment.BottomStart // Align content to bottom start
+            .background(colorScheme.primary)
+            .clip(RoundedCornerShape(bottomStart = HeaderClipBottomRadius_Home, bottomEnd = HeaderClipBottomRadius_Home))
+            .padding(horizontal = HeaderPaddingHorizontal_Home)
+            .padding(top = HeaderPaddingTop_Home, bottom = HeaderPaddingBottom_Home),
+        contentAlignment = Alignment.BottomStart
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween // Space out icon and text
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // App Icon within a clean, smaller container
-            Surface(
-                modifier = Modifier
-                    .size(60.dp), // Smaller size for header icon
-                shape = RoundedCornerShape(16.dp), // Slightly rounded corners
-                color = colorScheme.surface, // Surface color as background
-                shadowElevation = 4.dp // Subtle shadow
-            ) {
-                Box(
-                    modifier = Modifier
-                        .padding(8.dp) // Padding inside the surface
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.appicon1), // Using appicon1
-                        contentDescription = "App Icon",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(8.dp)), // Clip image with slight rounding
-                        contentScale = ContentScale.Fit
-                    )
-                }
-            }
+            AppIconDisplay(
+                size = HeaderIconSize_Home,
+                shapeRadius = HeaderIconShapeRadius_Home
+                // Other AppIconDisplay params use defaults or can be specified
+            )
 
-            Spacer(modifier = Modifier.width(16.dp)) // Spacing between icon and text
+            Spacer(modifier = Modifier.width(HeaderIconTextSpacing_Home))
 
-            Column(
-                modifier = Modifier.weight(1f) // Allow text column to take available space
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
+                    // text = stringResource(R.string.home_welcome_back),
                     text = "Bentornato",
-                    color = colorScheme.onPrimary.copy(alpha = 0.8f), // Slightly less opaque
-                    style = typography.titleSmall // Adjusted typography
+                    color = colorScheme.onPrimary.copy(alpha = 0.8f),
+                    style = typography.titleSmall
                 )
                 Text(
-                    text = idUtente.ifEmpty { "Utente" }, // Display "Utente" if idUtente is empty
+                    text = idUtente.ifEmpty { "Utente" /* stringResource(R.string.default_user) */ },
                     color = colorScheme.onPrimary,
-                    style = typography.titleLarge, // More prominent user name
+                    style = typography.titleLarge,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -174,97 +211,30 @@ fun Header(idUtente: String) {
 
 
 @Composable
-fun SearchBar(navController: NavController, idUtente: String) {
-    val colorScheme = MaterialTheme.colorScheme
-    val typography = MaterialTheme.typography
-
-    // Visually styled search bar (clickable Box)
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-            .clip(RoundedCornerShape(28.dp)) // Highly rounded corners
-            .background(colorScheme.surface) // Use surface color for the bar
-            .clickable {
-                // Navigate to SearchScreen on click
-                navController.navigate(Screen.SearchScreen.withArgs(idUtente))
-            }
-            .padding(horizontal = 16.dp, vertical = 12.dp) // Padding inside the bar
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp) // Spacing between icon and text
-        ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Cerca",
-                tint = colorScheme.onSurface.copy(alpha = 0.7f) // Softer icon tint
-            )
-            Text(
-                text = "Cerca comune, zona...", // Placeholder text
-                color = colorScheme.onSurface.copy(alpha = 0.7f), // Softer text color
-                style = typography.bodyLarge // Adjusted typography
-            )
+fun HomeScreenRecentSearchesSection( // Renamed
+    navController: NavController,
+    idUtente: String,
+    properties: List<Property>
+) {
+    TitledSection(
+        // title = stringResource(R.string.recent_searches_title),
+        title = "Ultime ricerche",
+        modifier = Modifier.padding(vertical = SectionPaddingVertical_Home),
+        onSeeAllClick = {
+            // TODO: Implement navigation to a dedicated recent searches screen.
+            // navController.navigate(Screen.RecentSearchesScreen.withArgs(idUtente))
         }
-    }
-}
-
-
-@Composable
-fun RecentSearchesSection(navController: NavController, idUtente: String, properties: List<Property>) {
-    val colorScheme = MaterialTheme.colorScheme
-    val typography = MaterialTheme.typography
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp)
+        // seeAllText = stringResource(R.string.see_all_button), // Default in TitledSection
     ) {
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 24.dp) // Consistent horizontal padding
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Ultime ricerche",
-                color = colorScheme.onBackground,
-                style = typography.titleMedium, // Use titleMedium for section title
-                fontWeight = FontWeight.SemiBold
-            )
-
-            TextButton(
-                onClick = {
-                    // TODO: Navigate to recent searches screen
-                    // navController.navigate(Screen.RecentSearchesScreen.route)
-                },
-                // Removed explicit height and shape, using TextButton defaults
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = colorScheme.primary // Primary color for text button
-                )
-            ) {
-                Text(
-                    text = "Vedi tutte", // More concise text
-                    style = typography.labelLarge // Using labelLarge
-                )
-            }
-        }
-
-        // Removed the heavy Divider here
-
-        Spacer(modifier = Modifier.height(12.dp)) // Spacing between title/button and list
-
-        // ScrollView orizzontale delle proprietà
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 24.dp), // Horizontal padding for the LazyRow content
-            horizontalArrangement = Arrangement.spacedBy(16.dp) // Spacing between cards
+            contentPadding = PaddingValues(horizontal = HorizontalListPadding_Home),
+            horizontalArrangement = Arrangement.spacedBy(HorizontalListItemSpacing_Home)
         ) {
             items(properties) { property ->
-                PropertyCard(
+                PropertyCard_Home( // Renamed
                     property = property,
                     navController = navController,
-                    modifier = Modifier.width(260.dp) // Slightly wider cards
+                    modifier = Modifier.width(PropertyCardWidth_Home)
                 )
             }
         }
@@ -272,7 +242,7 @@ fun RecentSearchesSection(navController: NavController, idUtente: String, proper
 }
 
 @Composable
-fun PropertyCard(
+fun PropertyCard_Home( // Renamed
     property: Property,
     navController: NavController,
     modifier: Modifier = Modifier
@@ -280,71 +250,61 @@ fun PropertyCard(
     val typography = MaterialTheme.typography
     val colorScheme = MaterialTheme.colorScheme
 
-    Card( // Use Material 3 Card
+    Card(
         modifier = modifier
-            .height(200.dp) // Increased card height
+            .height(PropertyCardHeight_Home)
             .clickable {
-                navController.navigate(Screen.PropertyScreen.route)
+                // TODO: Navigate to specific property details screen, passing property.id
+                // navController.navigate(Screen.PropertyScreen.withId(property.id))
+                navController.navigate(Screen.PropertyScreen.route) // Generic placeholder
             },
-        shape = RoundedCornerShape(12.dp), // Rounded corners for the card
-        colors = CardDefaults.cardColors(
-            containerColor = colorScheme.surface // Use surface color for card background
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp // Subtle elevation
-        )
+        shape = RoundedCornerShape(PropertyCardShapeRadius_Home),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = PropertyCardElevation_Home)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             Image(
                 painter = painterResource(id = property.imageRes),
-                contentDescription = "Property Image",
-                contentScale = ContentScale.Crop, // Crop to fill the card
+                // contentDescription = stringResource(R.string.property_image_description, property.type),
+                contentDescription = "Property Image: ${property.type}",
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp) // Fixed height for the image
+                    .height(PropertyCardImageHeight_Home)
             )
-
-            // Overlay sfumato nella parte inferiore dell'immagine
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .height(60.dp) // Height of the gradient overlay
+                    .height(PropertyCardGradientOverlayHeight_Home)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.7f) // Gradient to a darker, more opaque color for better text contrast
-                            )
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
                         )
                     )
             )
-
-            // Prezzo, tipo e location posizionati sopra l'overlay scuro
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(12.dp)
+                    .padding(PropertyCardTextPadding_Home)
             ) {
                 Text(
                     text = property.price,
-                    color = Color.White, // White text for better contrast on dark overlay
+                    color = Color.White,
                     style = typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = property.type,
-                    color = Color.White.copy(alpha = 0.9f), // Slightly less opaque white
-                    style = typography.bodyMedium, // Adjusted typography
+                    color = Color.White.copy(alpha = 0.9f),
+                    style = typography.bodyMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 if (property.location.isNotEmpty()) {
                     Text(
                         text = property.location,
-                        color = Color.White.copy(alpha = 0.7f), // Even less opaque white for location
+                        color = Color.White.copy(alpha = 0.7f),
                         style = typography.bodySmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -355,68 +315,51 @@ fun PropertyCard(
     }
 }
 
-
 @Composable
-fun PostAdSection(navController: NavController, idUtente: String) {
-    val colorScheme = MaterialTheme.colorScheme
+fun HomeScreenPostAdSection(navController: NavController, idUtente: String) { // Renamed
     val typography = MaterialTheme.typography
+    val colorScheme = MaterialTheme.colorScheme
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp) // Consistent horizontal padding
-            .padding(vertical = 24.dp),
+            .padding(horizontal = PostAdSectionOuterPaddingHorizontal_Home)
+            .padding(vertical = PostAdSectionOuterPaddingVertical_Home),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
+            // text = stringResource(R.string.post_ad_title),
             text = "Vuoi vendere o affittare il tuo immobile?",
             color = colorScheme.onBackground,
-            style = typography.titleMedium, // Use titleMedium for section title
+            style = typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
-            textAlign =  TextAlign.Center
+            textAlign = TextAlign.Center
         )
-
-        Spacer(modifier = Modifier.height(12.dp)) // Adjusted spacing
-
+        Spacer(modifier = Modifier.height(PostAdTitleSubtitleSpacing_Home))
         Text(
+            // text = stringResource(R.string.post_ad_subtitle),
             text = "Inserisci il tuo annuncio in pochi semplici passaggi.",
             color = colorScheme.onBackground.copy(alpha = 0.8f),
             style = typography.bodyMedium,
             textAlign = TextAlign.Center
         )
-
-        Spacer(modifier = Modifier.height(24.dp)) // Adjusted spacing
-
-        Button(
+        Spacer(modifier = Modifier.height(PostAdSubtitleButtonSpacing_Home))
+        AppSecondaryButton(
+            // text = stringResource(R.string.post_ad_button),
+            text = "Pubblica annuncio",
             onClick = {
                 navController.navigate(Screen.PropertySellScreen.withArgs(idUtente))
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(8.dp), // More standard rounded corners
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colorScheme.secondary, // Use secondary color for a different call to action
-                contentColor = colorScheme.onSecondary
-            ),
-            elevation = ButtonDefaults.buttonElevation(
-                defaultElevation = 4.dp, // Subtle elevation
-                pressedElevation = 2.dp
-            )
-        ) {
-            Text(
-                text = "Pubblica annuncio",
-                color = colorScheme.onSecondary,
-                style = typography.labelLarge
-            )
-        }
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, device = "id:pixel_4")
 @Composable
 fun PreviewHomeScreen() {
-    // Per la preview, creiamo un NavController fittizio
-    val navController = rememberNavController()
-    HomeScreen(navController = navController, idUtente = "Danilo") // Example user name
+    DietiEstatesTheme {
+        val navController = rememberNavController()
+        HomeScreen(navController = navController, idUtente = "Danilo")
+    }
 }

@@ -1,28 +1,65 @@
 package com.dieti.dietiestates25.ui.screen
 
+import android.app.Activity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+// import androidx.compose.ui.res.stringResource // Import if you use stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+
+// --- Dimensions ---
+// Private constants for dimensions, promoting reusability and maintainability within this screen.
+private val WelcomeScreenPaddingTop = 55.dp
+private val WelcomeScreenPaddingHorizontal = 24.dp
+private val AppIconContainerSize = 90.dp
+private val AppIconShapeRadius = 24.dp
+private val AppIconInternalPadding = 4.dp
+private val AppIconImageClipRadius = 20.dp // Adjusted for a visible clip inside the padded surface
+private val WelcomeImageBottomPadding = 16.dp
+private val WelcomeImageAspectRatio = 1f / 0.8f // Equivalent to 1.25f
+private val ContentColumnHorizontalPadding = 16.dp
+private val ContentColumnBottomPadding = 48.dp
+private val SpacerHeightSmall = 8.dp
+private val SpacerHeightLarge = 48.dp
+private val ActionButtonHeight = 56.dp
+private val ActionButtonShapeRadius = 12.dp
+private val ActionButtonElevationDefault = 8.dp
+private val ActionButtonElevationPressed = 4.dp
+private const val WELCOME_IMAGE_WIDTH_FRACTION = 0.9f
 
 @Composable
 fun WelcomeScreen(navController: NavController) {
@@ -30,50 +67,67 @@ fun WelcomeScreen(navController: NavController) {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
 
-        // Sfumatura perfezionata: transizione morbida tra primary e background
+        // System UI configuration
+        val view = LocalView.current
+        if (!view.isInEditMode) {
+            SideEffect {
+                val window = (view.context as Activity).window
+                val primaryColorArgb = colorScheme.primary.toArgb()
+                window.statusBarColor = primaryColorArgb
+                window.navigationBarColor = primaryColorArgb
+                WindowCompat.getInsetsController(window, view).let { controller ->
+                    controller.isAppearanceLightStatusBars = false // Assuming dark primary color
+                    controller.isAppearanceLightNavigationBars = false // Assuming dark primary color
+                }
+            }
+        }
+
+        // Gradient: smooth transition between primary and background colors.
         val gradientColors = listOf(
-            colorScheme.primary.copy(alpha = 1f),
+            colorScheme.primary,
             colorScheme.background,
-            colorScheme.primary.copy(alpha = 1f)
+            colorScheme.primary
         )
 
-        val idUtente = "Danilo Scala" // Consider getting this dynamically
+        // TODO: Retrieve 'idUtente' dynamically (e.g., from ViewModel, authentication state, or pass as argument).
+        val idUtente = "Danilo Scala"
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(colors = gradientColors)),
+                .background(Brush.verticalGradient(colors = gradientColors))
+                .statusBarsPadding(), // Apply padding for the status bar
             contentAlignment = Alignment.TopCenter
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 55.dp) // Increased top padding
-                    .padding(horizontal = 24.dp), // Added horizontal padding
+                    .padding(top = WelcomeScreenPaddingTop)
+                    .padding(horizontal = WelcomeScreenPaddingHorizontal),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween // Distribute space vertically
+                verticalArrangement = Arrangement.SpaceBetween // Distributes space between elements
             ) {
-                // App Icon within a subtly elevated rounded surface
+                // App Icon displayed within a slightly elevated, rounded Surface.
                 Surface(
-                    modifier = Modifier
-                        .size(90.dp), // Container size remains the same
-                    shape = RoundedCornerShape(24.dp), // Rounded rectangular shape
-                    color = colorScheme.surface, // Surface color as background
-                    shadowElevation = 8.dp // Subtle shadow
+                    modifier = Modifier.size(AppIconContainerSize),
+                    shape = RoundedCornerShape(AppIconShapeRadius),
+                    color = colorScheme.surface,
+                    shadowElevation = ActionButtonElevationDefault // Reusing for consistency or define new
                 ) {
                     Box(
                         modifier = Modifier
-                            .padding(4.dp) // Padding minimo per icona grande
+                            .padding(AppIconInternalPadding)
                             .fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.appicon1),
+                            // Consider using stringResource(R.string.app_icon_content_description)
                             contentDescription = "App Icon",
                             modifier = Modifier
                                 .fillMaxSize()
-                                .clip(RoundedCornerShape(4.dp)),
-                            contentScale = ContentScale.Fit // Adatta l'icona mantenendo l'aspect ratio
+                                .clip(RoundedCornerShape(AppIconImageClipRadius)),
+                            contentScale = ContentScale.Fit
                         )
                     }
                 }
@@ -81,11 +135,12 @@ fun WelcomeScreen(navController: NavController) {
                 // Welcome Image
                 Image(
                     painter = painterResource(id = R.drawable.welcome_image),
-                    contentDescription = "Illustrazione casa",
+                    // Consider using stringResource(R.string.welcome_image_content_description)
+                    contentDescription = "House illustration",
                     modifier = Modifier
-                        .fillMaxWidth(0.9f)
-                        .aspectRatio(1f / 0.8f, matchHeightConstraintsFirst = false)
-                        .padding(bottom = 16.dp),
+                        .fillMaxWidth(WELCOME_IMAGE_WIDTH_FRACTION)
+                        .aspectRatio(WelcomeImageAspectRatio, matchHeightConstraintsFirst = false)
+                        .padding(bottom = WelcomeImageBottomPadding), // Specific padding if needed before the next block
                     contentScale = ContentScale.Fit
                 )
 
@@ -93,27 +148,29 @@ fun WelcomeScreen(navController: NavController) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 48.dp),
+                        .padding(horizontal = ContentColumnHorizontalPadding)
+                        .padding(bottom = ContentColumnBottomPadding), // Padding at the very bottom of the screen content
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
+                        // Consider using stringResource(R.string.welcome_title_text)
                         text = "Benvenuto",
                         color = colorScheme.onBackground,
-                        style = typography.displaySmall, // Riproponiamo displaySmall per un titolo più incisivo
+                        style = typography.displaySmall,
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(SpacerHeightSmall))
 
                     Text(
+                        // Consider using stringResource(R.string.welcome_subtitle_text)
                         text = "Compra la tua casa dei sogni con facilità e sicurezza.",
-                        color = colorScheme.onBackground.copy(alpha = 0.7f),
-                        style = typography.bodyMedium, // Riproponiamo bodyMedium per il testo descrittivo
+                        color = colorScheme.onBackground.copy(alpha = 0.7f), // Subdued text color
+                        style = typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(48.dp))
+                    Spacer(modifier = Modifier.height(SpacerHeightLarge))
 
                     Button(
                         onClick = {
@@ -121,18 +178,19 @@ fun WelcomeScreen(navController: NavController) {
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
+                            .height(ActionButtonHeight),
+                        shape = RoundedCornerShape(ActionButtonShapeRadius),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = colorScheme.primary,
                             contentColor = colorScheme.onPrimary
                         ),
                         elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 8.dp,
-                            pressedElevation = 4.dp
+                            defaultElevation = ActionButtonElevationDefault,
+                            pressedElevation = ActionButtonElevationPressed
                         )
                     ) {
                         Text(
+                            // Consider using stringResource(R.string.welcome_button_start)
                             text = "Inizia ora",
                             style = typography.titleMedium
                         )
@@ -146,6 +204,9 @@ fun WelcomeScreen(navController: NavController) {
 @Preview(showBackground = true, device = "id:pixel_4")
 @Composable
 fun WelcomeScreenPreview() {
-    val navController = rememberNavController()
-    WelcomeScreen(navController = navController)
+    // It's good practice that previews can also wrap in the theme if not done internally by the Composable
+    DietiEstatesTheme {
+        val navController = rememberNavController()
+        WelcomeScreen(navController = navController)
+    }
 }
