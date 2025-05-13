@@ -118,61 +118,11 @@ fun NotificationScreen(
 ) {
     DietiEstatesTheme {
 
-
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
 
         val currentTab by viewModel.currentTab.collectAsState()
         val notifications = viewModel.getFilteredNotifications()
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = "Notifiche")
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) { // Azione per tornare indietro
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { /* Apri menu opzioni */ }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Menu"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = TealVibrant,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White,
-                    actionIconContentColor = Color.White
-                )
-            )
-        },
-        bottomBar = {
-            // Usa il Composable BottomNavigation definito sotto
-            AppBottomNavigation(navController = navController, idUtente = idUtente)
-        }
-    ) { paddingValues ->
-        // Applica paddingValues al contenitore principale per evitare sovrapposizioni
-        Column(
-            modifier = Modifier
-                .padding(paddingValues) // Applicare qui i padding
-                .fillMaxSize()
-                .background(Color.White) // Sfondo bianco per l'area contenuto
-        ) {
-            // Tab selectors
-            NotificationTabs(
-                currentTab = currentTab,
-                onTabSelected = { viewModel.setCurrentTab(it) }
-            )
-
 
         Scaffold(
             topBar = {
