@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.dieti.dietiestates25.ui.screen
 
 import androidx.compose.foundation.background
@@ -35,13 +37,29 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.platform.LocalFocusManager
 
-@OptIn(ExperimentalMaterial3Api::class)
+//Status bar
+import android.app.Activity
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+
 @Composable
 fun PropertySellScreen(navController: NavController, idUtente: String) {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
         val scrollState = rememberScrollState()
+
+        val view = LocalView.current
+        if (!view.isInEditMode) {
+            SideEffect {
+                val window = (view.context as Activity).window
+                @Suppress("DEPRECATION")
+                window.statusBarColor = colorScheme.primary.toArgb()
+                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false // false = icone chiare
+            }
+        }
 
         val focusManager = LocalFocusManager.current
 
@@ -90,6 +108,7 @@ fun PropertySellScreen(navController: NavController, idUtente: String) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .background(Brush.verticalGradient(colorStops = gradientColors))
                 // Questo permetterà di rimuovere il focus quando si clicca sullo sfondo
                 .pointerInput(Unit) {
@@ -746,7 +765,8 @@ fun RoomCounter(
         Text(
             text = title,
             style = typography.bodyMedium,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            color = colorScheme.onBackground
         )
 
         Row(
@@ -773,7 +793,9 @@ fun RoomCounter(
                 style = typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.width(24.dp),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = colorScheme.onBackground
+
             )
 
             IconButton(
