@@ -1,6 +1,5 @@
 package com.dieti.dietiestates25.ui.screen
 
-import android.app.Activity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,27 +9,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
-// import androidx.compose.ui.res.stringResource // Import if you use stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
@@ -41,41 +33,7 @@ import com.dieti.dietiestates25.ui.TitledSection
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
-
-// --- Dimensions for HomeScreen ---
-private val HeaderClipBottomRadius_Home = 24.dp
-private val HeaderPaddingHorizontal_Home = 24.dp
-private val HeaderPaddingTop_Home = 40.dp
-private val HeaderPaddingBottom_Home = 24.dp
-private val HeaderIconSize_Home = 60.dp // Parameter for AppIconDisplay
-private val HeaderIconShapeRadius_Home = 16.dp // Parameter for AppIconDisplay
-private val HeaderIconTextSpacing_Home = 16.dp
-
-private val MainContentSpacerHeight_Home = 32.dp
-
-// SearchBar dimensions are now mostly within ClickableSearchBar or its parameters
-// private val SearchBarOuterPaddingHorizontal_Home = 24.dp // Used by ClickableSearchBar default
-
-private val SectionPaddingVertical_Home = 16.dp
-// SectionTitlePaddingHorizontal_Home now DefaultSectionTitlePaddingHorizontal from TitledSection
-// SectionTitleContentSpacing_Home now DefaultSectionTitleContentSpacing from TitledSection
-
-private val HorizontalListPadding_Home = 24.dp
-private val HorizontalListItemSpacing_Home = 16.dp
-
-private val PropertyCardWidth_Home = 260.dp
-private val PropertyCardHeight_Home = 200.dp
-private val PropertyCardShapeRadius_Home = 12.dp
-private val PropertyCardElevation_Home = 4.dp
-private val PropertyCardImageHeight_Home = 140.dp
-private val PropertyCardGradientOverlayHeight_Home = 60.dp
-private val PropertyCardTextPadding_Home = 12.dp
-
-private val PostAdSectionOuterPaddingHorizontal_Home = 24.dp
-private val PostAdSectionOuterPaddingVertical_Home = 24.dp
-private val PostAdTitleSubtitleSpacing_Home = 12.dp
-private val PostAdSubtitleButtonSpacing_Home = 24.dp
-// PostAdButtonHeight and ShapeRadius now part of AppSecondaryButton defaults
+import com.dieti.dietiestates25.ui.theme.Dimensions
 
 // Sample Data for HomeScreen (remains the same)
 data class Property(
@@ -86,7 +44,7 @@ data class Property(
     val location: String
 )
 
-val sampleProperties_Home = listOf( // Renamed to avoid conflict if in same file scope
+val sampleProperties_Home = listOf(
     Property(1, "400.000 €", "Appartamento", R.drawable.property1, "Napoli"),
     Property(2, "320.000 €", "Villa", R.drawable.property2, "Roma"),
     Property(3, "250.000 €", "Attico", R.drawable.property1, "Milano"),
@@ -97,19 +55,7 @@ val sampleProperties_Home = listOf( // Renamed to avoid conflict if in same file
 fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
-        // val typography = MaterialTheme.typography // Retrieve if needed directly
-
-        val view = LocalView.current
-        if (!view.isInEditMode) {
-            SideEffect {
-                val window = (view.context as Activity).window
-                val primaryColorArgb = colorScheme.primary.toArgb()
-                window.statusBarColor = primaryColorArgb
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-                window.navigationBarColor = primaryColorArgb
-                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
-            }
-        }
+        val dimensions = Dimensions
 
         val gradientColors = listOf(
             colorScheme.primary.copy(alpha = 0.7f),
@@ -128,6 +74,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                     .fillMaxSize()
                     .background(Brush.verticalGradient(colors = gradientColors))
                     .padding(paddingValues)
+                    .navigationBarsPadding()
                     .statusBarsPadding()
             ) {
                 Column(
@@ -135,28 +82,26 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                 ) {
-                    HomeScreenHeader(idUtente = idUtente) // Renamed to avoid conflict if Header is too generic
-                    Spacer(modifier = Modifier.height(MainContentSpacerHeight_Home))
+                    HomeScreenHeader(idUtente = idUtente)
+                    Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
                     ClickableSearchBar(
-                        // placeholderText = stringResource(R.string.home_search_placeholder),
                         placeholderText = "Cerca comune, zona...",
                         onClick = { navController.navigate(Screen.SearchScreen.withArgs(idUtente)) }
-                        // Modifier can be passed if specific layout needs beyond default padding are required
                     )
 
-                    Spacer(modifier = Modifier.height(MainContentSpacerHeight_Home))
+                    Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
-                    HomeScreenRecentSearchesSection( // Renamed
+                    HomeScreenRecentSearchesSection(
                         navController = navController,
                         idUtente = idUtente,
                         properties = sampleProperties_Home
                     )
 
-                    Spacer(modifier = Modifier.height(MainContentSpacerHeight_Home))
+                    Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
-                    HomeScreenPostAdSection(navController = navController, idUtente = idUtente) // Renamed
-                    Spacer(modifier = Modifier.height(MainContentSpacerHeight_Home))
+                    HomeScreenPostAdSection(navController = navController, idUtente = idUtente)
+                    Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
                 }
             }
         }
@@ -164,17 +109,18 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
 }
 
 @Composable
-fun HomeScreenHeader(idUtente: String) { // Renamed from Header
+fun HomeScreenHeader(idUtente: String) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
+    val dimensions = Dimensions
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(colorScheme.primary)
-            .clip(RoundedCornerShape(bottomStart = HeaderClipBottomRadius_Home, bottomEnd = HeaderClipBottomRadius_Home))
-            .padding(horizontal = HeaderPaddingHorizontal_Home)
-            .padding(top = HeaderPaddingTop_Home, bottom = HeaderPaddingBottom_Home),
+            .clip(RoundedCornerShape(bottomStart = dimensions.cornerRadiusLarge, bottomEnd = dimensions.cornerRadiusLarge))
+            .padding(horizontal = dimensions.paddingLarge)
+            .padding(top = 40.dp, bottom = dimensions.paddingLarge), // Mantenuto il paddingTop specifico per allinearsi col design
         contentAlignment = Alignment.BottomStart
     ) {
         Row(
@@ -183,22 +129,20 @@ fun HomeScreenHeader(idUtente: String) { // Renamed from Header
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             AppIconDisplay(
-                size = HeaderIconSize_Home,
-                shapeRadius = HeaderIconShapeRadius_Home
-                // Other AppIconDisplay params use defaults or can be specified
+                size = 60.dp, // Mantenuto valore specifico perché è una dimensione dell'icona particolare
+                shapeRadius = dimensions.cornerRadiusMedium
             )
 
-            Spacer(modifier = Modifier.width(HeaderIconTextSpacing_Home))
+            Spacer(modifier = Modifier.width(dimensions.spacingMedium))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    // text = stringResource(R.string.home_welcome_back),
                     text = "Bentornato",
                     color = colorScheme.onPrimary.copy(alpha = 0.8f),
                     style = typography.titleSmall
                 )
                 Text(
-                    text = idUtente.ifEmpty { "Utente" /* stringResource(R.string.default_user) */ },
+                    text = idUtente.ifEmpty { "Utente" },
                     color = colorScheme.onPrimary,
                     style = typography.titleLarge,
                     maxLines = 1,
@@ -209,32 +153,30 @@ fun HomeScreenHeader(idUtente: String) { // Renamed from Header
     }
 }
 
-
 @Composable
-fun HomeScreenRecentSearchesSection( // Renamed
+fun HomeScreenRecentSearchesSection(
     navController: NavController,
     idUtente: String,
     properties: List<Property>
 ) {
+    val dimensions = Dimensions
+
     TitledSection(
-        // title = stringResource(R.string.recent_searches_title),
         title = "Ultime ricerche",
-        modifier = Modifier.padding(vertical = SectionPaddingVertical_Home),
+        modifier = Modifier.padding(vertical = dimensions.paddingMedium),
         onSeeAllClick = {
-            // TODO: Implement navigation to a dedicated recent searches screen.
-            // navController.navigate(Screen.RecentSearchesScreen.withArgs(idUtente))
+            navController.navigate(Screen.ApartmentListingScreen.withArgs(idUtente))
         }
-        // seeAllText = stringResource(R.string.see_all_button), // Default in TitledSection
     ) {
         LazyRow(
-            contentPadding = PaddingValues(horizontal = HorizontalListPadding_Home),
-            horizontalArrangement = Arrangement.spacedBy(HorizontalListItemSpacing_Home)
+            contentPadding = PaddingValues(horizontal = dimensions.paddingLarge),
+            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
         ) {
             items(properties) { property ->
-                PropertyCard_Home( // Renamed
+                PropertyCard_Home(
                     property = property,
                     navController = navController,
-                    modifier = Modifier.width(PropertyCardWidth_Home)
+                    modifier = Modifier.width(260.dp) // Mantenuto per preservare l'aspetto desiderato
                 )
             }
         }
@@ -242,41 +184,39 @@ fun HomeScreenRecentSearchesSection( // Renamed
 }
 
 @Composable
-fun PropertyCard_Home( // Renamed
+fun PropertyCard_Home(
     property: Property,
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
     val typography = MaterialTheme.typography
     val colorScheme = MaterialTheme.colorScheme
+    val dimensions = Dimensions
 
     Card(
         modifier = modifier
-            .height(PropertyCardHeight_Home)
+            .height(200.dp) // Mantenuto per preservare l'aspetto desiderato
             .clickable {
-                // TODO: Navigate to specific property details screen, passing property.id
-                // navController.navigate(Screen.PropertyScreen.withId(property.id))
-                navController.navigate(Screen.PropertyScreen.route) // Generic placeholder
+                navController.navigate(Screen.PropertyScreen.route)
             },
-        shape = RoundedCornerShape(PropertyCardShapeRadius_Home),
+        shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
         colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = PropertyCardElevation_Home)
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensions.elevationMedium)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
                 painter = painterResource(id = property.imageRes),
-                // contentDescription = stringResource(R.string.property_image_description, property.type),
                 contentDescription = "Property Image: ${property.type}",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(PropertyCardImageHeight_Home)
+                    .height(140.dp) // Mantenuto per preservare l'aspetto desiderato
             )
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .height(PropertyCardGradientOverlayHeight_Home)
+                    .height(60.dp) // Mantenuto per preservare l'aspetto desiderato
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
@@ -286,7 +226,7 @@ fun PropertyCard_Home( // Renamed
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(PropertyCardTextPadding_Home)
+                    .padding(dimensions.paddingSmall)
             ) {
                 Text(
                     text = property.price,
@@ -316,36 +256,34 @@ fun PropertyCard_Home( // Renamed
 }
 
 @Composable
-fun HomeScreenPostAdSection(navController: NavController, idUtente: String) { // Renamed
+fun HomeScreenPostAdSection(navController: NavController, idUtente: String) {
     val typography = MaterialTheme.typography
     val colorScheme = MaterialTheme.colorScheme
+    val dimensions = Dimensions
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = PostAdSectionOuterPaddingHorizontal_Home)
-            .padding(vertical = PostAdSectionOuterPaddingVertical_Home),
+            .padding(horizontal = dimensions.paddingLarge)
+            .padding(vertical = dimensions.paddingLarge),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            // text = stringResource(R.string.post_ad_title),
             text = "Vuoi vendere o affittare il tuo immobile?",
             color = colorScheme.onBackground,
             style = typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(PostAdTitleSubtitleSpacing_Home))
+        Spacer(modifier = Modifier.height(dimensions.spacingSmall))
         Text(
-            // text = stringResource(R.string.post_ad_subtitle),
             text = "Inserisci il tuo annuncio in pochi semplici passaggi.",
             color = colorScheme.onBackground.copy(alpha = 0.8f),
             style = typography.bodyMedium,
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(PostAdSubtitleButtonSpacing_Home))
+        Spacer(modifier = Modifier.height(dimensions.spacingLarge))
         AppSecondaryButton(
-            // text = stringResource(R.string.post_ad_button),
             text = "Pubblica annuncio",
             onClick = {
                 navController.navigate(Screen.PropertySellScreen.withArgs(idUtente))

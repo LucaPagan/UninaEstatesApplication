@@ -147,8 +147,13 @@ fun DietiEstatesTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            val barColor = colorScheme.primary.toArgb()
+
+            window.statusBarColor = barColor
+            window.navigationBarColor = barColor
+
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = darkTheme
         }
     }
 

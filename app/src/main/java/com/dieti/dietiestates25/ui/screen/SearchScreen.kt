@@ -1,8 +1,5 @@
-@file:Suppress("DEPRECATION")
-
 package com.dieti.dietiestates25.ui.screen
 
-import android.app.Activity // Import necessario
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -29,15 +26,12 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb // Import necessario
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalView // Import necessario
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat // Import necessario
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.navigation.Screen
@@ -55,17 +49,6 @@ fun SearchScreen(navController: NavController, idUtente: String) {
 
         var searchQuery by remember { mutableStateOf("") }
         var isSearchActive by remember { mutableStateOf(false) }
-
-        // Gestione della Status Bar
-        val view = LocalView.current
-        if (!view.isInEditMode) {
-            SideEffect {
-                val window = (view.context as Activity).window
-                colorScheme.primary.toArgb().also { window.statusBarColor = it } // Imposta colore primario
-                // Assicura che le icone della status bar siano chiare se il primario è scuro
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-            }
-        }
 
         val searchResults = listOf("Napoli - Comune", "Roma - Comune", "Milano - Comune", "Torino - Comune", "Firenze - Comune", "Bologna - Comune", "Genova - Comune")
         val filteredComuni = remember(searchQuery, searchResults) {
@@ -85,7 +68,8 @@ fun SearchScreen(navController: NavController, idUtente: String) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding() // Aggiunge padding per la status bar, il contenuto sarà sotto
+                .navigationBarsPadding()
+                .statusBarsPadding()
                 .background(Brush.verticalGradient(colors = gradientColors))
                 .clickable(
                     interactionSource = interactionSource,
