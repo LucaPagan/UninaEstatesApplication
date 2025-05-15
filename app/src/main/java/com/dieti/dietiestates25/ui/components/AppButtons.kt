@@ -1,72 +1,41 @@
-package com.dieti.dietiestates25.ui // Assuming a base package
+package com.dieti.dietiestates25.ui.components
 
-// Common Imports (organize as needed if splitting into multiple files)
-import android.app.Activity
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
-// import androidx.compose.ui.res.stringResource // Uncomment if you use stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.R // Assuming R file is in this base package for now
-import com.dieti.dietiestates25.ui.navigation.Screen // Assuming Screen class location
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
-
-// Reusable Component Dimensions (can be in a central Dimens.kt)
-private val DefaultButtonHeight = 56.dp
-private val PrimaryButtonShapeRadius = 12.dp
-private val SecondaryButtonShapeRadius = 8.dp
-private val DefaultButtonElevation = 8.dp
-private val PressedButtonElevation = 4.dp
-private val SecondaryButtonElevation = 4.dp
-private val SecondaryPressedButtonElevation = 2.dp
-
-private val DefaultAppIconSize = 60.dp
-private val DefaultAppIconShapeRadius = 16.dp
-private val DefaultAppIconInternalPadding = 8.dp
-private val DefaultAppIconImageClipRadius = 8.dp
-private val DefaultAppIconElevation = 4.dp
-
-private val ClickableSearchBarPaddingHorizontal = 24.dp
-private val ClickableSearchBarShapeRadius = 28.dp
-private val ClickableSearchBarInternalPaddingHorizontal = 16.dp
-private val ClickableSearchBarInternalPaddingVertical = 12.dp
-private val ClickableSearchBarIconTextSpacing = 8.dp
-
-private val DefaultSectionTitlePaddingHorizontal = 24.dp
-private val DefaultSectionTitleContentSpacing = 12.dp
-
-
-// =============================================================================================
-// REUSABLE COMPONENTS (Conceptually in com.dieti.dietiestates25.ui.components)
-// =============================================================================================
+import com.dieti.dietiestates25.R
+import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @Composable
 fun AppPrimaryButton(
@@ -74,14 +43,14 @@ fun AppPrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    textStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.titleMedium // Allow style override
+    textStyle: TextStyle = MaterialTheme.typography.titleMedium
 ) {
     val colorScheme = MaterialTheme.colorScheme
     Button(
         onClick = onClick,
-        modifier = modifier.height(DefaultButtonHeight),
+        modifier = modifier.height(Dimensions.buttonHeight),
         enabled = enabled,
-        shape = RoundedCornerShape(PrimaryButtonShapeRadius),
+        shape = RoundedCornerShape(Dimensions.cornerRadiusMedium),
         colors = ButtonDefaults.buttonColors(
             containerColor = colorScheme.primary,
             contentColor = colorScheme.onPrimary,
@@ -89,8 +58,8 @@ fun AppPrimaryButton(
             disabledContentColor = colorScheme.onSurface.copy(alpha = 0.38f)
         ),
         elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = DefaultButtonElevation,
-            pressedElevation = PressedButtonElevation
+            defaultElevation = Dimensions.elevationLarge,
+            pressedElevation = Dimensions.elevationMedium
         )
     ) {
         Text(text, style = textStyle)
@@ -103,14 +72,17 @@ fun AppSecondaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    textStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.labelLarge // Allow style override
+    textStyle: TextStyle = MaterialTheme.typography.labelLarge,
+    icon: ImageVector? = null,
+    iconContentDescription: String? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
+
     Button(
         onClick = onClick,
-        modifier = modifier.height(DefaultButtonHeight),
+        modifier = modifier.height(Dimensions.buttonHeight),
         enabled = enabled,
-        shape = RoundedCornerShape(SecondaryButtonShapeRadius),
+        shape = RoundedCornerShape(Dimensions.spacingSmall),
         colors = ButtonDefaults.buttonColors(
             containerColor = colorScheme.secondary,
             contentColor = colorScheme.onSecondary,
@@ -118,11 +90,24 @@ fun AppSecondaryButton(
             disabledContentColor = colorScheme.onSurface.copy(alpha = 0.38f)
         ),
         elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = SecondaryButtonElevation,
-            pressedElevation = SecondaryPressedButtonElevation
+            defaultElevation = Dimensions.elevationMedium,
+            pressedElevation = Dimensions.elevationSmall
         )
     ) {
-        Text(text, style = textStyle)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = iconContentDescription ?: text,
+                    tint = colorScheme.onSecondary
+                )
+                Spacer(modifier = Modifier.width(Dimensions.spacingSmall))
+            }
+            Text(text = text, style = textStyle)
+        }
     }
 }
 
@@ -130,13 +115,12 @@ fun AppSecondaryButton(
 fun AppIconDisplay(
     modifier: Modifier = Modifier,
     iconResId: Int = R.drawable.appicon1, // Default app icon
-    // contentDescription: String = stringResource(R.string.app_icon_description), // Use string resource
     contentDescription: String = "App Icon",
-    size: Dp = DefaultAppIconSize,
-    shapeRadius: Dp = DefaultAppIconShapeRadius,
-    internalPadding: Dp = DefaultAppIconInternalPadding,
-    imageClipRadius: Dp = DefaultAppIconImageClipRadius,
-    elevation: Dp = DefaultAppIconElevation
+    size: Dp = 60.dp,
+    shapeRadius: Dp = Dimensions.spacingMedium,
+    internalPadding: Dp = Dimensions.paddingSmall,
+    imageClipRadius: Dp = Dimensions.spacingSmall,
+    elevation: Dp = Dimensions.elevationMedium
 ) {
     Surface(
         modifier = modifier.size(size),
@@ -164,37 +148,37 @@ fun AppIconDisplay(
 
 @Composable
 fun ClickableSearchBar(
-    // placeholderText: String = stringResource(R.string.search_placeholder_default),
-    placeholderText: String = "Cerca...",
+    placeholderText: String = "Search...",
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = ClickableSearchBarPaddingHorizontal)
-            .clip(RoundedCornerShape(ClickableSearchBarShapeRadius))
-            .background(colorScheme.surface)
+            .padding(horizontal = Dimensions.paddingLarge)
+            .height(Dimensions.searchBarHeight)
+            .clip(RoundedCornerShape(28.dp))
+            .background(colorScheme.primary.copy(alpha = 0.8f))
             .clickable(onClick = onClick)
             .padding(
-                horizontal = ClickableSearchBarInternalPaddingHorizontal,
-                vertical = ClickableSearchBarInternalPaddingVertical
+                horizontal = Dimensions.paddingMedium,
+                vertical = Dimensions.cornerRadiusMedium
             )
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(ClickableSearchBarIconTextSpacing)
+            horizontalArrangement = Arrangement.spacedBy(Dimensions.spacingSmall)
         ) {
             Icon(
                 imageVector = Icons.Default.Search,
-                contentDescription = placeholderText, // Or dedicated description
-                tint = colorScheme.onSurface.copy(alpha = 0.7f)
+                contentDescription = placeholderText,
+                tint = colorScheme.onPrimary,
             )
             Text(
                 text = placeholderText,
-                color = colorScheme.onSurface.copy(alpha = 0.7f),
+                color = colorScheme.onPrimary,
                 style = typography.bodyLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -204,14 +188,64 @@ fun ClickableSearchBar(
 }
 
 @Composable
+fun <T> PropertyShowcaseSection(
+    title: String,
+    items: List<T>,
+    itemContent: @Composable (item: T) -> Unit,
+    modifier: Modifier = Modifier,
+    onSeeAllClick: (() -> Unit)? = null,
+    seeAllText: String = "Vedi tutte",
+    listContentPadding: PaddingValues = PaddingValues(horizontal = Dimensions.paddingLarge),
+    listHorizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(Dimensions.spacingMedium)
+) {
+    /*if (items.isEmpty() && onSeeAllClick == null) {
+        // Se non ci sono items e non c'è un'azione "vedi tutte",
+        // potresti decidere di non mostrare affatto la sezione.
+        // Per ora, la mostriamo comunque vuota se viene chiamata.
+        // Considera di aggiungere un Box vuoto o un Text placeholder qui se items è vuoto.
+    }*/
+    TitledSection(
+        title = title,
+        modifier = modifier,
+        onSeeAllClick = onSeeAllClick,
+        seeAllText = seeAllText,
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        if (items.isNotEmpty()) {
+            LazyRow(
+                contentPadding = listContentPadding,
+                horizontalArrangement = listHorizontalArrangement
+            ) {
+                items(items = items, key = { item -> item.hashCode() }) { item -> // Aggiungere una chiave se gli items possono cambiare
+                    itemContent(item)
+                }
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(listContentPadding)
+                    .padding(vertical = Dimensions.paddingMedium),
+                contentAlignment = Alignment.Center,
+            ) {
+                 Text(
+                     text = "Nessun elemento da mostrare.",
+                     style = MaterialTheme.typography.bodyMedium,
+                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun TitledSection(
     title: String,
     modifier: Modifier = Modifier,
     onSeeAllClick: (() -> Unit)? = null,
-    // seeAllText: String = stringResource(R.string.see_all),
-    seeAllText: String = "Vedi tutte",
-    titleStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.titleMedium,
-    seeAllTextStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.labelLarge,
+    seeAllText: String = "See all",
+    titleStyle: TextStyle = MaterialTheme.typography.titleMedium,
+    seeAllTextStyle: TextStyle = MaterialTheme.typography.labelLarge,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     content: @Composable () -> Unit
 ) {
@@ -220,7 +254,7 @@ fun TitledSection(
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
-                .padding(horizontal = DefaultSectionTitlePaddingHorizontal) // Use constant
+                .padding(horizontal = Dimensions.paddingLarge)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -229,7 +263,7 @@ fun TitledSection(
                 text = title,
                 color = colorScheme.onBackground,
                 style = titleStyle,
-                fontWeight = FontWeight.SemiBold // Common styling for titles
+                fontWeight = FontWeight.SemiBold
             )
             onSeeAllClick?.let { onClick ->
                 TextButton(
@@ -240,9 +274,115 @@ fun TitledSection(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(DefaultSectionTitleContentSpacing)) // Use constant
+        Spacer(modifier = Modifier.height(Dimensions.cornerRadiusMedium))
         Box(modifier = Modifier.padding(contentPadding)) {
             content()
+        }
+    }
+}
+
+@Composable
+fun CustomSearchAppBar(
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onBackPressed: () -> Unit,
+    onClearSearch: () -> Unit,
+    placeholderText: String,
+    modifier: Modifier = Modifier,
+    focusRequester: FocusRequester = remember { FocusRequester() },
+    imeAction: ImeAction = ImeAction.Search,
+    onSearchKeyboardAction: (String) -> Unit = {},
+    onFocusChanged: (hasFocus: Boolean) -> Unit = {} // Nuovo callback
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth(),
+        color = colorScheme.primary,
+        shadowElevation = Dimensions.elevationMedium
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = Dimensions.paddingSmall)
+                .padding(start = Dimensions.paddingSmall, end = Dimensions.paddingMedium),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onBackPressed,
+                modifier = Modifier
+                    .size(Dimensions.iconSizeLarge)
+                    .background(colorScheme.secondary.copy(alpha = 0.2f), CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Indietro",
+                    tint = colorScheme.onPrimary,
+                    modifier = Modifier.size(Dimensions.iconSizeMedium)
+                )
+            }
+
+            TextField(
+                value = searchQuery,
+                onValueChange = onSearchQueryChange,
+                placeholder = {
+                    Text(
+                        text = placeholderText,
+                        style = typography.bodyLarge,
+                        color = colorScheme.onPrimary.copy(alpha = 0.7f)
+                    )
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = Dimensions.paddingSmall)
+                    .clip(RoundedCornerShape(Dimensions.cornerRadiusLarge))
+                    .background(colorScheme.surface.copy(alpha = 0.2f))
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { focusState ->
+                        onFocusChanged(focusState.isFocused) // Notifica il cambio di focus
+                        // Logica per mostrare/nascondere la tastiera può essere gestita qui
+                        // o lasciata al sistema in base al focus.
+                        // if (focusState.isFocused) keyboardController?.show() else keyboardController?.hide()
+                    },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = colorScheme.surface.copy(alpha = 0.3f),
+                    unfocusedContainerColor = colorScheme.surface.copy(alpha = 0.2f),
+                    disabledContainerColor = colorScheme.surface.copy(alpha = 0.2f),
+                    cursorColor = colorScheme.onPrimary,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                    focusedTextColor = colorScheme.onPrimary,
+                    unfocusedTextColor = colorScheme.onPrimary,
+                ),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = imeAction),
+                keyboardActions = KeyboardActions(
+                    onSearch = { onSearchKeyboardAction(searchQuery) },
+                    onDone = { onSearchKeyboardAction(searchQuery) }
+                ),
+                trailingIcon = {
+                    if (searchQuery.isNotBlank()) {
+                        IconButton(onClick = onClearSearch) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cancella",
+                                tint = colorScheme.onPrimary.copy(alpha = 0.7f)
+                            )
+                        }
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Cerca",
+                            tint = colorScheme.onPrimary.copy(alpha = 0.7f)
+                        )
+                    }
+                },
+                textStyle = typography.bodyLarge.copy(color = colorScheme.onPrimary)
+            )
         }
     }
 }

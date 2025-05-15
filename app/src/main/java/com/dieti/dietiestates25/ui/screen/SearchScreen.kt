@@ -3,29 +3,35 @@ package com.dieti.dietiestates25.ui.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Train
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Train
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.Typography
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -34,8 +40,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.components.AppSecondaryButton
+import com.dieti.dietiestates25.ui.components.CustomSearchAppBar
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @Composable
 fun SearchScreen(navController: NavController, idUtente: String) {
@@ -48,7 +57,7 @@ fun SearchScreen(navController: NavController, idUtente: String) {
         val interactionSource = remember { MutableInteractionSource() }
 
         var searchQuery by remember { mutableStateOf("") }
-        var isSearchActive by remember { mutableStateOf(false) }
+        var searchBarHasFocus by remember { mutableStateOf(false) }
 
         val searchResults = listOf("Napoli - Comune", "Roma - Comune", "Milano - Comune", "Torino - Comune", "Firenze - Comune", "Bologna - Comune", "Genova - Comune")
         val filteredComuni = remember(searchQuery, searchResults) {
@@ -65,6 +74,10 @@ fun SearchScreen(navController: NavController, idUtente: String) {
             colorScheme.primary.copy(alpha = 0.7f)
         )
 
+        /*LaunchedEffect(Unit) {
+            focusRequester.requestFocus()
+        }*/
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -78,77 +91,109 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                 }
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize()
             ) {
-                SearchAppBar(
-                    navController = navController,
+                CustomSearchAppBar(
                     searchQuery = searchQuery,
-                    onSearchQueryChange = {
-                        searchQuery = it
-                        isSearchActive = it.isNotBlank()
+                    onSearchQueryChange = { query ->
+                        searchQuery = query
                     },
                     onBackPressed = {
-                        if (isSearchActive) {
+                        if (searchQuery.isNotBlank()) {
                             searchQuery = ""
-                            isSearchActive = false
+                        } else if (searchBarHasFocus) {
                             focusManager.clearFocus()
                             keyboardController?.hide()
-                        } else {
-                            navController.popBackStack()
+                        }
+                        else {
+                            navController.popBackStack() //
                         }
                     },
                     onClearSearch = {
                         searchQuery = ""
-                        isSearchActive = false
-                        focusManager.clearFocus()
-                        keyboardController?.hide()
+                        focusRequester.requestFocus()
+                        keyboardController?.show()
                     },
-                    isSearchActive = isSearchActive,
-                    colorScheme = colorScheme,
-                    typography = typography,
+                    placeholderText = "Cerca comune, zona...",
                     focusRequester = focusRequester,
-                    keyboardController = keyboardController
-                )
-
-                if (isSearchActive) {
-                    SearchResultsList(
-                        navController = navController,
-                        comuni = filteredComuni,
-                        searchQuery = searchQuery, // Passa la searchQuery corrente
-                        colorScheme = colorScheme,
-                        typography = typography,
-                        idUtente = idUtente,
-                        onItemClick = {
-                            focusManager.clearFocus()
+                    onFocusChanged = { hasFocus ->
+                        searchBarHasFocus = hasFocus
+                    },
+                    imeAction = ImeAction.Search,
+                    onSearchKeyboardAction = {
+                        if (searchQuery.isNotBlank()) {
                             keyboardController?.hide()
+                            focusManager.clearFocus()
                         }
-                    )
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp)
-                            .padding(top = 24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        SearchOptionButton(
-                            icon = Icons.Outlined.LocationOn,
-                            text = "Cerca su mappa",
-                            onClick = { navController.navigate("mapSearch/$idUtente") },
+                    }
+                )
+                when {
+                    // 1. Se c'è testo nella query, mostra i risultati o "nessun risultato"
+                    searchQuery.isNotBlank() -> {
+                        SearchResultsList(
+                            navController = navController,
+                            comuni = filteredComuni,
+                            searchQuery = searchQuery,
                             colorScheme = colorScheme,
-                            typography = typography
+                            typography = typography,
+                            idUtente = idUtente,
+                            onItemClick = {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
+                                searchQuery = ""
+                            }
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        SearchOptionButton(
-                            icon = Icons.Outlined.Train,
-                            text = "Cerca per metro",
-                            onClick = { navController.navigate("metroSearch/$idUtente") },
-                            colorScheme = colorScheme,
-                            typography = typography
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    // 2. Se non c'è testo, ma la barra di ricerca ha il focus, mostra "Inizia a digitare"
+                    searchBarHasFocus -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(Dimensions.paddingLarge),
+                            contentAlignment = Alignment.TopCenter
+                        ) {
+                            Text(
+                                text = "Inizia a digitare per cercare un comune o una zona.",
+                                color = colorScheme.onBackground.copy(alpha = 0.7f),
+                                style = typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(top = Dimensions.paddingLarge)
+                            )
+                        }
+                    }
+                    // 3. Altrimenti (no testo, no focus), mostra i bottoni di scelta
+                    else -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = Dimensions.paddingLarge)
+                                .padding(top = Dimensions.paddingLarge),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Spacer(modifier = Modifier.height(Dimensions.spacingLarge))
+                            AppSecondaryButton(
+                                text = "Cerca su mappa",
+                                onClick = {
+                                    // TODO: implementa navigazione
+                                    // navController.navigate(Screen.MapScreen.route)
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                icon = Icons.Default.Map,
+                                iconContentDescription = "Cerca su mappa"
+                            )
+                            Spacer(modifier = Modifier.height(Dimensions.spacingLarge))
+                            AppSecondaryButton(
+                                text = "Cerca per metro",
+                                onClick = {
+                                    focusRequester.requestFocus() // Richiede il focus sulla barra
+                                    keyboardController?.show()    // Mostra la tastiera
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                icon = Icons.Default.Train,
+                                iconContentDescription = "Cerca per metro"
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
                     }
                 }
             }
@@ -157,142 +202,36 @@ fun SearchScreen(navController: NavController, idUtente: String) {
 }
 
 @Composable
-fun SearchAppBar(
-    navController: NavController, // Non più usata direttamente qui per popBackStack se onBackPressed la gestisce
-    searchQuery: String,
-    onSearchQueryChange: (String) -> Unit,
-    onBackPressed: () -> Unit,
-    onClearSearch: () -> Unit,
-    isSearchActive: Boolean,
-    colorScheme: ColorScheme,
-    typography: Typography,
-    focusRequester: FocusRequester,
-    keyboardController: androidx.compose.ui.platform.SoftwareKeyboardController?
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth(),
-        color = colorScheme.primary,
-        shadowElevation = 4.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .padding(start = 8.dp, end = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // IconButton corretto: usa onBackPressed e ha lo sfondo/dimensione corretti
-            IconButton(
-                onClick = onBackPressed,
-                modifier = Modifier
-                    .size(42.dp)
-                    .background(colorScheme.secondary.copy(alpha = 0.2f), CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Indietro",
-                    tint = colorScheme.onPrimary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            TextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                placeholder = {
-                    Text(
-                        text = "Cerca comune, zona...",
-                        style = typography.bodyLarge,
-                        color = colorScheme.onPrimary.copy(alpha = 0.7f)
-                    )
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 8.dp)
-                    .clip(RoundedCornerShape(28.dp))
-                    .background(colorScheme.surface.copy(alpha = 0.2f))
-                    .focusRequester(focusRequester)
-                    .onFocusChanged { focusState ->
-                        if (focusState.isFocused && !isSearchActive) {
-                            keyboardController?.show()
-                        }
-                    },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = colorScheme.surface.copy(alpha = 0.3f),
-                    unfocusedContainerColor = colorScheme.surface.copy(alpha = 0.2f),
-                    disabledContainerColor = colorScheme.surface.copy(alpha = 0.2f),
-                    cursorColor = colorScheme.onPrimary, // Modificato per coerenza
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                    errorIndicatorColor = Color.Transparent,
-                    // Assicurati che il colore del testo sia corretto anche qui
-                    focusedTextColor = colorScheme.onPrimary,
-                    unfocusedTextColor = colorScheme.onPrimary,
-                ),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        if (searchQuery.isNotBlank()) {
-                            keyboardController?.hide()
-                        }
-                    }
-                ),
-                trailingIcon = {
-                    if (searchQuery.isNotBlank()) {
-                        IconButton(onClick = onClearSearch) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Cancella",
-                                tint = colorScheme.onPrimary.copy(alpha = 0.7f)
-                            )
-                        }
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Cerca",
-                            tint = colorScheme.onPrimary.copy(alpha = 0.7f)
-                        )
-                    }
-                },
-                textStyle = typography.bodyLarge.copy(color = colorScheme.onPrimary)
-            )
-        }
-    }
-}
-
-@Composable
 fun SearchResultsList(
     navController: NavController,
     comuni: List<String>,
-    searchQuery: String, // Aggiunto parametro searchQuery
+    searchQuery: String,
     colorScheme: ColorScheme,
     typography: Typography,
     idUtente: String,
     onItemClick: () -> Unit
 ) {
-    if (comuni.isEmpty()) {
+    // Mostra "nessun risultato" solo se si è cercato qualcosa attivamente
+    if (comuni.isEmpty() && searchQuery.isNotBlank()) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(Dimensions.paddingLarge),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Nessun risultato trovato per \"$searchQuery\"", // Utilizza searchQuery
+                text = "Nessun risultato trovato per \"$searchQuery\"",
                 color = colorScheme.onBackground.copy(alpha = 0.7f),
                 style = typography.bodyMedium,
                 textAlign = TextAlign.Center
             )
         }
-    } else {
+    } else if (comuni.isNotEmpty()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(vertical = 8.dp)
+                .padding(horizontal = Dimensions.paddingMedium),
+            contentPadding = PaddingValues(vertical = Dimensions.spacingSmall)
         ) {
             items(comuni) { comune ->
                 SearchResultItem(
@@ -306,6 +245,7 @@ fun SearchResultsList(
             }
         }
     }
+    // Altrimenti non mostra nulla (es. query vuota ma barra non focalizzata)
 }
 
 
@@ -321,7 +261,7 @@ fun SearchResultItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = Dimensions.spacingSmall)
             .clickable {
                 onItemClick()
                 navController.navigate(Screen.ApartmentListingScreen.withArgs(idUtente, comune))
@@ -329,69 +269,25 @@ fun SearchResultItem(
         colors = CardDefaults.cardColors(
             containerColor = colorScheme.surface
         ),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(Dimensions.cornerRadiusSmall),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
+            defaultElevation = Dimensions.elevationSmall
         )
     ) {
         Text(
             text = comune,
             color = colorScheme.onSurface,
             style = typography.bodyLarge,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(Dimensions.paddingMedium)
         )
     }
 }
-
-@Composable
-fun SearchOptionButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    text: String,
-    onClick: () -> Unit,
-    colorScheme: ColorScheme,
-    typography: Typography
-) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = colorScheme.secondary,
-            contentColor = colorScheme.onSecondary
-        ),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 4.dp,
-            pressedElevation = 2.dp
-        )
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = text,
-                tint = colorScheme.onSecondary
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = text,
-                style = typography.labelLarge
-            )
-        }
-    }
-}
-
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewSearchScreen() {
     val navController = rememberNavController()
-    // Per la preview, la modifica della status bar non avrà effetto visibile diretto nell'IDE
-    // ma il layout con statusBarsPadding() può essere osservato.
-    DietiEstatesTheme { // Assicurati che la Preview usi lo stesso tema per coerenza
+    DietiEstatesTheme {
         SearchScreen(navController = navController, idUtente = "user123")
     }
 }
