@@ -150,7 +150,6 @@ fun NotificationScreen(
         val currentTab by viewModel.currentTab.collectAsState()
         // Osserva il nuovo StateFlow filteredNotifications
         val notifications by viewModel.filteredNotifications.collectAsState()
-        val notifications = viewModel.getFilteredNotifications()
 
         Scaffold(
             topBar = {
