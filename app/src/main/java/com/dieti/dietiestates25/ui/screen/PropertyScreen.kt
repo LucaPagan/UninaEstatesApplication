@@ -89,8 +89,6 @@ fun PropertyScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .navigationBarsPadding()
-                    .statusBarsPadding()
             ) {
                 // Main content
                 LazyColumn(

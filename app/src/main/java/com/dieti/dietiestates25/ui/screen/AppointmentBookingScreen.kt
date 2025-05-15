@@ -40,7 +40,6 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -86,8 +85,6 @@ fun AppointmentBookingScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .statusBarsPadding() // Add padding for status bar
-                    .navigationBarsPadding()
             ) {
                 AppointmentHeader(navController, colorScheme, typography)
 
