@@ -133,7 +133,7 @@ fun Navigation() {
             NotificationScreen(navController = navController)
         }
 
-        composable(route = Screen.NotificationScreen.route){
+        composable(route = Screen.NotificationDetailScreen.route){
             NotificationDetailScreen(navController = navController)
         }
     }

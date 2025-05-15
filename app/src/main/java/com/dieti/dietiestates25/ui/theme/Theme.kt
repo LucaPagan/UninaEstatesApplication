@@ -35,6 +35,7 @@ private val LightColors = lightColorScheme(
     onSurface = GrayBlue,
     scrim = Orange,
     error = Color.Red,
+    onError = Color.White,
     surfaceDim = Color.Transparent,
     surfaceTint = Color(0xFFFFD700)
 )
@@ -53,6 +54,7 @@ private val DarkColors = darkColorScheme(
     onSurface = Color.White,
     scrim = Orange,
     error = Color.Red,
+    onError = Color.White,
     surfaceDim = Color.Transparent,
     surfaceTint = Color(0xFFFFD700)
 )
