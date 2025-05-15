@@ -1,5 +1,5 @@
 package com.dieti.dietiestates25.ui.screen
-import android.app.Activity
+
 import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
@@ -47,15 +47,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -66,18 +62,6 @@ fun PropertyScreen(
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
         val context = LocalContext.current
-        val view = LocalView.current
-
-        if (!view.isInEditMode) {
-            SideEffect {
-                val window = (view.context as Activity).window
-                colorScheme.primary.toArgb().also { window.statusBarColor = it }
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-                colorScheme.primary.toArgb().also { window.navigationBarColor = it }
-                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
-            }
-        }
-
 
         Scaffold(
             topBar = {
@@ -85,6 +69,7 @@ fun PropertyScreen(
                     // This is an empty box that ensures the top app bar space is reserved
                 }
             }
+
         ) { innerPadding ->
             Box(
                 modifier = Modifier

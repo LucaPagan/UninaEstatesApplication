@@ -60,6 +60,7 @@ class NotificationDetailViewModel : ViewModel() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class) // Necessario per TopAppBar
 @Composable
 fun NotificationDetailScreen(
     navController: NavController,
@@ -72,150 +73,159 @@ fun NotificationDetailScreen(
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colorScheme.primary)
-        ) {
-            // Top App Bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier.align(Alignment.CenterStart)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = colorScheme.onPrimary
+        Scaffold (
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Notifica",
+                            style = typography.titleLarge,
+                            // Il colore del testo viene gestito da TopAppBarDefaults
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                // La tint viene gestita da TopAppBarDefaults
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { /* Open menu */ }) {
+                            Icon(
+                                imageVector = Icons.Filled.MoreVert,
+                                contentDescription = "Menu",
+                                // La tint viene gestita da TopAppBarDefaults
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = colorScheme.primary,
+                        titleContentColor = colorScheme.onPrimary,
+                        navigationIconContentColor = colorScheme.onPrimary,
+                        actionIconContentColor = colorScheme.onPrimary
                     )
-                }
-
-                Text(
-                    text = "Notifica",
-                    style = typography.titleLarge,
-                    color = colorScheme.onPrimary
                 )
-
-                IconButton(
-                    onClick = { /* Open menu */ },
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Menu",
-                        tint = colorScheme.onPrimary
-                    )
-                }
             }
-
-            // Main content
-            Box(
+        ) { paddingValues ->
+            Column(
                 modifier = Modifier
+                    .padding(paddingValues)
                     .fillMaxSize()
-                    .background(
-                        colorScheme.background,
-                        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-                    )
-                    .padding(16.dp)
+                    .background(colorScheme.primary) // Sfondo della colonna principale
             ) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.SpaceBetween
+
+                // Main content
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            colorScheme.background, // Sfondo del box del contenuto
+                            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                        )
+                        .padding(16.dp)
                 ) {
-                    // Notification Header
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(colorScheme.primary)
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.SpaceBetween
                     ) {
-                        // Icon
+                        // Notification Header
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(colorScheme.primary) // Leggermente diverso per contrasto
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Icon
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(colorScheme.secondary), // Colore per il box icona
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Phone,
+                                    contentDescription = "Notification Icon",
+                                    modifier = Modifier.size(32.dp),
+                                    tint = colorScheme.onSecondary // Colore icona
+                                )
+                            }
+
+                            // Sender Info
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(horizontal = 16.dp)
+                            ) {
+                                Text(
+                                    text = notification.senderType,
+                                    style = typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = colorScheme.onPrimary
+                                )
+                                Text( // Aggiunto per mostrare il nome del mittente se necessario
+                                    text = notification.senderName,
+                                    style = typography.bodyMedium,
+                                    color = colorScheme.onPrimary.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
+
+                        // Proposal Details
                         Box(
                             modifier = Modifier
-                                .size(80.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(colorScheme.secondary),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(colorScheme.primary) // Coerente con l'header
+                                .padding(16.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Phone,
-                                contentDescription = "Notification Icon",
-                                modifier = Modifier.size(32.dp),
-                                tint = colorScheme.onSecondary
+                            Text(
+                                text = notification.message,
+                                style = typography.bodyLarge,
+                                color = colorScheme.onPrimary // Colore testo su surfaceVariant
                             )
                         }
 
-                        // Sender Info
+                        // Action Buttons
                         Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 16.dp)
-                        ) {
-                            Text(
-                                text = notification.senderType,
-                                style = typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                                color = colorScheme.onPrimary
-                            )
-                        }
-                    }
-
-                    // Proposal Details
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(colorScheme.primary)
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            text = notification.message,
-                            style = typography.bodyLarge,
-                            color = colorScheme.onPrimary
-                        )
-                    }
-
-                    // Action Buttons
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Accept Button
-                        Button(
-                            onClick = { viewModel.acceptProposal() },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = colorScheme.primary,
-                                contentColor = colorScheme.onPrimary
-                            ),
-                            shape = RoundedCornerShape(16.dp)
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text(
-                                text = "Accetta",
-                                style = typography.labelLarge
-                            )
-                        }
+                            // Accept Button
+                            Button(
+                                onClick = { viewModel.acceptProposal() },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorScheme.primary,
+                                    contentColor = colorScheme.onPrimary
+                                ),
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Text(
+                                    text = "Accetta",
+                                    style = typography.labelLarge
+                                )
+                            }
 
-                        // Reject Button
-                        Button(
-                            onClick = { viewModel.rejectProposal() },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = colorScheme.error.copy(alpha = 0.7f),
-                                contentColor = colorScheme.onPrimary
-                            ),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Text(
-                                text = "Rifiuta",
-                                style = typography.labelLarge
-                            )
+                            // Reject Button
+                            Button(
+                                onClick = { viewModel.rejectProposal() },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorScheme.error, // Usare colorScheme.error direttamente
+                                    contentColor = colorScheme.onError // Usare onError per il testo sul colore di errore
+                                ),
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Text(
+                                    text = "Rifiuta",
+                                    style = typography.labelLarge
+                                )
+                            }
                         }
                     }
                 }

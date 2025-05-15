@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 import android.annotation.SuppressLint
-import android.app.Activity
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,24 +27,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.ui.theme.typography
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentBookingScreen(
     navController: NavController
@@ -56,46 +48,92 @@ fun AppointmentBookingScreen(
         var selectedDate by remember { mutableStateOf(LocalDate.of(2025, 8, 17)) }
         var selectedTimeSlot by remember { mutableStateOf<Int?>(0) } // Default to first time slot
         val scrollState = rememberScrollState()
+        val haptic = LocalHapticFeedback.current
 
-        // Get system insets
-        val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-        val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-        val displayCutoutPadding = WindowInsets.displayCutout.asPaddingValues()
+        Scaffold(
+            // Gestisce automaticamente insets per status bar, navigation bar e keyboard
+            modifier = Modifier.fillMaxSize(),
 
-        // Calculate actual safe area padding
-        val topPadding = maxOf(statusBarHeight, displayCutoutPadding.calculateTopPadding()) + 4.dp
-        val bottomPadding = navigationBarHeight + 4.dp
-        val view = LocalView.current
-
-        if (!view.isInEditMode) {
-            SideEffect {
-                val window = (view.context as Activity).window
-                colorScheme.primary.toArgb().also { window.statusBarColor = it }
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-                colorScheme.primary.toArgb().also { window.navigationBarColor = it }
-                WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colorScheme.background)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-                AppointmentHeader(navController, colorScheme, typography)
-
-                BoxWithConstraints {
-                    val screenHeight = maxHeight
-
-                    Column(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Prenota una visita",
+                            style = typography.titleMedium
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            navController.popBackStack()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Chiudi"
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = colorScheme.primary,
+                        titleContentColor = colorScheme.onPrimary
+                    ),
+                    modifier = Modifier.statusBarsPadding()
+                )
+            },
+            bottomBar = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                ) {
+                    HorizontalDivider(color = colorScheme.onBackground, thickness = 1.dp)
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(screenHeight - 140.dp) // Reserve space for header, button and navigation bar
-                            .verticalScroll(scrollState)
+                            .background(colorScheme.background)
+                            .padding(16.dp),
+                    ) {
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                // Qui puoi usare la data e l'orario selezionati per le operazioni successive
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colorScheme.primary
+                            )
+                        ) {
+                            Text(
+                                text = "Prosegui",
+                                color = colorScheme.onPrimary,
+                                style = typography.labelLarge
+                            )
+                        }
+                    }
+                }
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(colorScheme.surface)
+                    .padding(paddingValues)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .imePadding() // Gestisce la tastiera
+                ) {
+                    HorizontalDivider(color = colorScheme.onBackground, thickness = 1.dp)
+
+                    // Heading
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
                             .padding(16.dp)
                     ) {
                         Text(
@@ -103,8 +141,15 @@ fun AppointmentBookingScreen(
                             style = typography.titleMedium,
                             color = colorScheme.onBackground
                         )
+                    }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                    // Main content area
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         CalendarView(
                             selectedDate = selectedDate,
@@ -126,83 +171,20 @@ fun AppointmentBookingScreen(
                         TimeSlotSelector(
                             selectedTimeSlot = selectedTimeSlot,
                             onTimeSlotSelected = { selectedTimeSlot = it },
-                            colorScheme = colorScheme
+                            colorScheme = colorScheme,
+                            typography = typography
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
                         NotificationBox(colorScheme, typography)
 
-                        // Add extra space at bottom to prevent content from being hidden by navigation bar
-                        Spacer(modifier = Modifier.height(navigationBarHeight))
-                    }
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .imePadding() // Handle keyboard appearance
-                ) {
-                    HorizontalDivider(
-                        color = colorScheme.onBackground,
-                        thickness = 1.dp
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(colorScheme.background)
-                            .padding(16.dp)
-                            .padding(bottom = bottomPadding) // Add padding for navigation bar
-                    ) {
-                        ContinueButton(colorScheme, typography)
+                        Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
             }
         }
     }
-}
-
-@Composable
-fun AppointmentHeader(
-    navController: NavController,
-    colorScheme: ColorScheme,
-    typography: Typography
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colorScheme.surface)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = {
-                    navController.popBackStack()
-                }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
-                    modifier = Modifier.size(24.dp),
-                    tint = colorScheme.onSurface
-                )
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Text(
-                text = "Prenota una visita",
-                style = typography.titleMedium,
-                color = colorScheme.onSurface
-            )
-        }
-    }
-
-    HorizontalDivider(thickness = 1.dp, color = colorScheme.onBackground)
 }
 
 @Composable
@@ -484,7 +466,8 @@ fun CalendarView(
 fun TimeSlotSelector(
     selectedTimeSlot: Int?,
     onTimeSlotSelected: (Int) -> Unit,
-    colorScheme: ColorScheme
+    colorScheme: ColorScheme,
+    typography: Typography
 ) {
     val timeSlots = listOf("9-12", "12-14", "14-17", "17-20")
 
@@ -571,28 +554,6 @@ fun NotificationBox(
                 color = colorScheme.onSecondary
             )
         }
-    }
-}
-
-@Composable
-fun ContinueButton(
-    colorScheme: ColorScheme,
-    typography: Typography
-) {
-    Button(
-        onClick = { /* Continue action */ },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = colorScheme.primary
-        )
-    ) {
-        Text(
-            text = "Prosegui",
-            style = typography.titleMedium
-        )
     }
 }
 
