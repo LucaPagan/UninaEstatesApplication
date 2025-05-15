@@ -92,8 +92,6 @@ fun PropertySellScreen(navController: NavController, idUtente: String) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .navigationBarsPadding()
-                .statusBarsPadding()
                 .background(Brush.verticalGradient(colorStops = gradientColors))
                 .pointerInput(Unit) {
                     detectTapGestures(onTap = {

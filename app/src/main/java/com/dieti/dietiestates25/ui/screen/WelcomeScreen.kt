@@ -67,21 +67,6 @@ fun WelcomeScreen(navController: NavController) {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
 
-        // System UI configuration
-        val view = LocalView.current
-        if (!view.isInEditMode) {
-            SideEffect {
-                val window = (view.context as Activity).window
-                val primaryColorArgb = colorScheme.primary.toArgb()
-                window.statusBarColor = primaryColorArgb
-                window.navigationBarColor = primaryColorArgb
-                WindowCompat.getInsetsController(window, view).let { controller ->
-                    controller.isAppearanceLightStatusBars = false // Assuming dark primary color
-                    controller.isAppearanceLightNavigationBars = false // Assuming dark primary color
-                }
-            }
-        }
-
         // Gradient: smooth transition between primary and background colors.
         val gradientColors = listOf(
             colorScheme.primary,
@@ -95,8 +80,7 @@ fun WelcomeScreen(navController: NavController) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(colors = gradientColors))
-                .statusBarsPadding(), // Apply padding for the status bar
+                .background(Brush.verticalGradient(colors = gradientColors)),
             contentAlignment = Alignment.TopCenter
         ) {
             Column(
