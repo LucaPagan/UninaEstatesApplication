@@ -4,8 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -26,11 +24,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
-import com.dieti.dietiestates25.ui.AppIconDisplay
-import com.dieti.dietiestates25.ui.AppSecondaryButton
-import com.dieti.dietiestates25.ui.ClickableSearchBar
-import com.dieti.dietiestates25.ui.TitledSection
+import com.dieti.dietiestates25.ui.components.AppIconDisplay
+import com.dieti.dietiestates25.ui.components.AppSecondaryButton
+import com.dieti.dietiestates25.ui.components.ClickableSearchBar
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
+import com.dieti.dietiestates25.ui.components.PropertyShowcaseSection
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
@@ -56,6 +54,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val dimensions = Dimensions
+        val comune = "Napoli"
 
         val gradientColors = listOf(
             colorScheme.primary.copy(alpha = 0.7f),
@@ -90,10 +89,20 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
 
                     Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
-                    HomeScreenRecentSearchesSection(
-                        navController = navController,
-                        idUtente = idUtente,
-                        properties = sampleProperties_Home
+                    PropertyShowcaseSection(
+                        title = "Ultime ricerche",
+                        items = sampleProperties_Home,
+                        itemContent = { property ->
+                            PropertyCard_Home(
+                                property = property,
+                                navController = navController,
+                                modifier = Modifier.width(260.dp)
+                            )
+                        },
+                        onSeeAllClick = {
+                            navController.navigate(Screen.ApartmentListingScreen.withArgs(idUtente, comune))
+                        },
+                        modifier = Modifier.padding(vertical = dimensions.paddingMedium) // Padding per la sezione
                     )
 
                     Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
@@ -127,7 +136,7 @@ fun HomeScreenHeader(idUtente: String) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             AppIconDisplay(
-                size = 60.dp, // Mantenuto valore specifico perché è una dimensione dell'icona particolare
+                size = 60.dp,
                 shapeRadius = dimensions.cornerRadiusMedium
             )
 
@@ -152,36 +161,6 @@ fun HomeScreenHeader(idUtente: String) {
 }
 
 @Composable
-fun HomeScreenRecentSearchesSection(
-    navController: NavController,
-    idUtente: String,
-    properties: List<Property>
-) {
-    val dimensions = Dimensions
-
-    TitledSection(
-        title = "Ultime ricerche",
-        modifier = Modifier.padding(vertical = dimensions.paddingMedium),
-        onSeeAllClick = {
-            navController.navigate(Screen.ApartmentListingScreen.withArgs(idUtente))
-        }
-    ) {
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = dimensions.paddingLarge),
-            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
-        ) {
-            items(properties) { property ->
-                PropertyCard_Home(
-                    property = property,
-                    navController = navController,
-                    modifier = Modifier.width(260.dp) // Mantenuto per preservare l'aspetto desiderato
-                )
-            }
-        }
-    }
-}
-
-@Composable
 fun PropertyCard_Home(
     property: Property,
     navController: NavController,
@@ -193,7 +172,7 @@ fun PropertyCard_Home(
 
     Card(
         modifier = modifier
-            .height(200.dp) // Mantenuto per preservare l'aspetto desiderato
+            .height(200.dp)
             .clickable {
                 navController.navigate(Screen.PropertyScreen.route)
             },
@@ -208,13 +187,13 @@ fun PropertyCard_Home(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp) // Mantenuto per preservare l'aspetto desiderato
+                    .height(140.dp)
             )
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .height(60.dp) // Mantenuto per preservare l'aspetto desiderato
+                    .height(60.dp)
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
