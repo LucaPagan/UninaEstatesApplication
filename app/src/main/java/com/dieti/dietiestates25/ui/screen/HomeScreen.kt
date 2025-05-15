@@ -74,8 +74,6 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                     .fillMaxSize()
                     .background(Brush.verticalGradient(colors = gradientColors))
                     .padding(paddingValues)
-                    .navigationBarsPadding()
-                    .statusBarsPadding()
             ) {
                 Column(
                     modifier = Modifier

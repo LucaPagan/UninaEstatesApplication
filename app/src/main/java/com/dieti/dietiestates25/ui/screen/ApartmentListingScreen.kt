@@ -81,8 +81,6 @@ fun ApartmentListingScreen(navController: NavController, idUtente: String, comun
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .navigationBarsPadding()
-                .statusBarsPadding()
                 .background(Brush.verticalGradient(colorStops = gradientColors))
         ) {
             Column(

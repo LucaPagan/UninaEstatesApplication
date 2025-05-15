@@ -68,8 +68,6 @@ fun SearchScreen(navController: NavController, idUtente: String) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .navigationBarsPadding()
-                .statusBarsPadding()
                 .background(Brush.verticalGradient(colors = gradientColors))
                 .clickable(
                     interactionSource = interactionSource,
