@@ -26,7 +26,7 @@ import com.dieti.dietiestates25.ui.navigation.Screen
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
     object Home : BottomNavItem(Screen.HomeScreen.route, Icons.Default.Home, "Esplora")
     object Notifications : BottomNavItem(Screen.NotificationScreen.route, Icons.Default.Notifications, "Notifiche")
-    //object Profile : BottomNavItem(Screen.ProfileScreen.route, Icons.Default.Person, "Profilo")
+    object Profile : BottomNavItem(Screen.ProfileScreen.route, Icons.Default.Person, "Profilo")
 }
 
 @Composable
@@ -41,7 +41,7 @@ fun AppBottomNavigation(navController: NavController, idUtente: String = "sconos
         val items = listOf(
             BottomNavItem.Home,
             BottomNavItem.Notifications,
-            //BottomNavItem.Profile
+            BottomNavItem.Profile,
         )
 
         items.forEach { item ->

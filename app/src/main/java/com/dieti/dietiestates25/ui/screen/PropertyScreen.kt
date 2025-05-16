@@ -8,7 +8,6 @@ import com.dieti.dietiestates25.ui.theme.typography
 import kotlinx.coroutines.launch
 
 import android.content.Intent
-import android.net.Uri
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -41,7 +40,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -52,6 +50,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -350,7 +349,8 @@ fun PropertyScreen(
                             Button(
                                 onClick = {
                                     // Intent per aprire il tastierino numerico con un numero preimpostato
-                                    val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:081 192 6079"))
+                                    val dialIntent = Intent(Intent.ACTION_DIAL,
+                                        "tel:081 192 6079".toUri())
                                     context.startActivity(dialIntent)
                                 },
                                 modifier = Modifier
@@ -537,7 +537,7 @@ fun PropertyScreen(
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.KeyboardArrowRight,
+                                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                             contentDescription = "View More",
                                             tint = colorScheme.primary,
                                             modifier = Modifier.size(36.dp)
@@ -575,7 +575,7 @@ fun PropertyScreen(
                                 .background(colorScheme.primary, CircleShape)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.ArrowBack,
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                                 contentDescription = "Back",
                                 tint = colorScheme.onPrimary
                             )

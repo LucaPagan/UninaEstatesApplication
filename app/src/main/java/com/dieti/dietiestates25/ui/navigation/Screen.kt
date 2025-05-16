@@ -12,6 +12,7 @@ sealed class Screen(val route: String) {
     data object AppointmentBookingScreen : Screen ("appointment_screen")
     data object NotificationScreen : Screen ("notification_screen")
     data object NotificationDetailScreen : Screen ("notification_detail_screen")
+    data object ProfileScreen : Screen ("profile_screen")
 
     fun withArgs(vararg args: String): String {
         return buildString {

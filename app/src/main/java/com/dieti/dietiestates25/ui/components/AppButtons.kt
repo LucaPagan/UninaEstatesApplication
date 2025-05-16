@@ -112,6 +112,35 @@ fun AppSecondaryButton(
 }
 
 @Composable
+fun AppRedButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    textStyle: TextStyle = MaterialTheme.typography.titleMedium
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(Dimensions.buttonHeight),
+        enabled = enabled,
+        shape = RoundedCornerShape(Dimensions.cornerRadiusMedium),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = colorScheme.error,
+            contentColor = colorScheme.onPrimary,
+            disabledContainerColor = colorScheme.onSurface.copy(alpha = 0.12f),
+            disabledContentColor = colorScheme.onSurface.copy(alpha = 0.38f)
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = Dimensions.elevationLarge,
+            pressedElevation = Dimensions.elevationMedium
+        )
+    ) {
+        Text(text, style = textStyle)
+    }
+}
+
+@Composable
 fun AppIconDisplay(
     modifier: Modifier = Modifier,
     iconResId: Int = R.drawable.appicon1, // Default app icon
