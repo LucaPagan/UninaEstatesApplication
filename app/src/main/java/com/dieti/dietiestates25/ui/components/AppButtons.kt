@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -172,6 +173,226 @@ fun AppIconDisplay(
                 contentScale = ContentScale.Fit
             )
         }
+    }
+}
+
+/**
+ * A reusable card component for displaying apartment/property information
+ *
+ * @param price The price of the property (displayed prominently)
+ * @param imageResId Resource ID for the property image
+ * @param onClick Action to execute when the card is clicked
+ * @param modifier Modifier for customizing the card appearance
+ * @param address Optional property address
+ * @param details Optional details list to display (rooms, area, floor, etc.)
+ * @param actionButton Optional action button to display (like "View" or "Details")
+ * @param cardHeight Height of the card (defaults to 210.dp for detail view, can be smaller for list views)
+ * @param imageHeight Height of the image portion (defaults to 120.dp for detail view)
+ * @param elevation Card elevation
+ * @param horizontalMode If true, displays in a more compact horizontal layout (for lists)
+ */
+@Composable
+fun AppPropertyCard(
+    price: String,
+    imageResId: Int = R.drawable.property1,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    address: String? = null,
+    details: List<String> = emptyList(),
+    actionButton: @Composable (() -> Unit)? = null,
+    cardHeight: Dp = 210.dp,
+    imageHeight: Dp = 120.dp,
+    elevation: Dp = Dimensions.elevationMedium,
+    horizontalMode: Boolean = false
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+
+    Card(
+        modifier = modifier // External modifier applied here (size, etc.)
+            .shadow(elevation, RoundedCornerShape(Dimensions.cornerRadiusMedium)), // Shadow applied here
+        shape = RoundedCornerShape(Dimensions.cornerRadiusMedium),
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+        colors = CardDefaults.cardColors(
+            containerColor = colorScheme.surface
+        )
+        // RIMOSSO il modificatore .clickable(onClick = onClick) dalla Card principale.
+        // La logica di click è ora applicata condizionalmente al contenuto interno.
+    ) {
+        // Determina il modificatore da applicare al contenuto basato sulla presenza dell'actionButton
+        val contentModifier = if (actionButton == null) {
+            // Se non c'è un actionButton, l'intera area del contenuto è cliccabile
+            Modifier.clickable(onClick = onClick)
+        } else {
+            // Se è presente un actionButton, l'area del contenuto stessa NON è cliccabile.
+            // Il bottone gestirà il proprio click.
+            Modifier
+        }
+
+        if (horizontalMode) {
+            // Layout orizzontale per viste compatte (es. in LazyRow)
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(contentModifier) // Applica il modificatore clickable condizionale
+            ) {
+                // Immagine proprietà
+                Box(
+                    modifier = Modifier
+                        .width(120.dp)
+                        .fillMaxHeight()
+                        .background(colorScheme.secondary.copy(alpha = 0.3f))
+                ) {
+                    Image(
+                        painter = painterResource(id = imageResId),
+                        contentDescription = "Property Image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                // Dettagli proprietà
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth() // Riempie la larghezza rimanente nella Row
+                        .padding(Dimensions.paddingSmall)
+                ) {
+                    Text(
+                        text = price,
+                        style = typography.titleMedium
+                    )
+
+                    if (address != null) {
+                        Text(
+                            text = address,
+                            style = typography.bodyMedium,
+                            color = colorScheme.onSurface.copy(alpha = 0.7f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    if (details.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(Dimensions.spacingSmall))
+                        Text(
+                            text = details.joinToString(", "),
+                            style = typography.bodySmall,
+                            color = colorScheme.onSurface.copy(alpha = 0.6f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    // actionButton viene visualizzato se fornito
+                    if (actionButton != null) {
+                        Spacer(modifier = Modifier.weight(1f)) // Spinge il bottone verso il basso/fine
+                        Box(
+                            modifier = Modifier.align(Alignment.End)
+                        ) {
+                            actionButton() // La composable del bottone viene invocata qui (gestirà il suo click)
+                        }
+                    }
+                }
+            }
+        } else {
+            // Layout verticale (default)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(contentModifier) // Applica il modificatore clickable condizionale
+            ) {
+                // Immagine proprietà
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth() // Riempie la larghezza della Column (che riempie la Card)
+                        .height(imageHeight) // Usa l'imageHeight specificata o di default
+                        .background(colorScheme.secondary.copy(alpha = 0.3f))
+                ) {
+                    Image(
+                        painter = painterResource(id = imageResId),
+                        contentDescription = "Property Image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                // Dettagli proprietà
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth() // Riempie la larghezza della Column (che riempie la Card)
+                        .padding(Dimensions.paddingSmall)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Prezzo
+                        Text(
+                            text = price,
+                            style = typography.titleMedium
+                        )
+
+                        // actionButton viene visualizzato qui se fornito
+                        actionButton?.invoke() // La composable del bottone viene invocata qui (gestirà il suo click)
+                    }
+
+                    if (address != null) {
+                        Text(
+                            text = address,
+                            style = typography.bodyMedium,
+                            color = colorScheme.onSurface.copy(alpha = 0.7f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    if (details.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(Dimensions.spacingExtraSmall))
+                        Text(
+                            text = details.joinToString(", "),
+                            style = typography.bodySmall,
+                            color = colorScheme.onSurface.copy(alpha = 0.6f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Standard View/Visualizza button for property cards
+ */
+@Composable
+fun AppPropertyViewButton(
+    text: String = "Visualizza",
+    onClick: () -> Unit,
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(25.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = colorScheme.secondary,
+            contentColor = colorScheme.onSecondary
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = Dimensions.elevationSmall,
+            pressedElevation = Dimensions.elevationSmall,
+        ),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+        modifier = modifier.height(32.dp)
+    ) {
+        Text(
+            text = text,
+            style = typography.labelSmall
+        )
     }
 }
 
