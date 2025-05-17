@@ -28,6 +28,7 @@ import com.dieti.dietiestates25.ui.components.AppIconDisplay
 import com.dieti.dietiestates25.ui.components.AppSecondaryButton
 import com.dieti.dietiestates25.ui.components.ClickableSearchBar
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
+import com.dieti.dietiestates25.ui.components.AppPropertyCard
 import com.dieti.dietiestates25.ui.components.PropertyShowcaseSection
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
@@ -54,7 +55,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val dimensions = Dimensions
-        val comune = "Napoli"
+        val comune = "Napoli" // Esempio: Potresti voler passare il comune dell'utente reale
 
         val gradientColors = listOf(
             colorScheme.primary.copy(alpha = 0.7f),
@@ -91,18 +92,32 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
 
                     PropertyShowcaseSection(
                         title = "Ultime ricerche",
-                        items = sampleProperties_Home,
-                        itemContent = { property ->
-                            PropertyCard_Home(
-                                property = property,
-                                navController = navController,
-                                modifier = Modifier.width(260.dp)
+                        items = sampleProperties_Home, // Passa la lista dei dati Property
+                        itemContent = { property -> // Per ogni 'property' nella lista...
+                            AppPropertyCard(
+                                // Mappa i dati della Property ai parametri della AppPropertyCard
+                                price = property.price,
+                                address = property.location,
+                                details = listOf(property.type),
+                                imageResId = property.imageRes,
+
+                                // Configura AppPropertyCard per il layout verticale con dimensione fissa
+                                horizontalMode = false, // Layout verticale
+                                modifier = Modifier.size(width = 260.dp, height = 200.dp), // Dimensione fissa
+
+                                // actionButton NON fornito, quindi l'onClick della card sarà attivo
+                                actionButton = null,
+
+                                onClick = {
+                                    // QUESTA AZIONE viene eseguita quando si clicca sulla card
+                                    navController.navigate("propertyDetail/${property.id}")
+                                }
                             )
                         },
                         onSeeAllClick = {
                             navController.navigate(Screen.ApartmentListingScreen.withArgs(idUtente, comune))
                         },
-                        modifier = Modifier.padding(vertical = dimensions.paddingMedium) // Padding per la sezione
+                        modifier = Modifier.padding(vertical = Dimensions.paddingMedium)
                     )
 
                     Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
@@ -155,78 +170,6 @@ fun HomeScreenHeader(idUtente: String) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-            }
-        }
-    }
-}
-
-@Composable
-fun PropertyCard_Home(
-    property: Property,
-    navController: NavController,
-    modifier: Modifier = Modifier
-) {
-    val typography = MaterialTheme.typography
-    val colorScheme = MaterialTheme.colorScheme
-    val dimensions = Dimensions
-
-    Card(
-        modifier = modifier
-            .height(200.dp)
-            .clickable {
-                navController.navigate(Screen.PropertyScreen.route)
-            },
-        shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
-        colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = dimensions.elevationMedium)
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(id = property.imageRes),
-                contentDescription = "Property Image: ${property.type}",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(140.dp)
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
-                        )
-                    )
-            )
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(dimensions.paddingSmall)
-            ) {
-                Text(
-                    text = property.price,
-                    color = Color.White,
-                    style = typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = property.type,
-                    color = Color.White.copy(alpha = 0.9f),
-                    style = typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                if (property.location.isNotEmpty()) {
-                    Text(
-                        text = property.location,
-                        color = Color.White.copy(alpha = 0.7f),
-                        style = typography.bodySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
         }
     }

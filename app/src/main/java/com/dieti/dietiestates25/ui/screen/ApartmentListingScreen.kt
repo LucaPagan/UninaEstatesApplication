@@ -2,6 +2,7 @@
 
 package com.dieti.dietiestates25.ui.screen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -43,14 +44,27 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme.colorScheme
 import com.dieti.dietiestates25.ui.theme.typography
-import androidx.compose.foundation.layout.statusBarsPadding
+import com.dieti.dietiestates25.ui.components.AppPropertyCard
+import com.dieti.dietiestates25.ui.components.AppPropertyViewButton
+import com.dieti.dietiestates25.ui.theme.Dimensions
+
+val sampleListingProperties = listOf(
+    Property(1, "450.000 €", "Appartamento", R.drawable.property1, "Napoli, Vomero"),
+    Property(2, "380.000 €", "Appartamento", R.drawable.property2, "Napoli, Chiaia"),
+    Property(3, "520.000 €", "Villa", R.drawable.property1, "Posillipo, Napoli"),
+    Property(4, "290.000 €", "Attico", R.drawable.property2, "Napoli, Centro Storico"),
+    Property(5, "210.000 €", "Bilocale", R.drawable.property1, "Napoli, Fuorigrotta"),
+    Property(6, "600.000 €", "Appartamento", R.drawable.property2, "Napoli, San Ferdinando"),
+    Property(7, "310.000 €", "Trivano", R.drawable.property1, "Napoli, Arenella"),
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApartmentListingScreen(navController: NavController, idUtente: String, comune: String) {
     DietiEstatesTheme {
-        val colorScheme = colorScheme
+        val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
+        val dimensions = Dimensions
 
         val scrollState = rememberScrollState()
 
@@ -116,78 +130,25 @@ fun ApartmentListingScreen(navController: NavController, idUtente: String, comun
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    // Apartment listings with enhanced visuals
-                    ApartmentCard(
-                        navController = navController,
-                        price = "€180.000",
-                        address = "Appartamento Napoli, Via Gennaro 49",
-                        rooms = "2 Locali",
-                        area = "62 mq",
-                        floor = "2 piano",
-                        bathrooms = "1 bagno",
-                        features = "Dotato di ascensore",
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    ApartmentCard(
-                        navController = navController,
-                        price = "€195.000",
-                        address = "Appartamento Napoli, Soccavo, Via Montevergine 20",
-                        rooms = "3 Locali",
-                        area = "93 mq",
-                        floor = "3 piano",
-                        bathrooms = "1 bagno",
-                        features = "Dotato di ascensore",
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    ApartmentCard(
-                        navController = navController,
-                        price = "€240.000",
-                        address = "Appartamento Napoli, Vomero, Via Torsanlo Tasso 185",
-                        rooms = "3 Locali",
-                        area = "86 mq",
-                        floor = "1 piano",
-                        bathrooms = "1 bagno",
-                        features = "Dotato di posto auto",
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    ApartmentCard(
-                        navController = navController,
-                        price = "€210.000",
-                        address = "Appartamento Napoli, Posillipo, Via Petrarca 25",
-                        rooms = "4 Locali",
-                        area = "105 mq",
-                        floor = "4 piano",
-                        bathrooms = "2 bagni",
-                        features = "Dotato di ascensore e terrazzo",
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    ApartmentCard(
-                        navController = navController,
-                        price = "€175.000",
-                        address = "Appartamento Napoli, Fuorigrotta, Via Leopardi 12",
-                        rooms = "2 Locali",
-                        area = "75 mq",
-                        floor = "2 piano",
-                        bathrooms = "1 bagno",
-                        features = "Dotato di balcone",
-                        colorScheme = colorScheme,
-                        typography = typography
+                    AppPropertyCard(
+                        price = "100",
+                        address = "Napoli",
+                        details = listOf("100 mq", "2 bagni"),
+                        imageResId = R.drawable.property1,
+                        horizontalMode = false,
+                        actionButton = {
+                            AppPropertyViewButton(
+                                text = "Visualizza",
+                                onClick = {
+                                    navController.navigate(Screen.PropertyScreen.route)
+                                }
+                            )
+                        },
+                        onClick = {
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = dimensions.paddingSmall, horizontal = dimensions.paddingLarge)
                     )
 
                     // Bottom padding to ensure last item is visible above bottom bar
@@ -354,16 +315,13 @@ fun CustomRangeSlider(
     presets: List<Pair<String, ClosedFloatingPointRange<Float>>> = emptyList(),
 
     // Colori personalizzabili
-    thumbColor: Color = colorScheme.primary, // Thumb con colore primario
-    activeTrackColor: Color = colorScheme.primary, // Range interno con colore primario
-    inactiveTrackColor: Color = colorScheme.secondary, // Range esterno con colore secondario
+    thumbColor: Color = colorScheme.primary,
+    activeTrackColor: Color = colorScheme.primary,
+    inactiveTrackColor: Color = colorScheme.secondary,
     labelBackgroundColor: Color = colorScheme.primaryContainer,
     labelTextColor: Color = colorScheme.onPrimaryContainer,
-
-    // Altri parametri
-    modifier: Modifier = Modifier
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
-    // Stati per le animazioni
     var isDragging by remember { mutableStateOf(false) }
     val animatedScale by animateFloatAsState(
         targetValue = if (isDragging) 1.1f else 1f,
