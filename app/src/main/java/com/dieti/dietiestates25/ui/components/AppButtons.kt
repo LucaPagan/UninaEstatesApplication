@@ -44,7 +44,9 @@ fun AppPrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    textStyle: TextStyle = MaterialTheme.typography.titleMedium
+    textStyle: TextStyle = MaterialTheme.typography.titleMedium,
+    icon: ImageVector? = null,
+    iconContentDescription: String? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
     Button(
@@ -63,7 +65,20 @@ fun AppPrimaryButton(
             pressedElevation = Dimensions.elevationMedium
         )
     ) {
-        Text(text, style = textStyle)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = iconContentDescription ?: text,
+                    tint = colorScheme.onPrimary
+                )
+                Spacer(modifier = Modifier.width(Dimensions.spacingSmall))
+            }
+            Text(text = text, style = textStyle)
+        }
     }
 }
 

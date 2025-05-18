@@ -1,5 +1,12 @@
 package com.dieti.dietiestates25.ui.screen
 
+import com.dieti.dietiestates25.ui.components.AppPrimaryButton
+import com.dieti.dietiestates25.ui.components.AppRedButton
+import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,9 +26,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavController
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
 // ViewModel for Notification Details
 class NotificationDetailViewModel : ViewModel() {
@@ -196,36 +200,18 @@ fun NotificationDetailScreen(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             // Accept Button
-                            Button(
+                            AppPrimaryButton(
                                 onClick = { viewModel.acceptProposal() },
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = colorScheme.primary,
-                                    contentColor = colorScheme.onPrimary
-                                ),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Text(
-                                    text = "Accetta",
-                                    style = typography.labelLarge
-                                )
-                            }
+                                text = "Accetta",
+                            )
 
                             // Reject Button
-                            Button(
+                            AppRedButton(
                                 onClick = { viewModel.rejectProposal() },
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = colorScheme.error, // Usare colorScheme.error direttamente
-                                    contentColor = colorScheme.onError // Usare onError per il testo sul colore di errore
-                                ),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Text(
-                                    text = "Rifiuta",
-                                    style = typography.labelLarge
-                                )
-                            }
+                                text = "Rifiuta"
+                            )
                         }
                     }
                 }
