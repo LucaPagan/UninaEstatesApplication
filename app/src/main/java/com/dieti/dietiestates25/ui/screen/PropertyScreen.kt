@@ -38,6 +38,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Phone
@@ -51,6 +52,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
+import com.dieti.dietiestates25.ui.components.AppPrimaryButton
+import com.dieti.dietiestates25.ui.components.AppSecondaryButton
+import kotlinx.coroutines.CoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -62,6 +66,22 @@ fun PropertyScreen(
         val typography = MaterialTheme.typography
         val context = LocalContext.current
 
+        val coroutineScope = rememberCoroutineScope()
+
+        // Elenco delle immagini da mostrare
+        val propertyImages = listOf(
+            R.drawable.property1,
+            R.drawable.property2,
+            // Aggiungi qui altre immagini
+            // R.drawable.property4,
+            // R.drawable.property5,
+            // ecc.
+        )
+
+        val totalImages = propertyImages.size
+        // Crea un PagerState controllabile
+        val pagerState = rememberPagerState(initialPage = 0) { totalImages }
+
         Scaffold(
             topBar = {
                 Box {
@@ -70,6 +90,7 @@ fun PropertyScreen(
             }
 
         ) { innerPadding ->
+            //Box per l'immagine a scorrimento
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -81,409 +102,75 @@ fun PropertyScreen(
                         .padding(innerPadding)
                 ) {
                     // Property Images Section with navigation buttons
-                    // Property Images Section with navigation buttons
                     item {
-                        val coroutineScope = rememberCoroutineScope()
-
-                        // Elenco delle immagini da mostrare
-                        val propertyImages = listOf(
-                            R.drawable.property1,
-                            R.drawable.property2,
-                            // Aggiungi qui altre immagini
-                            // R.drawable.property4,
-                            // R.drawable.property5,
-                            // ecc.
-                        )
-
-                        val totalImages = propertyImages.size
-                        // Crea un PagerState controllabile
-                        val pagerState = rememberPagerState(initialPage = 0) { totalImages }
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(250.dp)
-                        ) {
-                            // HorizontalPager per le immagini
-                            HorizontalPager(
-                                state = pagerState,
-                                modifier = Modifier.fillMaxSize()
-                            ) { page ->
-                                // Immagine della proprietà
-                                Image(
-                                    painter = painterResource(
-                                        id = propertyImages[page]
-                                    ),
-                                    contentDescription = "Property Image ${page + 1}",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-
-                            // Navigazione immagini
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.BottomCenter)
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                // Pulsante immagine precedente
-                                IconButton(
-                                    onClick = {
-                                        // Usa coroutine per animare lo scorrimento
-                                        coroutineScope.launch {
-                                            val targetPage = if (pagerState.currentPage > 0) {
-                                                pagerState.currentPage - 1
-                                            } else {
-                                                totalImages - 1 // Torna all'ultima immagine
-                                            }
-                                            pagerState.animateScrollToPage(targetPage)
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .background(colorScheme.onBackground.copy(alpha = 0.6f), CircleShape)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                                        contentDescription = "Previous Image",
-                                        tint = colorScheme.background
-                                    )
-                                }
-
-                                // Indicatore del contatore immagini
-                                Box(
-                                    modifier = Modifier
-                                        .background(
-                                            colorScheme.onBackground.copy(alpha = 0.6f),
-                                            RoundedCornerShape(12.dp)
-                                        )
-                                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                                ) {
-                                    Text(
-                                        // Usa pagerState.currentPage invece di currentImageIndex
-                                        text = "${pagerState.currentPage + 1}/$totalImages",
-                                        color = colorScheme.background,
-                                        style = typography.labelMedium
-                                    )
-                                }
-
-                                // Pulsante immagine successiva
-                                IconButton(
-                                    onClick = {
-                                        // Usa coroutine per animare lo scorrimento
-                                        coroutineScope.launch {
-                                            val targetPage = if (pagerState.currentPage < totalImages - 1) {
-                                                pagerState.currentPage + 1
-                                            } else {
-                                                0 // Torna alla prima immagine
-                                            }
-                                            pagerState.animateScrollToPage(targetPage)
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .background(colorScheme.onBackground.copy(alpha = 0.6f), CircleShape)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                        contentDescription = "Next Image",
-                                        tint = colorScheme.background
-                                    )
-                                }
-                            }
-                        }
+                        PropertyImagePager(pagerState, propertyImages, coroutineScope, colorScheme)
                     }
 
                     // Price and Location
                     item {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = "€129,500",
-                                style = typography.displayLarge,
-                                color = colorScheme.onBackground
-                            )
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(top = 4.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.LocationOn,
-                                    contentDescription = "Location",
-                                    tint = colorScheme.onBackground,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = "Appartamento Napoli, Via Francesco Girardi 90",
-                                    style = typography.bodyMedium,
-                                    color = colorScheme.onBackground,
-                                    modifier = Modifier.padding(start = 4.dp)
-                                )
-                            }
-                        }
+                        PropertyPriceAndLocation(
+                            price = "€129.500",
+                            location = "Appartamento Napoli, Via Francesco Girardi 90",
+                            colorScheme = colorScheme,
+                            typography = typography
+                        )
                     }
 
                     // Property Features
                     item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            PropertyFeature(
-                                icon = Icons.Default.Hotel,
-                                label = "2 Letti"
-                            )
-
-                            PropertyFeature(
-                                icon = Icons.Default.Bathroom,
-                                label = "1 Bagno"
-                            )
-
-                            PropertyFeature(
-                                icon = Icons.Default.Home,
-                                label = "3 Locali"
-                            )
-                        }
+                        PropertyFeaturesRow(
+                            colorScheme = colorScheme,
+                            typography = typography
+                        )
                     }
 
                     // Caratteristiche Section
                     item {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = "Caratteristiche",
-                                style = typography.titleMedium,
-                                color = colorScheme.onBackground,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-
-                            PropertyCharacteristic(text = "115 m²")
-                            PropertyCharacteristic(text = "2 Camere da letto")
-                            PropertyCharacteristic(text = "1 Bagno")
-                            PropertyCharacteristic(text = "3 Locali")
-                            PropertyCharacteristic(text = "3° Piano, con ascensore")
-                            PropertyCharacteristic(text = "Disponibilità di mezzi pubblici")
-                        }
+                        PropertyCharacteristicsSection(
+                            characteristics = listOf(
+                                "115 m²",
+                                "2 Camere da letto",
+                                "1 Bagno",
+                                "3 Locali"
+                            ),
+                            colorScheme = colorScheme,
+                            typography = typography
+                        )
                     }
 
                     // Descrizione Section
                     item {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = "Descrizione",
-                                style = typography.titleMedium,
-                                color = colorScheme.onBackground,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-
-                            Text(
-                                text = "Scopri questo accogliente appartamento situato nel cuore di Napoli, ideale per chi cerca comfort e comodità. L'immobile è situato al terzo piano di un edificio con ascensore, è perfetto per famiglie o coppie alla ricerca di uno spazio ben organizzato e luminoso.",
-                                style = typography.labelLarge,
-                                color = colorScheme.onBackground
-                            )
-                        }
+                        PropertyDescriptionSection(
+                            description = "Scopri questo accogliente appartamento situato nel cuore di Napoli, ideale per chi cerca comfort e comodità. L'immobile è situato al terzo piano di un edificio con ascensore, è perfetto per famiglie o coppie alla ricerca di uno spazio ben organizzato e luminoso.",
+                            colorScheme = colorScheme,
+                            typography = typography
+                        )
                     }
 
                     // Agent Info
                     item {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Home,
-                                    contentDescription = "Agency",
-                                    tint = colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-
-                                Column(modifier = Modifier.padding(start = 8.dp)) {
-                                    Text(
-                                        text = "Agenzia: Gianfranco Lombardi",
-                                        style = typography.bodyLarge,
-                                        color = colorScheme.onBackground
-                                    )
-
-                                    Text(
-                                        text = "Telefono: 081 192 6079",
-                                        style = typography.labelLarge,
-                                        color = colorScheme.onBackground
-                                    )
-
-                                    Text(
-                                        text = "VIA G. PORZIO ISOLA Es 3, Napoli (NA), Campania, 80143",
-                                        style = typography.labelMedium,
-                                        color = colorScheme.onBackground.copy(alpha = 0.7f)
-                                    )
-                                }
-                            }
-                        }
+                        AgentInfoSection(
+                            agencyName = "Agenzia Gianfranco Lombardi",
+                            phoneNumber = "081 192 6079",
+                            address = "VIA G. PORZIO ISOLA Es 3, Napoli (NA), Campania, 80143",
+                            colorScheme = colorScheme,
+                            typography = typography
+                        )
                     }
 
                     // Action Buttons
                     item {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
-                            Button(
-                                onClick = {
-                                    // Intent per aprire il tastierino numerico con un numero preimpostato
-                                    val dialIntent = Intent(Intent.ACTION_DIAL,
-                                        "tel:081 192 6079".toUri())
-                                    context.startActivity(dialIntent)
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = colorScheme.primary
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Phone,
-                                    contentDescription = "Call",
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                Text(text = "Chiama ora")
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            OutlinedButton(
-                                onClick = {
-                                    navController.navigate(Screen.AppointmentBookingScreen.route)
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = colorScheme.onSecondary,
-                                    containerColor = colorScheme.secondary
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.DateRange,
-                                    contentDescription = "Visit",
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                Text(text = "Visita")
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            OutlinedButton(
-                                onClick = {
-                                    navController.navigate(Screen.PriceProposalScreen.route)
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = colorScheme.onSecondary,
-                                    containerColor = colorScheme.secondary
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Euro,
-                                    contentDescription = "Propose price",
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                Text(text = "Proponi prezzo")
-                            }
-                        }
+                        ActionButtonsSection(
+                            navController = navController,
+                            phoneNumber = "081 192 6079",
+                            typography = typography,
+                            context = context
+                        )
                     }
 
                     // Report Ad with decorative lines and shadow
                     item {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            // Top decorative line
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.7f)
-                                    .height(1.dp)
-                                    .background(
-                                        brush = Brush.horizontalGradient(
-                                            colors = listOf(
-                                                colorScheme.surfaceDim,
-                                                colorScheme.error.copy(alpha = 0.6f),
-                                                colorScheme.surfaceDim
-                                            )
-                                        )
-                                    )
-                            )
-
-                            // Report button with shadow
-                            Row(
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Button(
-                                    onClick = { },
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = colorScheme.background
-                                    )
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Warning,
-                                        contentDescription = "Report",
-                                        tint = colorScheme.error,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        text = "Segnala Annuncio",
-                                        color = colorScheme.error,
-                                        style = typography.labelLarge,
-                                        modifier = Modifier.padding(start = 8.dp)
-                                    )
-                                }
-
-                            }
-
-                            // Bottom decorative line
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.7f)
-                                    .height(1.dp)
-                                    .background(
-                                        brush = Brush.horizontalGradient(
-                                            colors = listOf(
-                                                colorScheme.surfaceDim,
-                                                colorScheme.error.copy(alpha = 0.6f),
-                                                colorScheme.surfaceDim
-                                            )
-                                        )
-                                    )
-                            )
-                        }
+                        ReportAdSection(colorScheme = colorScheme, typography = typography)
                     }
 
                     // Similar Listings Section with Horizontal Scrolling
@@ -610,13 +297,186 @@ fun PropertyScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun PropertyImagePager(
+    pagerState: PagerState,
+    images: List<Int>,
+    coroutineScope: CoroutineScope,
+    colorScheme: ColorScheme
+) {
+    val totalImages = images.size
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(250.dp)
+    ) {
+        // HorizontalPager per le immagini
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            // Immagine della proprietà
+            Image(
+                painter = painterResource(
+                    id = images[page]
+                ),
+                contentDescription = "Property Image ${page + 1}",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
+
+        // Navigazione immagini
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Pulsante immagine precedente
+            IconButton(
+                onClick = {
+                    coroutineScope.launch {
+                        val targetPage = if (pagerState.currentPage > 0) {
+                            pagerState.currentPage - 1
+                        } else {
+                            totalImages - 1 // Torna all'ultima immagine
+                        }
+                        pagerState.animateScrollToPage(targetPage)
+                    }
+                },
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(colorScheme.onBackground.copy(alpha = 0.6f), CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    contentDescription = "Previous Image",
+                    tint = colorScheme.background
+                )
+            }
+
+            // Indicatore del contatore immagini
+            Box(
+                modifier = Modifier
+                    .background(
+                        colorScheme.onBackground.copy(alpha = 0.6f),
+                        RoundedCornerShape(12.dp)
+                    )
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "${pagerState.currentPage + 1}/$totalImages",
+                    color = colorScheme.background,
+                    style = typography.labelMedium // Utilizza la typography passata
+                )
+            }
+
+            // Pulsante immagine successiva
+            IconButton(
+                onClick = {
+                    coroutineScope.launch {
+                        val targetPage = if (pagerState.currentPage < totalImages - 1) {
+                            pagerState.currentPage + 1
+                        } else {
+                            0 // Torna alla prima immagine
+                        }
+                        pagerState.animateScrollToPage(targetPage)
+                    }
+                },
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(colorScheme.onBackground.copy(alpha = 0.6f), CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = "Next Image",
+                    tint = colorScheme.background
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun PropertyPriceAndLocation(
+    price: String,
+    location: String,
+    colorScheme: ColorScheme,
+    typography: Typography
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = price,
+            style = typography.displayLarge,
+            color = colorScheme.onBackground
+        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(top = 4.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = "Location",
+                tint = colorScheme.onBackground,
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = location,
+                style = typography.bodyMedium,
+                color = colorScheme.onBackground,
+                modifier = Modifier.padding(start = 4.dp)
+            )
+        }
+    }
+}
+
+
+@Composable
+fun PropertyFeaturesRow(colorScheme: ColorScheme, typography: Typography) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        PropertyFeature(
+            icon = Icons.Default.Hotel,
+            label = "2 Letti",
+            colorScheme = colorScheme,
+            typography = typography
+        )
+
+        PropertyFeature(
+            icon = Icons.Default.Bathroom,
+            label = "1 Bagno",
+            colorScheme = colorScheme,
+            typography = typography
+        )
+
+        PropertyFeature(
+            icon = Icons.Default.Home,
+            label = "3 Locali",
+            colorScheme = colorScheme,
+            typography = typography
+        )
+    }
+}
+
 @Composable
 fun PropertyFeature(
     icon: ImageVector,
-    label: String
+    label: String,
+    colorScheme: ColorScheme,
+    typography: Typography
 ) {
-    val colorScheme = MaterialTheme.colorScheme
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -633,13 +493,37 @@ fun PropertyFeature(
     }
 }
 
-@Composable
-fun PropertyCharacteristic(text: String) {
-    val colorScheme = MaterialTheme.colorScheme
 
+@Composable
+fun PropertyCharacteristicsSection(
+    characteristics: List<String>,
+    colorScheme: ColorScheme,
+    typography: Typography
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Caratteristiche",
+            style = typography.titleMedium,
+            color = colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        characteristics.forEach { characteristic ->
+            PropertyCharacteristic(text = characteristic, colorScheme = colorScheme, typography = typography)
+        }
+    }
+}
+
+
+@Composable
+fun PropertyCharacteristic(text: String, colorScheme: ColorScheme, typography: Typography) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 4.dp)
+        modifier = Modifier.padding(vertical = 4.dp)
     ) {
         Box(
             modifier = Modifier
@@ -653,6 +537,199 @@ fun PropertyCharacteristic(text: String) {
             modifier = Modifier.padding(start = 8.dp)
         )
     }
+}
+
+
+@Composable
+fun PropertyDescriptionSection(
+    description: String,
+    colorScheme: ColorScheme,
+    typography: Typography
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Descrizione",
+            style = typography.titleMedium,
+            color = colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Text(
+            text = description,
+            style = typography.labelLarge,
+            color = colorScheme.onBackground
+        )
+    }
+}
+
+@Composable
+fun AgentInfoSection(
+    agencyName: String,
+    phoneNumber: String,
+    address: String,
+    colorScheme: ColorScheme,
+    typography: Typography
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Home,
+                contentDescription = "Agency",
+                tint = colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+
+            Column(modifier = Modifier.padding(start = 8.dp)) {
+                Text(
+                    text = "Agenzia: $agencyName",
+                    style = typography.bodyLarge,
+                    color = colorScheme.onBackground
+                )
+
+                Text(
+                    text = "Telefono: $phoneNumber",
+                    style = typography.labelLarge,
+                    color = colorScheme.onBackground
+                )
+
+                Text(
+                    text = address,
+                    style = typography.labelMedium,
+                    color = colorScheme.onBackground.copy(alpha = 0.7f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ActionButtonsSection(
+    navController: NavController,
+    phoneNumber: String,
+    context: android.content.Context,
+    typography: Typography
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        AppPrimaryButton(
+            onClick = {
+                // Intent per aprire il tastierino numerico con un numero preimpostato
+                val dialIntent = Intent(Intent.ACTION_DIAL,
+                    "tel:$phoneNumber".toUri())
+                context.startActivity(dialIntent)
+            },
+            text = "Chiama ora",
+            textStyle = typography.labelLarge,
+            icon = Icons.Default.Phone,
+            iconContentDescription = "Call",
+            modifier = Modifier
+                .fillMaxWidth(),
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        AppSecondaryButton(
+            onClick = {
+                navController.navigate(Screen.AppointmentBookingScreen.route)
+            },
+            text = "Visita",
+            icon = Icons.Default.DateRange,
+            iconContentDescription = "Visit",
+            modifier = Modifier
+                .fillMaxWidth(),
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        AppSecondaryButton(
+            onClick = {
+                navController.navigate(Screen.PriceProposalScreen.route)
+            },
+            text = "Proponi prezzo",
+            icon = Icons.Default.Euro,
+            iconContentDescription = "Propose price",
+            modifier = Modifier
+                .fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+fun ReportAdSection(colorScheme: ColorScheme, typography: Typography) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Top decorative line (estratta)
+        DecorativeLine(colorScheme = colorScheme, isTop = true)
+
+        // Report button with shadow
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = { },
+                modifier = Modifier
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorScheme.background
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = "Report",
+                    tint = colorScheme.error,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = "Segnala Annuncio",
+                    color = colorScheme.error,
+                    style = typography.labelLarge,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+        }
+
+        // Bottom decorative line (estratta)
+        DecorativeLine(colorScheme = colorScheme, isTop = false)
+    }
+}
+
+@Composable
+fun DecorativeLine(colorScheme: ColorScheme, isTop: Boolean) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(0.7f)
+            .height(1.dp)
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        colorScheme.surfaceDim,
+                        colorScheme.error.copy(alpha = 0.6f),
+                        colorScheme.surfaceDim
+                    )
+                )
+            )
+            // Aggiungi un piccolo margine per separare dalla riga successiva/precedente
+            .padding(top = if(isTop) 0.dp else 4.dp, bottom = if(isTop) 4.dp else 0.dp)
+    )
 }
 
 @Composable
