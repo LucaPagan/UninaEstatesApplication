@@ -1,12 +1,16 @@
 package com.dieti.dietiestates25.ui.components
 
+// Common Imports
 import android.annotation.SuppressLint
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -21,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -32,11 +35,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.theme.Dimensions
+import androidx.compose.ui.Modifier.Companion as Modifier1
 
 @Composable
 fun AppPrimaryButton(
@@ -75,7 +81,7 @@ fun AppPrimaryButton(
                     contentDescription = iconContentDescription ?: text,
                     tint = colorScheme.onPrimary
                 )
-                Spacer(modifier = Modifier.width(Dimensions.spacingSmall))
+                Spacer(modifier = Modifier1.width(Dimensions.spacingSmall))
             }
             Text(text = text, style = textStyle)
         }
@@ -93,7 +99,6 @@ fun AppSecondaryButton(
     iconContentDescription: String? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
-
     Button(
         onClick = onClick,
         modifier = modifier.height(Dimensions.buttonHeight),
@@ -120,7 +125,7 @@ fun AppSecondaryButton(
                     contentDescription = iconContentDescription ?: text,
                     tint = colorScheme.onSecondary
                 )
-                Spacer(modifier = Modifier.width(Dimensions.spacingSmall))
+                Spacer(modifier = Modifier1.width(Dimensions.spacingSmall))
             }
             Text(text = text, style = textStyle)
         }
@@ -133,7 +138,9 @@ fun AppRedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    textStyle: TextStyle = MaterialTheme.typography.titleMedium
+    textStyle: TextStyle = MaterialTheme.typography.titleMedium,
+    icon: ImageVector? = null,
+    iconContentDescription: String? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
     Button(
@@ -143,23 +150,37 @@ fun AppRedButton(
         shape = RoundedCornerShape(Dimensions.cornerRadiusMedium),
         colors = ButtonDefaults.buttonColors(
             containerColor = colorScheme.error,
-            contentColor = colorScheme.onPrimary,
-            disabledContainerColor = colorScheme.onSurface.copy(alpha = 0.12f),
-            disabledContentColor = colorScheme.onSurface.copy(alpha = 0.38f)
+            contentColor = colorScheme.onError,
+            disabledContainerColor = colorScheme.error.copy(alpha = 0.12f),
+            disabledContentColor = colorScheme.onError.copy(alpha = 0.38f)
         ),
         elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = Dimensions.elevationLarge,
-            pressedElevation = Dimensions.elevationMedium
+            defaultElevation = Dimensions.elevationMedium,
+            pressedElevation = Dimensions.elevationSmall
         )
     ) {
-        Text(text, style = textStyle)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = iconContentDescription ?: text,
+                    tint = colorScheme.onError
+                )
+                Spacer(modifier = Modifier1.width(Dimensions.spacingSmall))
+            }
+            Text(text = text, style = textStyle)
+        }
     }
 }
 
+// --- ALTRI COMPONENTI UI ---
 @Composable
 fun AppIconDisplay(
     modifier: Modifier = Modifier,
-    iconResId: Int = R.drawable.appicon1, // Default app icon
+    iconResId: Int = R.drawable.appicon1,
     contentDescription: String = "App Icon",
     size: Dp = 60.dp,
     shapeRadius: Dp = Dimensions.spacingMedium,
@@ -174,7 +195,7 @@ fun AppIconDisplay(
         shadowElevation = elevation
     ) {
         Box(
-            modifier = Modifier
+            modifier = Modifier1
                 .padding(internalPadding)
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -182,7 +203,7 @@ fun AppIconDisplay(
             Image(
                 painter = painterResource(id = iconResId),
                 contentDescription = contentDescription,
-                modifier = Modifier
+                modifier = Modifier1
                     .fillMaxSize()
                     .clip(RoundedCornerShape(imageClipRadius)),
                 contentScale = ContentScale.Fit
@@ -190,187 +211,79 @@ fun AppIconDisplay(
         }
     }
 }
-
-/**
- * A reusable card component for displaying apartment/property information
- *
- * @param price The price of the property (displayed prominently)
- * @param imageResId Resource ID for the property image
- * @param onClick Action to execute when the card is clicked
- * @param modifier Modifier for customizing the card appearance
- * @param address Optional property address
- * @param details Optional details list to display (rooms, area, floor, etc.)
- * @param actionButton Optional action button to display (like "View" or "Details")
- * @param cardHeight Height of the card (defaults to 210.dp for detail view, can be smaller for list views)
- * @param imageHeight Height of the image portion (defaults to 120.dp for detail view)
- * @param elevation Card elevation
- * @param horizontalMode If true, displays in a more compact horizontal layout (for lists)
- */
 @Composable
 fun AppPropertyCard(
     price: String,
     imageResId: Int = R.drawable.property1,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier1,
     address: String? = null,
     details: List<String> = emptyList(),
     actionButton: @Composable (() -> Unit)? = null,
     cardHeight: Dp = 210.dp,
     imageHeight: Dp = 120.dp,
-    elevation: Dp = Dimensions.elevationMedium,
-    horizontalMode: Boolean = false
+    elevation: Dp = Dimensions.cardDefaultElevation,
+    horizontalMode: Boolean = false,
+    cardWidthHorizontal: Dp = 280.dp,
+    imageWidthHorizontal: Dp = 110.dp
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
 
+    val cardModifierCombined = if (horizontalMode) {
+        modifier.width(cardWidthHorizontal).heightIn(min = Dimensions.buttonHeight * 2)
+    } else {
+        modifier.height(cardHeight)
+    }
+
     Card(
-        modifier = modifier // External modifier applied here (size, etc.)
-            .shadow(elevation, RoundedCornerShape(Dimensions.cornerRadiusMedium)), // Shadow applied here
+        modifier = cardModifierCombined,
         shape = RoundedCornerShape(Dimensions.cornerRadiusMedium),
         elevation = CardDefaults.cardElevation(defaultElevation = elevation),
         colors = CardDefaults.cardColors(
             containerColor = colorScheme.surface
         )
-        // RIMOSSO il modificatore .clickable(onClick = onClick) dalla Card principale.
-        // La logica di click è ora applicata condizionalmente al contenuto interno.
     ) {
-        // Determina il modificatore da applicare al contenuto basato sulla presenza dell'actionButton
-        val contentModifier = if (actionButton == null) {
-            // Se non c'è un actionButton, l'intera area del contenuto è cliccabile
-            Modifier.clickable(onClick = onClick)
-        } else {
-            // Se è presente un actionButton, l'area del contenuto stessa NON è cliccabile.
-            // Il bottone gestirà il proprio click.
-            Modifier
-        }
+        val contentModifier = if (actionButton == null) Modifier1.clickable(onClick = onClick) else Modifier1
 
         if (horizontalMode) {
-            // Layout orizzontale per viste compatte (es. in LazyRow)
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(contentModifier) // Applica il modificatore clickable condizionale
-            ) {
-                // Immagine proprietà
-                Box(
-                    modifier = Modifier
-                        .width(120.dp)
+            Row(modifier = Modifier1.fillMaxSize().then(contentModifier)) {
+                Image(
+                    painter = painterResource(id = imageResId),
+                    contentDescription = "Property Image: $price",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier1
+                        .width(imageWidthHorizontal)
                         .fillMaxHeight()
-                        .background(colorScheme.secondary.copy(alpha = 0.3f))
-                ) {
-                    Image(
-                        painter = painterResource(id = imageResId),
-                        contentDescription = "Property Image",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-
-                // Dettagli proprietà
+                        .clip(RoundedCornerShape(topStart = Dimensions.cornerRadiusMedium, bottomStart = Dimensions.cornerRadiusMedium))
+                )
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth() // Riempie la larghezza rimanente nella Row
-                        .padding(Dimensions.paddingSmall)
+                    modifier = Modifier1.weight(1f).fillMaxHeight().padding(Dimensions.paddingSmall),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = price,
-                        style = typography.titleMedium
-                    )
-
-                    if (address != null) {
-                        Text(
-                            text = address,
-                            style = typography.bodyMedium,
-                            color = colorScheme.onSurface.copy(alpha = 0.7f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    if (details.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(Dimensions.spacingSmall))
-                        Text(
-                            text = details.joinToString(", "),
-                            style = typography.bodySmall,
-                            color = colorScheme.onSurface.copy(alpha = 0.6f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    // actionButton viene visualizzato se fornito
-                    if (actionButton != null) {
-                        Spacer(modifier = Modifier.weight(1f)) // Spinge il bottone verso il basso/fine
-                        Box(
-                            modifier = Modifier.align(Alignment.End)
-                        ) {
-                            actionButton() // La composable del bottone viene invocata qui (gestirà il suo click)
+                    Column {
+                        Text(text = price, style = typography.titleMedium, color = colorScheme.onSurface)
+                        address?.let { Text(it, style = typography.bodyMedium, color = colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                        if (details.isNotEmpty()) {
+                            Spacer(modifier = Modifier1.height(Dimensions.spacingExtraSmall))
+                            Text(details.joinToString(" • "), style = typography.bodySmall, color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f), maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                     }
+                    actionButton?.let { Box(modifier = Modifier1.align(Alignment.End).padding(top = Dimensions.spacingSmall)) { it() } }
                 }
             }
-        } else {
-            // Layout verticale (default)
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .then(contentModifier) // Applica il modificatore clickable condizionale
-            ) {
-                // Immagine proprietà
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth() // Riempie la larghezza della Column (che riempie la Card)
-                        .height(imageHeight) // Usa l'imageHeight specificata o di default
-                        .background(colorScheme.secondary.copy(alpha = 0.3f))
-                ) {
-                    Image(
-                        painter = painterResource(id = imageResId),
-                        contentDescription = "Property Image",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-
-                // Dettagli proprietà
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth() // Riempie la larghezza della Column (che riempie la Card)
-                        .padding(Dimensions.paddingSmall)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Prezzo
-                        Text(
-                            text = price,
-                            style = typography.titleMedium
-                        )
-
-                        // actionButton viene visualizzato qui se fornito
-                        actionButton?.invoke() // La composable del bottone viene invocata qui (gestirà il suo click)
+        } else { // Vertical Mode
+            Column(modifier = Modifier1.fillMaxSize().then(contentModifier)) {
+                Image(painter = painterResource(id = imageResId), contentDescription = "Property Image: $price", contentScale = ContentScale.Crop, modifier = Modifier1.fillMaxWidth().height(imageHeight))
+                Column(modifier = Modifier1.fillMaxWidth().padding(Dimensions.paddingSmall), verticalArrangement = Arrangement.SpaceBetween) {
+                    Row(modifier = Modifier1.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+                        Text(text = price, style = typography.titleMedium, color = colorScheme.onSurface)
+                        actionButton?.invoke()
                     }
-
-                    if (address != null) {
-                        Text(
-                            text = address,
-                            style = typography.bodyMedium,
-                            color = colorScheme.onSurface.copy(alpha = 0.7f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
+                    address?.let { Text(it, style = typography.bodyMedium, color = colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier1.padding(top = Dimensions.spacingExtraSmall)) }
                     if (details.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(Dimensions.spacingExtraSmall))
-                        Text(
-                            text = details.joinToString(", "),
-                            style = typography.bodySmall,
-                            color = colorScheme.onSurface.copy(alpha = 0.6f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Spacer(modifier = Modifier1.height(Dimensions.spacingExtraSmall))
+                        Text(details.joinToString(" • "), style = typography.bodySmall, color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f), maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -378,38 +291,310 @@ fun AppPropertyCard(
     }
 }
 
-/**
- * Standard View/Visualizza button for property cards
- */
 @Composable
 fun AppPropertyViewButton(
     text: String = "Visualizza",
     onClick: () -> Unit,
-    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier1
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
-
     Button(
         onClick = onClick,
-        shape = RoundedCornerShape(25.dp),
+        shape = CircleShape,
         colors = ButtonDefaults.buttonColors(
-            containerColor = colorScheme.secondary,
-            contentColor = colorScheme.onSecondary
+            containerColor = colorScheme.secondaryContainer,
+            contentColor = colorScheme.onSecondaryContainer
         ),
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = Dimensions.elevationSmall,
-            pressedElevation = Dimensions.elevationSmall,
+            pressedElevation = Dimensions.elevationSmall / 2
         ),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
-        modifier = modifier.height(32.dp)
+        contentPadding = PaddingValues(horizontal = Dimensions.paddingMedium, vertical = Dimensions.spacingExtraSmall),
+        modifier = modifier.height(Dimensions.iconSizeLarge)
+    ) {
+        Text(text = text, style = typography.labelMedium)
+    }
+}
+
+@Composable
+fun FilterSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    dimensions: Dimensions,
+    typography: Typography,
+    colorScheme: ColorScheme,
+    content: @Composable () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = dimensions.cornerRadiusMedium)
+    ) {
+        Text(
+            text = title,
+            style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+            color = colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = dimensions.paddingSmall)
+        )
+        content()
+    }
+}
+
+@Composable
+fun SelectableOptionButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    dimensions: Dimensions,
+    typography: Typography,
+    colorScheme: ColorScheme
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = dimensions.iconSizeLarge + dimensions.paddingExtraSmall),
+        shape = RoundedCornerShape(dimensions.spacingSmall),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = if (isSelected) colorScheme.primaryContainer else Color.Transparent,
+            contentColor = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurface
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (isSelected) colorScheme.primaryContainer else colorScheme.outline.copy(alpha = 0.5f)
+        ),
+        elevation = if (isSelected) ButtonDefaults.buttonElevation(dimensions.elevationSmall) else null,
+        contentPadding = PaddingValues(
+            horizontal = dimensions.paddingSmall,
+            vertical = dimensions.cornerRadiusMedium
+        )
     ) {
         Text(
             text = text,
-            style = typography.labelSmall
+            style = typography.labelLarge,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
+
+@Composable
+fun SingleChoiceToggleGroup(
+    options: List<String>,
+    selectedOption: String?,
+    onOptionSelected: (String?) -> Unit,
+    modifier: Modifier = Modifier,
+    dimensions: Dimensions,
+    typography: Typography,
+    colorScheme: ColorScheme
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(dimensions.spacingSmall))
+            .background(colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(dimensions.paddingExtraSmall),
+        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingExtraSmall),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        options.forEach { optionText ->
+            val isSelected = optionText == selectedOption
+            OutlinedButton(
+                onClick = {
+                    onOptionSelected(if (isSelected) null else optionText)
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(dimensions.iconSizeLarge + dimensions.paddingExtraSmall),
+                shape = RoundedCornerShape(dimensions.spacingSmall - dimensions.spacingExtraSmall),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = if (isSelected) colorScheme.primaryContainer else Color.Transparent,
+                    contentColor = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant
+                ),
+                border = if (isSelected) null else BorderStroke(1.dp, colorScheme.outline),
+                elevation = if (isSelected) ButtonDefaults.buttonElevation(dimensions.elevationSmall) else null,
+                contentPadding = PaddingValues(horizontal = dimensions.paddingSmall)
+            ) {
+                Text(
+                    text = optionText,
+                    style = typography.labelLarge,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                )
+            }
+        }
+    }
+}
+
+data class PredefinedRange(val label: String, val min: Float, val max: Float)
+
+@Composable
+fun CustomFilterChip(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    dimensions: Dimensions,
+    typography: Typography,
+    colorScheme: ColorScheme
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.height(dimensions.iconSizeLarge - dimensions.spacingExtraSmall),
+        enabled = enabled,
+        shape = RoundedCornerShape(dimensions.spacingSmall),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = if (isSelected) colorScheme.secondaryContainer else Color.Transparent,
+            contentColor = if (isSelected) colorScheme.onSecondaryContainer else colorScheme.onSurfaceVariant,
+            disabledContentColor = colorScheme.onSurface.copy(alpha = 0.38f)
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = when {
+                !enabled && isSelected -> colorScheme.outline.copy(alpha = 0.12f)
+                !enabled && !isSelected -> colorScheme.outline.copy(alpha = 0.12f)
+                isSelected -> colorScheme.secondaryContainer.copy(alpha = 0.9f)
+                else -> colorScheme.outline.copy(alpha = 0.5f)
+            }
+        ),
+        contentPadding = PaddingValues(horizontal = dimensions.paddingMedium)
+    ) {
+        Text(
+            text = label,
+            style = typography.labelMedium, // Stile testo per chip
+            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
+        )
+    }
+}
+
+@Composable
+fun RangeFilterInput(
+    title: String,
+    minTextFieldValue: String,
+    onMinTextFieldChange: (String) -> Unit,
+    maxTextFieldValue: String,
+    onMaxTextFieldChange: (String) -> Unit,
+    sliderPosition: ClosedFloatingPointRange<Float>,
+    onSliderPositionChange: (ClosedFloatingPointRange<Float>) -> Unit,
+    valueRange: ClosedFloatingPointRange<Float>,
+    predefinedRanges: List<PredefinedRange>,
+    onPredefinedRangeSelected: (PredefinedRange) -> Unit,
+    unitSuffix: String = "",
+    steps: Int = 0,
+    dimensions: Dimensions,
+    typography: Typography,
+    colorScheme: ColorScheme,
+    componentEnabled: Boolean = true
+) {
+    FilterSection(
+        title = title,
+        dimensions = dimensions,
+        typography = typography,
+        colorScheme = colorScheme
+    ) {
+        Row(
+            modifier = Modifier1
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
+        ) {
+            predefinedRanges.forEach { range ->
+                val isSelected = sliderPosition.start == range.min && sliderPosition.endInclusive == range.max
+                CustomFilterChip(
+                    label = range.label,
+                    isSelected = isSelected,
+                    onClick = { if (componentEnabled) onPredefinedRangeSelected(range) },
+                    enabled = componentEnabled,
+                    dimensions = dimensions,
+                    typography = typography,
+                    colorScheme = colorScheme
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier1.height(dimensions.spacingSmall))
+
+        RangeSlider(
+            value = sliderPosition,
+            onValueChange = onSliderPositionChange,
+            valueRange = valueRange,
+            steps = steps,
+            modifier = Modifier1.fillMaxWidth(),
+            colors = SliderDefaults.colors(
+                thumbColor = colorScheme.primary,
+                activeTrackColor = colorScheme.primary,
+                inactiveTrackColor = colorScheme.primary.copy(alpha = 0.3f),
+                disabledThumbColor = colorScheme.onSurface.copy(alpha = 0.38f),
+                disabledActiveTrackColor = colorScheme.onSurface.copy(alpha = 0.12f),
+                disabledInactiveTrackColor = colorScheme.onSurface.copy(alpha = 0.12f)
+            ),
+            enabled = componentEnabled
+        )
+        Row(modifier = Modifier1.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(
+                text = if (sliderPosition.start <= valueRange.start) "Min" else "${sliderPosition.start.toInt()}$unitSuffix",
+                style = typography.labelSmall,
+                color = if (componentEnabled) colorScheme.onSurfaceVariant else colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+            )
+            Text(
+                text = if (sliderPosition.endInclusive >= valueRange.endInclusive) "Max" else "${sliderPosition.endInclusive.toInt()}$unitSuffix",
+                style = typography.labelSmall,
+                color = if (componentEnabled) colorScheme.onSurfaceVariant else colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+            )
+        }
+
+        Spacer(modifier = Modifier1.height(dimensions.spacingMedium))
+
+        Row(
+            modifier = Modifier1.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
+        ) {
+            OutlinedTextField(
+                value = minTextFieldValue,
+                onValueChange = onMinTextFieldChange,
+                label = { Text("Minimo $unitSuffix") },
+                modifier = Modifier1.weight(1f),
+                shape = RoundedCornerShape(dimensions.spacingSmall),
+                colors = defaultOutlineTextFieldColors(colorScheme, typography),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                textStyle = typography.bodyMedium.copy(color = if (componentEnabled) colorScheme.onSurface else colorScheme.onSurface.copy(alpha = 0.38f)),
+                enabled = componentEnabled
+            )
+            OutlinedTextField(
+                value = maxTextFieldValue,
+                onValueChange = onMaxTextFieldChange,
+                label = { Text("Massimo $unitSuffix") },
+                modifier = Modifier1.weight(1f),
+                shape = RoundedCornerShape(dimensions.spacingSmall),
+                colors = defaultOutlineTextFieldColors(colorScheme, typography),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                textStyle = typography.bodyMedium.copy(color = if (componentEnabled) colorScheme.onSurface else colorScheme.onSurface.copy(alpha = 0.38f)),
+                enabled = componentEnabled
+            )
+        }
+    }
+}
+
+@Composable
+internal fun defaultOutlineTextFieldColors(colorScheme: ColorScheme, typography: Typography): TextFieldColors =
+    OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = colorScheme.primary,
+        unfocusedBorderColor = colorScheme.outline.copy(alpha = 0.7f),
+        disabledBorderColor = colorScheme.outline.copy(alpha = 0.38f),
+        focusedLabelColor = colorScheme.primary,
+        unfocusedLabelColor = colorScheme.onSurfaceVariant,
+        disabledLabelColor = colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+        cursorColor = colorScheme.primary,
+        focusedTextColor = colorScheme.onSurface,
+        unfocusedTextColor = colorScheme.onSurface,
+        disabledTextColor = colorScheme.onSurface.copy(alpha = 0.38f),
+        focusedPlaceholderColor = colorScheme.onSurfaceVariant,
+        unfocusedPlaceholderColor = colorScheme.onSurfaceVariant,
+        disabledPlaceholderColor = colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+    )
 
 @Composable
 fun ClickableSearchBar(
@@ -419,31 +604,31 @@ fun ClickableSearchBar(
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
-    Box(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Dimensions.paddingLarge)
-            .height(Dimensions.searchBarHeight)
-            .clip(RoundedCornerShape(28.dp))
-            .background(colorScheme.primary.copy(alpha = 0.8f))
-            .clickable(onClick = onClick)
-            .padding(
-                horizontal = Dimensions.paddingMedium,
-                vertical = Dimensions.cornerRadiusMedium
-            )
+            .height(Dimensions.searchBarHeight),
+        shape = CircleShape,
+        color = colorScheme.primaryContainer.copy(alpha = 0.8f),
+        shadowElevation = Dimensions.elevationSmall,
+        onClick = onClick
     ) {
         Row(
+            modifier = Modifier1
+                .fillMaxSize()
+                .padding(horizontal = Dimensions.paddingMedium),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Dimensions.spacingSmall)
         ) {
             Icon(
                 imageVector = Icons.Default.Search,
                 contentDescription = placeholderText,
-                tint = colorScheme.onPrimary,
+                tint = colorScheme.onPrimaryContainer,
             )
             Text(
                 text = placeholderText,
-                color = colorScheme.onPrimary,
+                color = colorScheme.onPrimaryContainer.copy(alpha = 0.9f),
                 style = typography.bodyLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -461,14 +646,12 @@ fun <T> PropertyShowcaseSection(
     onSeeAllClick: (() -> Unit)? = null,
     seeAllText: String = "Vedi tutte",
     listContentPadding: PaddingValues = PaddingValues(horizontal = Dimensions.paddingLarge),
-    listHorizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(Dimensions.spacingMedium)
+    listHorizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(Dimensions.spacingMedium),
+    keyProvider: ((item: T) -> Any)? = null
 ) {
-    /*if (items.isEmpty() && onSeeAllClick == null) {
-        // Se non ci sono items e non c'è un'azione "vedi tutte",
-        // potresti decidere di non mostrare affatto la sezione.
-        // Per ora, la mostriamo comunque vuota se viene chiamata.
-        // Considera di aggiungere un Box vuoto o un Text placeholder qui se items è vuoto.
-    }*/
+    val typography = MaterialTheme.typography
+    val colorScheme = MaterialTheme.colorScheme
+
     TitledSection(
         title = title,
         modifier = modifier,
@@ -481,22 +664,25 @@ fun <T> PropertyShowcaseSection(
                 contentPadding = listContentPadding,
                 horizontalArrangement = listHorizontalArrangement
             ) {
-                items(items = items, key = { item -> item.hashCode() }) { item -> // Aggiungere una chiave se gli items possono cambiare
+                items(
+                    items = items,
+                    key = keyProvider ?: { item -> item.hashCode() } // Fallback a hashCode se keyProvider è null
+                ) { item ->
                     itemContent(item)
                 }
             }
         } else {
             Box(
-                modifier = Modifier
+                modifier = Modifier1
                     .fillMaxWidth()
                     .padding(listContentPadding)
-                    .padding(vertical = Dimensions.paddingMedium),
+                    .padding(vertical = Dimensions.paddingLarge),
                 contentAlignment = Alignment.Center,
             ) {
-                 Text(
-                     text = "Nessun elemento da mostrare.",
-                     style = MaterialTheme.typography.bodyMedium,
-                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                Text(
+                    text = "Nessun elemento da mostrare.",
+                    style = typography.bodyMedium,
+                    color = colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -518,7 +704,7 @@ fun TitledSection(
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier
+            modifier = Modifier1
                 .padding(horizontal = Dimensions.paddingLarge)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -539,8 +725,8 @@ fun TitledSection(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(Dimensions.cornerRadiusMedium))
-        Box(modifier = Modifier.padding(contentPadding)) {
+        Spacer(modifier = Modifier1.height(Dimensions.cornerRadiusMedium))
+        Box(modifier = Modifier1.padding(contentPadding)) {
             content()
         }
     }
@@ -557,19 +743,18 @@ fun CustomSearchAppBar(
     focusRequester: FocusRequester = remember { FocusRequester() },
     imeAction: ImeAction = ImeAction.Search,
     onSearchKeyboardAction: (String) -> Unit = {},
-    onFocusChanged: (hasFocus: Boolean) -> Unit = {} // Nuovo callback
+    onFocusChanged: (hasFocus: Boolean) -> Unit = {}
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
 
     Surface(
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         color = colorScheme.primary,
         shadowElevation = Dimensions.elevationMedium
     ) {
         Row(
-            modifier = Modifier
+            modifier = Modifier1
                 .fillMaxWidth()
                 .padding(vertical = Dimensions.paddingSmall)
                 .padding(start = Dimensions.paddingSmall, end = Dimensions.paddingMedium),
@@ -577,15 +762,15 @@ fun CustomSearchAppBar(
         ) {
             IconButton(
                 onClick = onBackPressed,
-                modifier = Modifier
-                    .size(Dimensions.iconSizeLarge)
-                    .background(colorScheme.secondary.copy(alpha = 0.2f), CircleShape)
+                modifier = Modifier1
+                    .size(Dimensions.iconSizeLarge + Dimensions.spacingSmall)
+                    .background(colorScheme.primaryContainer.copy(alpha = 0.3f), CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Indietro",
                     tint = colorScheme.onPrimary,
-                    modifier = Modifier.size(Dimensions.iconSizeMedium)
+                    modifier = Modifier1.size(Dimensions.iconSizeMedium)
                 )
             }
 
@@ -599,22 +784,18 @@ fun CustomSearchAppBar(
                         color = colorScheme.onPrimary.copy(alpha = 0.7f)
                     )
                 },
-                modifier = Modifier
+                modifier = Modifier1
                     .weight(1f)
-                    .padding(horizontal = Dimensions.paddingSmall)
-                    .clip(RoundedCornerShape(Dimensions.cornerRadiusLarge))
-                    .background(colorScheme.surface.copy(alpha = 0.2f))
+                    .padding(horizontal = Dimensions.spacingSmall)
+                    .height(Dimensions.buttonHeight - Dimensions.spacingMedium)
+                    .clip(CircleShape)
+                    .background(colorScheme.surface.copy(alpha = 0.15f))
                     .focusRequester(focusRequester)
-                    .onFocusChanged { focusState ->
-                        onFocusChanged(focusState.isFocused) // Notifica il cambio di focus
-                        // Logica per mostrare/nascondere la tastiera può essere gestita qui
-                        // o lasciata al sistema in base al focus.
-                        // if (focusState.isFocused) keyboardController?.show() else keyboardController?.hide()
-                    },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = colorScheme.surface.copy(alpha = 0.3f),
-                    unfocusedContainerColor = colorScheme.surface.copy(alpha = 0.2f),
-                    disabledContainerColor = colorScheme.surface.copy(alpha = 0.2f),
+                    .onFocusChanged { focusState -> onFocusChanged(focusState.isFocused) },
+                colors = TextFieldDefaults.colors( // TextFieldColors in M3
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
                     cursorColor = colorScheme.onPrimary,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
@@ -622,12 +803,15 @@ fun CustomSearchAppBar(
                     errorIndicatorColor = Color.Transparent,
                     focusedTextColor = colorScheme.onPrimary,
                     unfocusedTextColor = colorScheme.onPrimary,
+                    disabledTextColor = colorScheme.onPrimary.copy(alpha = 0.38f),
+                    focusedPlaceholderColor = colorScheme.onPrimary.copy(alpha = 0.7f),
+                    unfocusedPlaceholderColor = colorScheme.onPrimary.copy(alpha = 0.7f)
                 ),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = imeAction),
                 keyboardActions = KeyboardActions(
-                    onSearch = { onSearchKeyboardAction(searchQuery) },
-                    onDone = { onSearchKeyboardAction(searchQuery) }
+                    onSearch = { onSearchKeyboardAction(searchQuery); defaultKeyboardAction(imeAction) }, // Chiamata corretta
+                    onDone = { onSearchKeyboardAction(searchQuery); defaultKeyboardAction(imeAction) } // Chiamata corretta
                 ),
                 trailingIcon = {
                     if (searchQuery.isNotBlank()) {

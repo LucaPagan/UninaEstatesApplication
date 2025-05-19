@@ -78,11 +78,15 @@ fun Navigation() {
 
 
         composable(
-            route = Screen.SearchFilterScreen.route + "/{idUtente}/{ricerca}",
+            route = Screen.SearchFilterScreen.route + "/{idUtente}/{comune}/{ricerca}",
             arguments = listOf(
                 navArgument("idUtente") {
                     type = NavType.StringType
                     defaultValue = "utente"
+                },
+                navArgument("comune") {
+                    type = NavType.StringType
+                    defaultValue = "napoli"
                 },
                 navArgument("ricerca") {
                     type = NavType.StringType
@@ -93,12 +97,13 @@ fun Navigation() {
             SearchFilterScreen(
                 navController = navController,
                 idUtente = entry.arguments?.getString("idUtente") ?: "utente",
+                comune = entry.arguments?.getString("comune") ?: "napoli",
                 ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"
             )
         }
 
         composable(
-            route = Screen.ApartmentListingScreen.route + "/{idUtente}/{comune}",
+            route = Screen.ApartmentListingScreen.route + "/{idUtente}/{comune}/{ricerca}",
             arguments = listOf(
                 navArgument("idUtente") {
                     type = NavType.StringType
@@ -107,13 +112,18 @@ fun Navigation() {
                 navArgument("comune") {
                     type = NavType.StringType
                     defaultValue = "Napoli"
+                },
+                navArgument("ricerca") {
+                    type = NavType.StringType
+                    defaultValue = "ricerca"
                 }
             )
         ) { entry ->
             ApartmentListingScreen(
                 navController = navController,
                 idUtente = entry.arguments?.getString("idUtente") ?: "utente",
-                comune = entry.arguments?.getString("comune") ?: "Napoli"
+                comune = entry.arguments?.getString("comune") ?: "Napoli",
+                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"
             )
         }
 
