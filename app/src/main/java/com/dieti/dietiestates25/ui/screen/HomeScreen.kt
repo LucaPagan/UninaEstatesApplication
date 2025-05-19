@@ -1,8 +1,5 @@
 package com.dieti.dietiestates25.ui.screen
-
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,9 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,7 +28,6 @@ import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
-// Sample Data for HomeScreen (remains the same)
 data class Property(
     val id: Int,
     val price: String,
@@ -55,7 +48,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val dimensions = Dimensions
-        val comune = "Napoli" // Esempio: Potresti voler passare il comune dell'utente reale
+        val comune = "Napoli"
 
         val gradientColors = listOf(
             colorScheme.primary.copy(alpha = 0.7f),

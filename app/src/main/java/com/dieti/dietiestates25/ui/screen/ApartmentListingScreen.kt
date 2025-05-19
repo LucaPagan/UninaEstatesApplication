@@ -60,7 +60,7 @@ val sampleListingProperties = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ApartmentListingScreen(navController: NavController, idUtente: String, comune: String) {
+fun ApartmentListingScreen(navController: NavController, idUtente: String, comune: String, ricerca: String) {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
@@ -1086,5 +1086,5 @@ fun ApartmentCard(
 @Composable
 fun PreviewApartmentListingScreen() {
     val navController = rememberNavController()
-    ApartmentListingScreen(navController = navController, idUtente = "Danilo", comune = "Napoli")
+    ApartmentListingScreen(navController = navController, idUtente = "Danilo", comune = "Napoli", ricerca = "")
 }

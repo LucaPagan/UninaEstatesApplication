@@ -264,7 +264,7 @@ fun SearchResultItem(
             .padding(vertical = Dimensions.spacingSmall)
             .clickable {
                 onItemClick()
-                navController.navigate(Screen.ApartmentListingScreen.withArgs(idUtente, comune))
+                navController.navigate(Screen.SearchFilterScreen.withArgs(idUtente, comune, ""))
             },
         colors = CardDefaults.cardColors(
             containerColor = colorScheme.surface
