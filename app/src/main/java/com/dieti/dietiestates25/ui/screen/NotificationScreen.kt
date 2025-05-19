@@ -3,6 +3,7 @@ package com.dieti.dietiestates25.ui.screen
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.navigation.Screen // Assicurati che questo percorso sia corretto
+import com.dieti.dietiestates25.ui.theme.Dimensions
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -45,6 +46,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.components.AppIconDisplay
 
 // Data class to represent a notification
 data class Notification(
@@ -65,13 +67,13 @@ enum class NotificationIconType {
 class NotificationsViewModel : ViewModel() {
 
     enum class NotificationTab {
-        RECENT, OLD, SAVED
+        RECENTI, VECCHIE, SALVATE
     }
 
     private val _notifications = MutableStateFlow<List<Notification>>(emptyList())
     val allNotifications: StateFlow<List<Notification>> = _notifications.asStateFlow() // Esposizione se serve altrove
 
-    private val _currentTab = MutableStateFlow(NotificationTab.RECENT)
+    private val _currentTab = MutableStateFlow(NotificationTab.RECENTI)
     val currentTab: StateFlow<NotificationTab> = _currentTab.asStateFlow()
 
     private val _favoriteNotifications = MutableStateFlow<List<Notification>>(emptyList())
@@ -84,12 +86,12 @@ class NotificationsViewModel : ViewModel() {
             val fiveDaysAgo = today.minusDays(5) // Notifiche recenti fino a 5 giorni fa
 
             when (tab) {
-                NotificationTab.RECENT -> allNots
+                NotificationTab.RECENTI -> allNots
                     .filter { !it.date.isBefore(fiveDaysAgo) } // Include oggi e fino a 5 giorni fa
                     .sortedByDescending { it.date }
-                NotificationTab.OLD -> allNots // Mostra tutte, già ordinate in _notifications se necessario o ordinate qui
+                NotificationTab.VECCHIE -> allNots // Mostra tutte, già ordinate in _notifications se necessario o ordinate qui
                     .sortedByDescending { it.date } // Ordinamento per data decrescente
-                NotificationTab.SAVED -> favNots // favNots è già la lista dei preferiti, ordinata in updateFavorites
+                NotificationTab.SALVATE -> favNots // favNots è già la lista dei preferiti, ordinata in updateFavorites
             }
         }.stateIn(
             scope = viewModelScope,
@@ -153,7 +155,8 @@ fun NotificationScreen(
             topBar = {
                 NotificationScreenTopAppBar(
                     colorScheme = colorScheme,
-                    onMenuClick = { /* Logica per il menu */ }
+                    onMenuClick = { /* Logica per il menu */ },
+                    dimensions = Dimensions
                 )
             },
             bottomBar = {
@@ -182,10 +185,32 @@ fun NotificationScreen(
 @Composable
 private fun NotificationScreenTopAppBar(
     colorScheme: ColorScheme,
-    onMenuClick: () -> Unit
+    onMenuClick: () -> Unit,
+    dimensions: Dimensions
 ) {
     TopAppBar(
-        title = { Text(text = "Notifiche") },
+        title = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(colorScheme.primary)
+                    .clip(RoundedCornerShape(bottomStart = dimensions.cornerRadiusLarge, bottomEnd = dimensions.cornerRadiusLarge))
+                    .padding(horizontal = dimensions.paddingLarge),
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    AppIconDisplay(
+                        size = 60.dp,
+                        shapeRadius = dimensions.cornerRadiusMedium
+                    )
+                    Text(text = "Notifiche")
+                }
+            }
+        },
         actions = {
             IconButton(onClick = onMenuClick) {
                 Icon(

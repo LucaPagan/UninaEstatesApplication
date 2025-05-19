@@ -9,11 +9,13 @@ import kotlinx.coroutines.flow.asStateFlow
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Phone // o altra icona rilevante
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,205 +28,283 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavController
+import java.text.NumberFormat
+import java.util.Locale
 
 // ViewModel for Notification Details
 class NotificationDetailViewModel : ViewModel() {
-    // You can add more complex logic here as needed
     data class NotificationDetail(
         val id: Int,
         val senderType: String,
         val senderName: String,
         val message: String,
-        val propertyAddress: String,
-        val propertyPrice: Double
+        val propertyAddress: String, // Potrebbe essere usato nel messaggio o in un campo separato
+        val propertyPrice: Double,    // Potrebbe essere usato nel messaggio o in un campo separato
+        val offerAmount: Double? = null // Aggiunto per chiarezza se c'è un'offerta specifica
     )
 
-    // Sample notification detail
     private val _currentNotification = MutableStateFlow(
         NotificationDetail(
             id = 1,
             senderType = "Compratore",
-            senderName = "Mario rossi",
-            message = "Il venditore Mario rossi ha offerto 120.000 da lei messo in vendita a via Ripuaria 48.",
-            propertyAddress = "Via Ripuaria 48",
-            propertyPrice = 120000.0
+            senderName = "Mario Rossi",
+            message = "Il %SENDER_TYPE% %SENDER_NAME% ha fatto un'offerta di %OFFER_AMOUNT% per l'immobile da lei messo in vendita situato in %PROPERTY_ADDRESS%. L'immobile era stato inizialmente listato a %PROPERTY_PRICE%. Valuti attentamente la proposta e decida se accettare o rifiutare. Può contattare direttamente il proponente per ulteriori chiarimenti o negoziazioni. Questa è una fase cruciale della transazione, quindi prenda il tempo necessario per una decisione informata.",
+            propertyAddress = "Via Ripuaria 48, Pozzuoli (NA)",
+            propertyPrice = 150000.0,
+            offerAmount = 120000.0
         )
     )
     val currentNotification = _currentNotification.asStateFlow()
 
-    // Methods to handle accept/reject actions
+    // Metodo per formattare il messaggio con i dati dinamici
+    fun getFormattedMessage(detail: NotificationDetail): String {
+        val currencyFormat = NumberFormat.getCurrencyInstance(Locale.ITALY)
+        return detail.message
+            .replace("%SENDER_TYPE%", detail.senderType)
+            .replace("%SENDER_NAME%", detail.senderName)
+            .replace("%PROPERTY_ADDRESS%", detail.propertyAddress)
+            .replace("%PROPERTY_PRICE%", currencyFormat.format(detail.propertyPrice))
+            .replace("%OFFER_AMOUNT%", detail.offerAmount?.let { currencyFormat.format(it) } ?: "N/A")
+    }
+
+
     fun acceptProposal() {
-        // Implement accept logic
-        // This could involve API calls, database updates, etc.
+        // Implementa logica di accettazione
+        println("Proposta accettata")
     }
 
     fun rejectProposal() {
-        // Implement reject logic
-        // This could involve API calls, database updates, etc.
+        // Implementa logica di rifiuto
+        println("Proposta rifiutata")
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class) // Necessario per TopAppBar
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationDetailScreen(
     navController: NavController,
     viewModel: NotificationDetailViewModel = viewModel()
 ) {
     DietiEstatesTheme {
+        val notificationDetail by viewModel.currentNotification.collectAsState()
+        val formattedMessage = remember(notificationDetail) {
+            viewModel.getFormattedMessage(notificationDetail)
+        }
 
-        val notification by viewModel.currentNotification.collectAsState()
-
-        val colorScheme = MaterialTheme.colorScheme
-        val typography = MaterialTheme.typography
-
-        Scaffold (
+        Scaffold(
             topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = "Notifica",
-                            style = typography.titleLarge,
-                            // Il colore del testo viene gestito da TopAppBarDefaults
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(
-                                imageVector = Icons.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                // La tint viene gestita da TopAppBarDefaults
-                            )
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { /* Open menu */ }) {
-                            Icon(
-                                imageVector = Icons.Filled.MoreVert,
-                                contentDescription = "Menu",
-                                // La tint viene gestita da TopAppBarDefaults
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colorScheme.primary,
-                        titleContentColor = colorScheme.onPrimary,
-                        navigationIconContentColor = colorScheme.onPrimary,
-                        actionIconContentColor = colorScheme.onPrimary
-                    )
+                NotificationDetailTopAppBar(
+                    navController = navController,
+                    colorScheme = MaterialTheme.colorScheme,
+                    typography = MaterialTheme.typography
                 )
             }
         ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize()
-                    .background(colorScheme.primary) // Sfondo della colonna principale
-            ) {
-
-                // Main content
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            colorScheme.background, // Sfondo del box del contenuto
-                            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-                        )
-                        .padding(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        // Notification Header
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(colorScheme.primary) // Leggermente diverso per contrasto
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Icon
-                            Box(
-                                modifier = Modifier
-                                    .size(80.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(colorScheme.secondary), // Colore per il box icona
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Phone,
-                                    contentDescription = "Notification Icon",
-                                    modifier = Modifier.size(32.dp),
-                                    tint = colorScheme.onSecondary // Colore icona
-                                )
-                            }
-
-                            // Sender Info
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(horizontal = 16.dp)
-                            ) {
-                                Text(
-                                    text = notification.senderType,
-                                    style = typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                                    color = colorScheme.onPrimary
-                                )
-                                Text( // Aggiunto per mostrare il nome del mittente se necessario
-                                    text = notification.senderName,
-                                    style = typography.bodyMedium,
-                                    color = colorScheme.onPrimary.copy(alpha = 0.8f)
-                                )
-                            }
-                        }
-
-                        // Proposal Details
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(colorScheme.primary) // Coerente con l'header
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = notification.message,
-                                style = typography.bodyLarge,
-                                color = colorScheme.onPrimary // Colore testo su surfaceVariant
-                            )
-                        }
-
-                        // Action Buttons
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            // Accept Button
-                            AppPrimaryButton(
-                                onClick = { viewModel.acceptProposal() },
-                                modifier = Modifier.fillMaxWidth(),
-                                text = "Accetta",
-                            )
-
-                            // Reject Button
-                            AppRedButton(
-                                onClick = { viewModel.rejectProposal() },
-                                modifier = Modifier.fillMaxWidth(),
-                                text = "Rifiuta"
-                            )
-                        }
-                    }
-                }
-            }
+            NotificationDetailContent(
+                modifier = Modifier.padding(paddingValues),
+                notificationDetail = notificationDetail,
+                formattedMessage = formattedMessage,
+                onAccept = viewModel::acceptProposal,
+                onReject = viewModel::rejectProposal,
+                colorScheme = MaterialTheme.colorScheme,
+                typography = MaterialTheme.typography
+            )
         }
     }
 }
 
-@Preview(showBackground = true)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NotificationDetailTopAppBar(
+    navController: NavController,
+    colorScheme: ColorScheme,
+    typography: Typography
+) {
+    TopAppBar(
+        title = {
+            Text(
+                text = "Dettaglio Notifica", // Titolo più specifico
+                style = typography.titleLarge,
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Indietro"
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = { /* */ }) {
+                Icon(
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = "Menu"
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = colorScheme.primary,
+            titleContentColor = colorScheme.onPrimary,
+            navigationIconContentColor = colorScheme.onPrimary,
+            actionIconContentColor = colorScheme.onPrimary
+        )
+    )
+}
+
+@Composable
+private fun NotificationDetailContent(
+    modifier: Modifier = Modifier,
+    notificationDetail: NotificationDetailViewModel.NotificationDetail,
+    formattedMessage: String,
+    onAccept: () -> Unit,
+    onReject: () -> Unit,
+    colorScheme: ColorScheme,
+    typography: Typography
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(colorScheme.primary) // Sfondo primario per l'effetto "notch" superiore
+    ) {
+        // Box principale con angoli arrotondati solo in alto
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                .background(colorScheme.background) // Sfondo del contenuto effettivo
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween // Spinge i bottoni in basso
+        ) {
+            Column(modifier = Modifier.weight(1f)) { // Colonna per header e dettagli proposta (scrollabile)
+                NotificationHeaderCard(
+                    senderType = notificationDetail.senderType,
+                    senderName = notificationDetail.senderName,
+                    colorScheme = colorScheme,
+                    typography = typography
+                )
+                Spacer(modifier = Modifier.height(16.dp)) // Spazio tra header e dettagli
+                ProposalDetailsCard(
+                    message = formattedMessage, // Usa il messaggio formattato
+                    colorScheme = colorScheme,
+                    typography = typography
+                )
+            }
+            ActionButtonsSection(
+                onAccept = onAccept,
+                onReject = onReject,
+                modifier = Modifier.padding(top = 16.dp) // Spazio prima dei bottoni
+            )
+        }
+    }
+}
+
+@Composable
+private fun NotificationHeaderCard(
+    senderType: String,
+    senderName: String,
+    colorScheme: ColorScheme,
+    typography: Typography
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp)) // Angoli più dolci
+            .background(colorScheme.surfaceVariant) // Un colore di sfondo per la card interna
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(64.dp) // Dimensione icona leggermente aggiustata
+                .clip(RoundedCornerShape(10.dp))
+                .background(colorScheme.primaryContainer), // Colore per il box icona
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Phone, // o un'icona più specifica basata su senderType
+                contentDescription = "Icona Notifica",
+                modifier = Modifier.size(32.dp),
+                tint = colorScheme.onPrimaryContainer
+            )
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = senderType,
+                style = typography.titleMedium.copy(fontWeight = FontWeight.Bold), // Titolo più appropriato
+                color = colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = senderName,
+                style = typography.bodyMedium,
+                color = colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProposalDetailsCard(
+    message: String,
+    colorScheme: ColorScheme,
+    typography: Typography
+) {
+    val scrollState = rememberScrollState()
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(colorScheme.surfaceVariant.copy(alpha = 0.5f)) // Sfondo leggermente diverso
+            .padding(horizontal = 16.dp, vertical = 12.dp) // Padding interno
+    ) {
+        Text(
+            text = message,
+            style = typography.bodyLarge,
+            color = colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .fillMaxSize() // Occupa tutto lo spazio del Box
+                .verticalScroll(scrollState) // Rende il testo scrollabile
+        )
+    }
+}
+
+@Composable
+private fun ActionButtonsSection(
+    onAccept: () -> Unit,
+    onReject: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp) // Spazio tra i bottoni
+    ) {
+        AppPrimaryButton(
+            onClick = onAccept,
+            modifier = Modifier.fillMaxWidth(),
+            text = "Accetta Proposta",
+        )
+        AppRedButton(
+            onClick = onReject,
+            modifier = Modifier.fillMaxWidth(),
+            text = "Rifiuta Proposta"
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Notification Detail Light")
+@Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, name = "Notification Detail Dark")
 @Composable
 fun NotificationDetailScreenPreview() {
     val navController = rememberNavController()
+    // Per testare un messaggio più lungo nella preview:
+    val previewViewModel = viewModel<NotificationDetailViewModel>()
+    // Puoi modificare _currentNotification.value nel ViewModel per testare scenari specifici se necessario,
+    // ma la preview userà i dati di default del ViewModel.
+
     NotificationDetailScreen(
         navController = navController,
+        viewModel = previewViewModel
     )
 }
