@@ -1,7 +1,9 @@
 package com.dieti.dietiestates25.ui.screen
 
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
-import com.dieti.dietiestates25.ui.components.AppPrimaryButton // Assicurati che il percorso sia corretto
+import com.dieti.dietiestates25.ui.components.AppPrimaryButton
+import com.dieti.dietiestates25.ui.components.CircularIconActionButton
+import com.dieti.dietiestates25.ui.theme.Dimensions
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -80,6 +82,7 @@ fun PriceProposalScreen(
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
+        val dimensions = Dimensions
 
         var proposedPrice by remember { mutableStateOf("") }
         var isPriceFieldFocused by remember { mutableStateOf(false) }
@@ -107,10 +110,9 @@ fun PriceProposalScreen(
                     haptic = haptic,
                     colorScheme = colorScheme,
                     onProposeClick = { price ->
-                        // Qui puoi usare il prezzo per le operazioni successive
                         println("Prezzo proposto: $price")
-                        // Esempio: navController.navigate("confirmationScreen/$price")
-                    }
+                    },
+                    dimensions = dimensions
                 )
             }
         ) { paddingValues ->
@@ -130,18 +132,23 @@ fun PriceProposalScreen(
                         .fillMaxSize()
                         .imePadding()
                 ) {
-                    HorizontalDivider(color = colorScheme.onBackground, thickness = 1.dp)
+                    HorizontalDivider(
+                        color = colorScheme.onBackground,
+                        thickness = 1.dp
+                    )
 
                     InformationCard(
                         text = "Proponi un nuovo prezzo all'inserzionista, senza impegno, adatto al tuo budget",
                         colorScheme = colorScheme,
-                        typography = typography
+                        typography = typography,
+                        dimensions = dimensions
                     )
 
                     StartingPriceRow(
                         startingPrice = startingPrice,
                         colorScheme = colorScheme,
-                        typography = typography
+                        typography = typography,
+                        dimensions = dimensions
                     )
 
                     YourProposalRow(
@@ -154,14 +161,16 @@ fun PriceProposalScreen(
                         focusManager = focusManager,
                         haptic = haptic,
                         colorScheme = colorScheme,
-                        typography = typography
+                        typography = typography,
+                        dimensions = dimensions
                     )
 
                     PriceDifferenceRow(
                         proposedPrice = proposedPrice,
-                        colorScheme = colorScheme,
                         startingPrice = startingPrice,
-                        typography = typography
+                        colorScheme = colorScheme,
+                        typography = typography,
+                        dimensions = dimensions
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -169,7 +178,8 @@ fun PriceProposalScreen(
                     InformationNoteCard(
                         text = "Il prezzo è stato elaborato da un professionista immobiliare. Per mantenere coerenza con il mercato, puoi fare un'offerta con una variazione massima del 15%",
                         colorScheme = colorScheme,
-                        typography = typography
+                        typography = typography,
+                        dimensions = dimensions
                     )
                 }
             }
@@ -193,20 +203,21 @@ private fun PriceProposalTopAppBar(
             )
         },
         navigationIcon = {
-            IconButton(onClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                navController.popBackStack()
-            }) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Chiudi",
-                    tint = colorScheme.onPrimary // Assicurati che l'icona sia visibile
-                )
-            }
+            CircularIconActionButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    navController.popBackStack()
+                },
+                iconVector = Icons.Default.Close,
+                contentDescription = "Chiudi",
+                backgroundColor = colorScheme.primaryContainer,
+                iconTint = colorScheme.onPrimaryContainer
+            )
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = colorScheme.primary,
-            titleContentColor = colorScheme.onPrimary
+            titleContentColor = colorScheme.onPrimary,
+            navigationIconContentColor = colorScheme.onPrimaryContainer
         ),
         modifier = Modifier.statusBarsPadding()
     )
@@ -218,28 +229,31 @@ private fun PriceProposalBottomBar(
     placeholder: String,
     haptic: HapticFeedback,
     colorScheme: ColorScheme,
-    onProposeClick: (Double) -> Unit
+    onProposeClick: (Double) -> Unit,
+    dimensions: Dimensions // Aggiunto
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
     ) {
-        HorizontalDivider(color = colorScheme.onBackground, thickness = 1.dp)
+        HorizontalDivider(
+            color = colorScheme.onBackground,
+            thickness = 1.dp
+        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colorScheme.background)
-                .padding(16.dp),
+                .padding(dimensions.paddingMedium),
         ) {
             AppPrimaryButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    val price =
-                        if (proposedPrice.isEmpty()) placeholder.replace(".", "").toDoubleOrNull()
-                            ?: 0.0
+                    val priceValue = // Rinominato per chiarezza
+                        if (proposedPrice.isEmpty()) placeholder.replace(".", "").toDoubleOrNull() ?: 0.0
                         else proposedPrice.replace(".", "").toDoubleOrNull() ?: 0.0
-                    onProposeClick(price)
+                    onProposeClick(priceValue)
                 },
                 text = "Proponi",
                 modifier = Modifier.fillMaxWidth()
@@ -252,19 +266,20 @@ private fun PriceProposalBottomBar(
 private fun InformationCard(
     text: String,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(dimensions.paddingMedium),
         colors = CardDefaults.cardColors(containerColor = colorScheme.secondary),
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, colorScheme.outline)
     ) {
         Text(
             text = text,
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(dimensions.paddingMedium),
             style = typography.bodyMedium,
             color = colorScheme.onSecondary
         )
@@ -275,12 +290,13 @@ private fun InformationCard(
 private fun StartingPriceRow(
     startingPrice: Double,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(dimensions.paddingMedium),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -309,12 +325,13 @@ private fun YourProposalRow(
     focusManager: FocusManager,
     haptic: HapticFeedback,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = dimensions.paddingMedium),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -323,17 +340,12 @@ private fun YourProposalRow(
             style = typography.bodyLarge,
             color = colorScheme.onBackground
         )
-
-        Column(
-            horizontalAlignment = Alignment.End
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+        Column(horizontalAlignment = Alignment.End) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start,
-                    modifier = Modifier.width(160.dp), // Aumentato leggermente per dare spazio all'icona
+                    modifier = Modifier.width(160.dp),
                 ) {
                     val infiniteTransition = rememberInfiniteTransition(label = "border-animation")
                     val borderWidth by infiniteTransition.animateFloat(
@@ -345,7 +357,6 @@ private fun YourProposalRow(
                         ),
                         label = "border-width"
                     )
-
                     OutlinedTextField(
                         value = proposedPrice,
                         onValueChange = { newValue ->
@@ -374,50 +385,42 @@ private fun YourProposalRow(
                             cursorColor = colorScheme.primary,
                             focusedTextColor = colorScheme.primary,
                             unfocusedTextColor = colorScheme.primary,
-                            // Aggiunto per consistenza placeholder
                             focusedPlaceholderColor = colorScheme.primary.copy(alpha = 0.5f),
                             unfocusedPlaceholderColor = colorScheme.primary.copy(alpha = 0.5f)
                         ),
-                        textStyle = typography.bodyLarge.copy(
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Start
-                        ),
+                        textStyle = typography.bodyLarge.copy(fontWeight = FontWeight.Medium, textAlign = TextAlign.Start),
                         prefix = { Text("€", color = colorScheme.primary) },
                         modifier = Modifier
-                            .weight(1f) // Permette al TextField di prendere lo spazio disponibile
+                            .weight(1f)
                             .onFocusChanged { focusState ->
                                 onFocusChanged(focusState.isFocused)
-                                if (focusState.isFocused) {
-                                    keyboardController?.show()
-                                }
+                                if (focusState.isFocused) keyboardController?.show()
                             }
                             .then(
                                 if (isPriceFieldFocused) {
                                     Modifier.border(
                                         width = borderWidth.dp,
                                         color = colorScheme.primary,
-                                        shape = RoundedCornerShape(4.dp)
+                                        shape = RoundedCornerShape(dimensions.cornerRadiusSmall)
                                     )
                                 } else {
                                     Modifier.border(
-                                        width = 1.dp,
+                                        width = 1.dp, // 1.dp non in Dimensions
                                         color = colorScheme.primary.copy(alpha = 0.6f),
-                                        shape = RoundedCornerShape(4.dp)
+                                        shape = RoundedCornerShape(dimensions.cornerRadiusSmall)
                                     )
                                 }
                             ),
                         singleLine = true
                     )
-
-                    Spacer(modifier = Modifier.width(8.dp)) // Aumentato lo spazio
-
+                    Spacer(modifier = Modifier.width(dimensions.spacingSmall))
                     IconButton(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onProposedPriceChange("")
                             focusManager.clearFocus()
                         },
-                        modifier = Modifier.size(24.dp) // Dimensione standard per IconButton
+                        modifier = Modifier.size(dimensions.iconSizeMedium)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Cancel,
@@ -434,14 +437,15 @@ private fun YourProposalRow(
 @Composable
 private fun PriceDifferenceRow(
     proposedPrice: String,
-    colorScheme: ColorScheme,
     startingPrice: Double,
-    typography: Typography
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(dimensions.paddingMedium),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -450,29 +454,21 @@ private fun PriceDifferenceRow(
             style = typography.bodyLarge,
             color = colorScheme.onBackground
         )
-
-        val differencePercent = if (proposedPrice.isNotBlank()) { // Usato isNotBlank per maggiore robustezza
+        val differencePercent = if (proposedPrice.isNotBlank()) {
             try {
                 val proposedPriceValue = proposedPrice.replace(".", "").toDouble()
                 val calculatedPercent = (proposedPriceValue - startingPrice) / startingPrice * 100
-                minOf(calculatedPercent, 100.0) // Limita il valore massimo a 100.0
-            } catch (e: NumberFormatException) { // Più specifico sull'eccezione
-                0.0
-            }
-        } else {
-            0.0
-        }
-
-        val priceDifferenceText = String.format("%.1f%%", differencePercent) // Modificato per includere % direttamente
-
+                minOf(calculatedPercent, 100.0)
+            } catch (e: NumberFormatException) { 0.0 }
+        } else { 0.0 }
+        val priceDifferenceText = String.format("%.1f%%", differencePercent)
         val differenceColor = when {
-            differencePercent > 0.0 -> colorScheme.onBackground // Grigio
-            differencePercent == 0.0 -> colorScheme.onBackground // Grigio
-            differencePercent > -12.0 -> colorScheme.primary // Verde/Azzurro di tema
-            differencePercent >= -15.0 -> colorScheme.tertiary // Arancione/Giallo di tema
-            else -> colorScheme.error // Rosso
+            differencePercent > 0.0 -> colorScheme.onBackground
+            differencePercent == 0.0 -> colorScheme.onBackground
+            differencePercent > -12.0 -> colorScheme.primary
+            differencePercent >= -15.0 -> colorScheme.tertiary
+            else -> colorScheme.error
         }
-
         Box(
             modifier = Modifier
                 .clip(CircleShape)
@@ -482,37 +478,36 @@ private fun PriceDifferenceRow(
         ) {
             Text(
                 text = priceDifferenceText,
-                color = if (differenceColor == colorScheme.onBackground) colorScheme.background else colorScheme.surface, // Adatta il colore del testo per leggibilità
+                color = if (differenceColor == colorScheme.onBackground) colorScheme.background else colorScheme.surface,
                 style = typography.labelLarge
             )
         }
     }
 }
 
-
 @Composable
 private fun InformationNoteCard(
     text: String,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(dimensions.paddingMedium),
         colors = CardDefaults.cardColors(containerColor = colorScheme.secondary),
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, colorScheme.outline)
     ) {
         Text(
             text = text,
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(dimensions.paddingMedium),
             style = typography.bodySmall,
             color = colorScheme.onSecondary
         )
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

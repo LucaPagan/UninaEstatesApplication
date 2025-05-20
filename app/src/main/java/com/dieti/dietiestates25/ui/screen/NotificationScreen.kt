@@ -1,25 +1,25 @@
 package com.dieti.dietiestates25.ui.screen
 
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
+import com.dieti.dietiestates25.ui.components.AppIconDisplay
+import com.dieti.dietiestates25.ui.components.NotificationCard
+import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
-import com.dieti.dietiestates25.ui.navigation.Screen // Assicurati che questo percorso sia corretto
 import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.components.AppointmentCard
+import com.dieti.dietiestates25.ui.components.CircularIconActionButton
+
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlin.random.Random
 
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale // Aggiunto per il formatter della data
+import java.util.Locale
 
-import kotlin.random.Random
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
-
-import android.annotation.SuppressLint
-
-import androidx.lifecycle.viewModelScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,12 +27,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.More
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,58 +34,70 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.ui.components.AppIconDisplay
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Notifications
 
-// Data class to represent a notification
+// Data classes e Enums (invariate, ma assicurati siano accessibili)
 data class Notification(
     val id: Int,
     val senderType: String,
     val message: String,
     val iconType: NotificationIconType,
     val date: LocalDate,
-    var isFavorite: Boolean = false
+    var isFavorite: Boolean = false,
 )
 
-// Icon types for notifications
 enum class NotificationIconType {
     PHONE, PERSON, BADGE
 }
 
-// ViewModel to manage notifications
-class NotificationsViewModel : ViewModel() {
+data class Appointment(
+    val id: Int,
+    val title: String,
+    val description: String?,
+    val iconType: AppointmentIconType,
+    val date: LocalDate,
+    val timeSlot: String,
+)
 
+enum class AppointmentIconType {
+    VISIT, MEETING, GENERIC
+}
+
+val TimeSlots = listOf("9-12", "12-14", "14-17", "17-20")
+
+class NotificationsViewModel : ViewModel() {
     enum class NotificationTab {
         RECENTI, VECCHIE, SALVATE
     }
 
     private val _notifications = MutableStateFlow<List<Notification>>(emptyList())
-    val allNotifications: StateFlow<List<Notification>> = _notifications.asStateFlow() // Esposizione se serve altrove
+    val allNotifications: StateFlow<List<Notification>> = _notifications.asStateFlow()
 
     private val _currentTab = MutableStateFlow(NotificationTab.RECENTI)
     val currentTab: StateFlow<NotificationTab> = _currentTab.asStateFlow()
 
     private val _favoriteNotifications = MutableStateFlow<List<Notification>>(emptyList())
-    // val favoriteNotificationsList: StateFlow<List<Notification>> = _favoriteNotifications.asStateFlow() // Potrebbe non essere necessaria l'esposizione diretta
 
-    // StateFlow per le notifiche filtrate, basato sulla tab corrente e le liste
     val filteredNotifications: StateFlow<List<Notification>> =
         combine(_currentTab, _notifications, _favoriteNotifications) { tab, allNots, favNots ->
             val today = LocalDate.now()
-            val fiveDaysAgo = today.minusDays(5) // Notifiche recenti fino a 5 giorni fa
-
+            val fiveDaysAgo = today.minusDays(5)
             when (tab) {
                 NotificationTab.RECENTI -> allNots
-                    .filter { !it.date.isBefore(fiveDaysAgo) } // Include oggi e fino a 5 giorni fa
+                    .filter { !it.date.isBefore(fiveDaysAgo) }
                     .sortedByDescending { it.date }
-                NotificationTab.VECCHIE -> allNots // Mostra tutte, già ordinate in _notifications se necessario o ordinate qui
-                    .sortedByDescending { it.date } // Ordinamento per data decrescente
-                NotificationTab.SALVATE -> favNots // favNots è già la lista dei preferiti, ordinata in updateFavorites
+                NotificationTab.VECCHIE -> allNots
+                    .sortedByDescending { it.date }
+                NotificationTab.SALVATE -> favNots
             }
         }.stateIn(
             scope = viewModelScope,
@@ -99,8 +105,15 @@ class NotificationsViewModel : ViewModel() {
             initialValue = emptyList()
         )
 
+    private val _isShowingAppointments = MutableStateFlow(false)
+    val isShowingAppointments: StateFlow<Boolean> = _isShowingAppointments.asStateFlow()
+
+    private val _appointments = MutableStateFlow<List<Appointment>>(emptyList())
+    val appointments: StateFlow<List<Appointment>> = _appointments.asStateFlow()
+
     init {
         loadInitialNotifications()
+        loadInitialAppointments()
     }
 
     private fun loadInitialNotifications() {
@@ -112,10 +125,10 @@ class NotificationsViewModel : ViewModel() {
             Notification(4, "Broker", "Visita confermata per domani alle 10:30.", NotificationIconType.PERSON, today.minusDays(Random.nextInt(4, 7).toLong()), false),
             Notification(5, "Sistema", "Aggiornamento importante della policy sulla privacy.", NotificationIconType.BADGE, today.minusDays(Random.nextInt(10, 20).toLong()), false),
             Notification(6, "Venditore", "Offerta ricevuta per l'appartamento in Via Roma.", NotificationIconType.PHONE, today, false),
-            Notification(7, "Compratore", "Vorrei fissare un appuntamento.", NotificationIconType.PERSON, today.minusDays(6), false), // Più vecchio di 5 giorni
-            Notification(8, "Agenzia", "Promozione estiva: sconti sulle commissioni!", NotificationIconType.BADGE, today.minusDays(10), false) // Vecchio
+            Notification(7, "Compratore", "Vorrei fissare un appuntamento.", NotificationIconType.PERSON, today.minusDays(6), false),
+            Notification(8, "Agenzia", "Promozione estiva: sconti sulle commissioni!", NotificationIconType.BADGE, today.minusDays(10), false)
         )
-        _notifications.value = initialList.sortedByDescending { it.date } // Ordina subito la lista principale
+        _notifications.value = initialList.sortedByDescending { it.date }
         updateFavorites()
     }
 
@@ -126,135 +139,183 @@ class NotificationsViewModel : ViewModel() {
     fun toggleFavorite(notificationId: Int) {
         _notifications.value = _notifications.value.map {
             if (it.id == notificationId) it.copy(isFavorite = !it.isFavorite) else it
-        }.sortedByDescending { it.date } // Mantieni l'ordinamento
+        }.sortedByDescending { it.date }
         updateFavorites()
     }
 
     private fun updateFavorites() {
         _favoriteNotifications.value = _notifications.value
             .filter { it.isFavorite }
-            .sortedByDescending { it.date } // Assicurati che anche i preferiti siano ordinati
+            .sortedByDescending { it.date }
+    }
+
+    fun toggleAppointmentsView() {
+        _isShowingAppointments.value = !_isShowingAppointments.value
+    }
+
+    private fun loadInitialAppointments() {
+        val today = LocalDate.now()
+        _appointments.value = listOf(
+            Appointment(1, "Visita Via Toledo", "Cliente: Paolo Bianchi", AppointmentIconType.VISIT, today.plusDays(1), TimeSlots[0]),
+            Appointment(2, "Incontro con Agenzia", "Discussione nuove proposte", AppointmentIconType.MEETING, today.plusDays(2), TimeSlots[2]),
+            Appointment(3, "Sopralluogo tecnico", "Viale Kennedy, 100", AppointmentIconType.GENERIC, today.plusDays(1), TimeSlots[1]),
+            Appointment(4, "Chiamata con Notaio", "Definizione contratto", AppointmentIconType.MEETING, today.plusDays(3), TimeSlots[3])
+        ).sortedBy { it.date }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationScreen(
     navController: NavController,
-    idUtente: String = "sconosciuto", // Parametro idUtente mantenuto
-    viewModel: NotificationsViewModel = viewModel()
+    idUtente: String = "sconosciuto",
+    viewModel: NotificationsViewModel = viewModel(),
 ) {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
-        val typography = MaterialTheme.typography // Non serve se passiamo colorScheme e typography ai figli
+        val typography = MaterialTheme.typography
+        val dimensions = Dimensions // Istanza locale per accesso breve
 
         val currentTab by viewModel.currentTab.collectAsState()
         val notifications by viewModel.filteredNotifications.collectAsState()
+        val isShowingAppointments by viewModel.isShowingAppointments.collectAsState()
+        val appointments by viewModel.appointments.collectAsState()
 
         Scaffold(
             topBar = {
-                NotificationScreenTopAppBar(
+                NotificationScreenHeader(
                     colorScheme = colorScheme,
-                    onMenuClick = { /* Logica per il menu */ },
-                    dimensions = Dimensions
+                    typography = typography,
+                    dimensions = dimensions, // Passa dimensions
+                    isShowingAppointments = isShowingAppointments,
+                    onCalendarIconClick = viewModel::toggleAppointmentsView
                 )
             },
             bottomBar = {
-                // Passa l'idUtente se AppBottomNavigation lo richiede
                 AppBottomNavigation(navController = navController, idUtente = idUtente)
             }
         ) { paddingValues ->
-            NotificationScreenContent(
-                modifier = Modifier.padding(paddingValues),
-                currentTab = currentTab,
-                notifications = notifications,
-                onTabSelected = viewModel::setCurrentTab, // Usa riferimento a funzione
-                onToggleFavorite = viewModel::toggleFavorite, // Usa riferimento a funzione
-                onNotificationClick = {
-                    // Naviga al dettaglio della notifica, passando l'ID se necessario
-                    navController.navigate(Screen.NotificationDetailScreen.route) // Potresti voler passare notification.id
-                },
-                colorScheme = colorScheme,
-                typography = typography // Passa typography qui
+            Box (
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                if (isShowingAppointments) {
+                    AppointmentsView(
+                        appointments = appointments,
+                        onAppointmentClick = { appointment ->
+                            println("Clicked appointment: ${appointment.title}")
+                        },
+                        colorScheme = colorScheme,
+                        typography = typography,
+                        dimensions = dimensions // Passa dimensions
+                    )
+                } else {
+                    NotificationScreenContent(
+                        currentTab = currentTab,
+                        notifications = notifications,
+                        onTabSelected = viewModel::setCurrentTab,
+                        onToggleFavorite = viewModel::toggleFavorite,
+                        onNotificationClick = { notification ->
+                            navController.navigate(Screen.NotificationDetailScreen.route)
+                        },
+                        colorScheme = colorScheme,
+                        typography = typography,
+                        dimensions = dimensions // Passa dimensions
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NotificationScreenHeader(
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions,
+    isShowingAppointments: Boolean,
+    onCalendarIconClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .background(colorScheme.primary)
+            .clip(RoundedCornerShape(bottomStart = dimensions.cornerRadiusLarge, bottomEnd = dimensions.cornerRadiusLarge))
+            .padding(horizontal = dimensions.paddingLarge)
+            .padding(
+                top = dimensions.paddingLarge, // SOSTITUITO 25.dp con paddingLarge (24.dp) per coerenza
+                bottom = dimensions.paddingLarge,
+            ),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                AppIconDisplay(
+                    size = 60.dp, // Valore specifico, non in Dimensions.iconSize*
+                    shapeRadius = dimensions.cornerRadiusMedium
+                )
+                Spacer(modifier = Modifier.width(dimensions.spacingMedium))
+                Text(
+                    text = if (isShowingAppointments) "Appuntamenti" else "Notifiche",
+                    color = colorScheme.onPrimary,
+                    style = typography.titleLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            val iconVector = if (isShowingAppointments) Icons.Filled.Notifications else Icons.Filled.CalendarToday
+            val contentDesc = if (isShowingAppointments) "Mostra Notifiche" else "Mostra Appuntamenti"
+            CircularIconActionButton(
+                onClick = onCalendarIconClick,
+                iconVector = iconVector,
+                contentDescription = contentDesc,
+                backgroundColor = colorScheme.primaryContainer,
+                iconTint = colorScheme.onPrimaryContainer,
+                // buttonSize = 40.dp (default), iconSize = 24.dp (dimensions.iconSizeMedium, default)
+                iconSize = dimensions.iconSizeMedium // Esplicito per chiarezza
             )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun NotificationScreenTopAppBar(
-    colorScheme: ColorScheme,
-    onMenuClick: () -> Unit,
-    dimensions: Dimensions
-) {
-    TopAppBar(
-        title = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(colorScheme.primary)
-                    .clip(RoundedCornerShape(bottomStart = dimensions.cornerRadiusLarge, bottomEnd = dimensions.cornerRadiusLarge))
-                    .padding(horizontal = dimensions.paddingLarge),
-                contentAlignment = Alignment.BottomStart
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    AppIconDisplay(
-                        size = 60.dp,
-                        shapeRadius = dimensions.cornerRadiusMedium
-                    )
-                    Text(text = "Notifiche")
-                }
-            }
-        },
-        actions = {
-            IconButton(onClick = onMenuClick) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "Menu Opzioni"
-                )
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = colorScheme.primary,
-            titleContentColor = colorScheme.onPrimary,
-            actionIconContentColor = colorScheme.onPrimary // Colore icona azioni
-        )
-    )
-}
-
 @Composable
 private fun NotificationScreenContent(
-    modifier: Modifier = Modifier,
     currentTab: NotificationsViewModel.NotificationTab,
     notifications: List<Notification>,
     onTabSelected: (NotificationsViewModel.NotificationTab) -> Unit,
     onToggleFavorite: (Int) -> Unit,
     onNotificationClick: (Notification) -> Unit,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions // Aggiunto
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(colorScheme.background)
+        modifier = Modifier.fillMaxSize()
     ) {
         NotificationTabs(
             currentTab = currentTab,
             onTabSelected = onTabSelected,
             colorScheme = colorScheme,
-            typography = typography
+            typography = typography,
+            dimensions = dimensions // Passa dimensions
         )
-
         if (notifications.isEmpty()) {
             EmptyNotificationsView(
                 modifier = Modifier.weight(1f),
                 colorScheme = colorScheme,
-                typography = typography
+                typography = typography,
+                message = "Nessuna notifica da mostrare.",
+                dimensions = dimensions // Passa dimensions
             )
         } else {
             NotificationsList(
@@ -263,8 +324,53 @@ private fun NotificationScreenContent(
                 onToggleFavorite = onToggleFavorite,
                 onNotificationClick = onNotificationClick,
                 colorScheme = colorScheme,
-                typography = typography
+                typography = typography,
+                dimensions = dimensions // Passa dimensions
             )
+        }
+    }
+}
+
+@Composable
+private fun AppointmentsView(
+    appointments: List<Appointment>,
+    onAppointmentClick: (Appointment) -> Unit,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions // Aggiunto
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = dimensions.paddingMedium) // SOSTITUITO 16.dp
+    ) {
+        if (appointments.isEmpty()) {
+            EmptyNotificationsView(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                colorScheme = colorScheme,
+                typography = typography,
+                message = "Nessun appuntamento programmato.",
+                dimensions = dimensions // Passa dimensions
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                contentPadding = PaddingValues(
+                    horizontal = dimensions.paddingMedium, // SOSTITUITO 16.dp
+                    vertical = 12.dp // 12.dp non in Dimensions, lasciato invariato
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp) // 12.dp non in Dimensions, lasciato invariato
+            ) {
+                items(appointments, key = { it.id }) { appointment ->
+                    AppointmentCard(
+                        appointment = appointment,
+                        onClick = { onAppointmentClick(appointment) },
+                        colorScheme = colorScheme,
+                        typography = typography
+                        // AppointmentCard userà i default per dimensioni o le sue props specifiche
+                    )
+                }
+            }
         }
     }
 }
@@ -273,16 +379,18 @@ private fun NotificationScreenContent(
 private fun EmptyNotificationsView(
     modifier: Modifier = Modifier,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    message: String,
+    dimensions: Dimensions // Aggiunto
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp), // Aggiunto padding per non farla toccare i bordi
+            .padding(dimensions.paddingMedium), // SOSTITUITO 16.dp
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Nessuna notifica da mostrare.",
+            text = message,
             style = typography.bodyLarge,
             color = colorScheme.onBackground.copy(alpha = 0.7f)
         )
@@ -296,43 +404,48 @@ private fun NotificationsList(
     onToggleFavorite: (Int) -> Unit,
     onNotificationClick: (Notification) -> Unit,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions // Aggiunto
 ) {
     LazyColumn(
-        modifier = modifier
-            .fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp), // Aumentato padding verticale
-        verticalArrangement = Arrangement.spacedBy(12.dp) // Spazio tra gli item
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(
+            horizontal = dimensions.paddingMedium, // SOSTITUITO 16.dp
+            vertical = 12.dp // 12.dp non in Dimensions, lasciato invariato
+        ),
+        verticalArrangement = Arrangement.spacedBy(12.dp) // 12.dp non in Dimensions, lasciato invariato
     ) {
         items(notifications, key = { it.id }) { notification ->
-            NotificationItem(
+            NotificationCard(
                 notification = notification,
                 onToggleFavorite = { onToggleFavorite(notification.id) },
                 onClick = { onNotificationClick(notification) },
                 colorScheme = colorScheme,
                 typography = typography
             )
-            // Spacer rimosso, gestito da verticalArrangement in LazyColumn
         }
     }
 }
 
-
 @Composable
-fun NotificationTabs( // Mantenuta pubblica se usata altrove, altrimenti private
+fun NotificationTabs(
     currentTab: NotificationsViewModel.NotificationTab,
     onTabSelected: (NotificationsViewModel.NotificationTab) -> Unit,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions // Aggiunto
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp) // Padding consistente
-            .height(52.dp) // Altezza fissa per i tab
-            .clip(RoundedCornerShape(26.dp)) // Leggermente più arrotondato
-            .background(colorScheme.surfaceVariant) // Colore di sfondo per il contenitore dei tab
-            .padding(4.dp), // Padding interno per i bottoni
+            .padding(
+                horizontal = dimensions.paddingMedium, // SOSTITUITO 16.dp
+                vertical = dimensions.paddingMedium   // SOSTITUITO 16.dp
+            )
+            .height(52.dp) // 52.dp non in Dimensions (buttonHeight è 56.dp), lasciato invariato
+            .clip(RoundedCornerShape(dimensions.cornerRadiusLarge)) // SOSTITUITO 26.dp con 24.dp
+            .background(colorScheme.surfaceVariant)
+            .padding(dimensions.paddingExtraSmall), // SOSTITUITO 4.dp
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -340,201 +453,56 @@ fun NotificationTabs( // Mantenuta pubblica se usata altrove, altrimenti private
         tabs.forEach { tab ->
             TabButton(
                 text = tab.name.lowercase(Locale.getDefault())
-                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }, // Es. Recent, Old, Saved
+                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
                 isSelected = currentTab == tab,
                 onClick = { onTabSelected(tab) },
                 modifier = Modifier.weight(1f),
                 colorScheme = colorScheme,
-                typography = typography
+                typography = typography,
+                dimensions = dimensions // Passa dimensions
             )
         }
     }
 }
 
 @Composable
-fun TabButton( // Mantenuta pubblica se usata altrove, altrimenti private
+fun TabButton(
     text: String,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions // Aggiunto
 ) {
     Box(
         modifier = modifier
-            .fillMaxHeight() // Occupa tutta l'altezza del contenitore Row
-            .padding(horizontal = 2.dp) // Spazio minimo tra i bottoni
-            .clip(RoundedCornerShape(22.dp)) // Angoli arrotondati per il bottone
-            .background(if (isSelected) colorScheme.primary else Color.Transparent) // Sfondo trasparente se non selezionato
+            .fillMaxHeight()
+            .padding(horizontal = 2.dp) // 2.dp non in Dimensions, lasciato invariato
+            .clip(RoundedCornerShape(dimensions.cornerRadiusLarge)) // SOSTITUITO 22.dp con 24.dp
+            .background(if (isSelected) colorScheme.primary else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp), // Padding orizzontale interno
+            .padding(horizontal = 12.dp), // 12.dp non in Dimensions, lasciato invariato
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
             style = typography.labelLarge.copy(
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium // Medium per non selezionato
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
             ),
-            color = if (isSelected) colorScheme.onPrimary else colorScheme.onSurfaceVariant.copy(alpha = 0.8f) // Colore per testo non selezionato
+            color = if (isSelected) colorScheme.onPrimary else colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
         )
     }
 }
 
-@Composable
-fun NotificationItem( // Mantenuta pubblica se usata altrove, altrimenti private
-    notification: Notification,
-    onToggleFavorite: () -> Unit,
-    onClick: () -> Unit,
-    colorScheme: ColorScheme,
-    typography: Typography
-) {
-    val dateFormatter = remember { DateTimeFormatter.ofPattern("dd/MM/yy", Locale.ITALIAN) }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colorScheme.surface // Sfondo più neutro per la card
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp) // Leggera elevazione
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp), // Padding aumentato
-            verticalAlignment = Alignment.Top // Allinea in alto per la data e stella
-        ) {
-            NotificationIcon(
-                iconType = notification.iconType,
-                colorScheme = colorScheme
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            NotificationContent(
-                modifier = Modifier.weight(1f),
-                senderType = notification.senderType,
-                message = notification.message,
-                colorScheme = colorScheme,
-                typography = typography
-            )
-
-            Spacer(modifier = Modifier.width(12.dp)) // Aumentato spazio prima della colonna data/stella
-
-            NotificationActions(
-                date = notification.date.format(dateFormatter),
-                isFavorite = notification.isFavorite,
-                onToggleFavorite = onToggleFavorite,
-                colorScheme = colorScheme,
-                typography = typography
-            )
-        }
-    }
-}
-
-@Composable
-private fun NotificationIcon(
-    iconType: NotificationIconType,
-    colorScheme: ColorScheme
-) {
-    Box(
-        modifier = Modifier
-            .size(48.dp) // Dimensione icon box ridotta
-            .clip(RoundedCornerShape(12.dp))
-            .background(colorScheme.primaryContainer), // Usa primaryContainer
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = when (iconType) {
-                NotificationIconType.PHONE -> Icons.Default.Phone
-                NotificationIconType.PERSON -> Icons.Default.Person
-                NotificationIconType.BADGE -> Icons.AutoMirrored.Filled.More // Usando Filled.More
-            },
-            contentDescription = "Notification Icon",
-            modifier = Modifier.size(24.dp), // Dimensione icona interna
-            tint = colorScheme.onPrimaryContainer // Usa onPrimaryContainer
-        )
-    }
-}
-
-@Composable
-private fun NotificationContent(
-    modifier: Modifier = Modifier,
-    senderType: String,
-    message: String,
-    colorScheme: ColorScheme,
-    typography: Typography
-) {
-    Column(modifier = modifier) {
-        Text(
-            text = senderType,
-            style = typography.titleMedium, // Coerente con il design system
-            fontWeight = FontWeight.SemiBold, // Un po' meno forte di Bold
-            color = colorScheme.onSurface // Colore sul colore di superficie
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = message,
-            style = typography.bodyMedium,
-            color = colorScheme.onSurfaceVariant, // Colore variante per testo secondario
-            maxLines = 2 // Non più di due righe
-            // overflow = TextOverflow.Ellipsis // Aggiungere se si vuole l'ellissi
-        )
-    }
-}
-
-@Composable
-private fun NotificationActions(
-    date: String,
-    isFavorite: Boolean,
-    onToggleFavorite: () -> Unit,
-    colorScheme: ColorScheme,
-    typography: Typography
-) {
-    Column(
-        horizontalAlignment = Alignment.End, // Allinea a destra
-        verticalArrangement = Arrangement.SpaceBetween, // Spazio tra data e stella
-        modifier = Modifier.height(IntrinsicSize.Min) // Per far sì che la colonna si adatti all'altezza del testo più alto
-    ) {
-        Text(
-            text = date,
-            style = typography.labelSmall,
-            color = colorScheme.onSurfaceVariant.copy(alpha = 0.8f) // Più leggibile
-        )
-        Spacer(modifier = Modifier.weight(1f)) // Spinge l'icona in basso se necessario (con altezza fissa)
-        IconButton(
-            onClick = onToggleFavorite,
-            modifier = Modifier.size(32.dp) // Dimensione standard per IconButton touch target
-        ) {
-            Icon(
-                imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
-                contentDescription = "Aggiungi ai preferiti",
-                tint = if (isFavorite) Color(0xFFFFC107) /* Amber 500 */ else colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier = Modifier.size(22.dp) // Dimensione effettiva dell'icona stella
-            )
-        }
-    }
-}
-
-
-@SuppressLint("ViewModelConstructorInComposable") // Necessario per la preview con ViewModel
 @Preview(showBackground = true, name = "Notification Screen Light")
 @Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, name = "Notification Screen Dark")
 @Composable
 fun NotificationScreenPreview() {
     val navController = rememberNavController()
-    // Inizializza il ViewModel direttamente per la preview
     val previewViewModel = remember {
-        NotificationsViewModel().apply {
-            // Puoi personalizzare i dati o la tab selezionata qui per testare scenari specifici
-            // Esempio:
-            // setCurrentTab(NotificationsViewModel.NotificationTab.SAVED)
-            // toggleFavorite(1) // Per avere una notifica salvata
-        }
+        NotificationsViewModel().apply {}
     }
-
     DietiEstatesTheme {
         NotificationScreen(
             navController = navController,

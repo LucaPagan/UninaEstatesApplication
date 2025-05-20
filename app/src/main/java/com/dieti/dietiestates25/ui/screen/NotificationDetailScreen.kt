@@ -3,6 +3,10 @@ package com.dieti.dietiestates25.ui.screen
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import com.dieti.dietiestates25.ui.theme.Dimensions
+
+import java.text.NumberFormat
+import java.util.Locale
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,24 +27,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.dp // Mantieni per valori hardcoded non in Dimensions
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavController
-import java.text.NumberFormat
-import java.util.Locale
 
-// ViewModel for Notification Details
+// ViewModel for Notification Details (invariato)
 class NotificationDetailViewModel : ViewModel() {
     data class NotificationDetail(
         val id: Int,
         val senderType: String,
         val senderName: String,
         val message: String,
-        val propertyAddress: String, // Potrebbe essere usato nel messaggio o in un campo separato
-        val propertyPrice: Double,    // Potrebbe essere usato nel messaggio o in un campo separato
-        val offerAmount: Double? = null // Aggiunto per chiarezza se c'è un'offerta specifica
+        val propertyAddress: String,
+        val propertyPrice: Double,
+        val offerAmount: Double? = null
     )
 
     private val _currentNotification = MutableStateFlow(
@@ -56,7 +58,6 @@ class NotificationDetailViewModel : ViewModel() {
     )
     val currentNotification = _currentNotification.asStateFlow()
 
-    // Metodo per formattare il messaggio con i dati dinamici
     fun getFormattedMessage(detail: NotificationDetail): String {
         val currencyFormat = NumberFormat.getCurrencyInstance(Locale.ITALY)
         return detail.message
@@ -67,14 +68,11 @@ class NotificationDetailViewModel : ViewModel() {
             .replace("%OFFER_AMOUNT%", detail.offerAmount?.let { currencyFormat.format(it) } ?: "N/A")
     }
 
-
     fun acceptProposal() {
-        // Implementa logica di accettazione
         println("Proposta accettata")
     }
 
     fun rejectProposal() {
-        // Implementa logica di rifiuto
         println("Proposta rifiutata")
     }
 }
@@ -90,6 +88,7 @@ fun NotificationDetailScreen(
         val formattedMessage = remember(notificationDetail) {
             viewModel.getFormattedMessage(notificationDetail)
         }
+        val dimensions = Dimensions // Istanza locale per accesso breve
 
         Scaffold(
             topBar = {
@@ -97,6 +96,7 @@ fun NotificationDetailScreen(
                     navController = navController,
                     colorScheme = MaterialTheme.colorScheme,
                     typography = MaterialTheme.typography
+                    // dimensions non serve qui perché TopAppBar gestisce i suoi padding interni
                 )
             }
         ) { paddingValues ->
@@ -107,7 +107,8 @@ fun NotificationDetailScreen(
                 onAccept = viewModel::acceptProposal,
                 onReject = viewModel::rejectProposal,
                 colorScheme = MaterialTheme.colorScheme,
-                typography = MaterialTheme.typography
+                typography = MaterialTheme.typography,
+                dimensions = dimensions // Passa dimensions
             )
         }
     }
@@ -123,7 +124,7 @@ private fun NotificationDetailTopAppBar(
     TopAppBar(
         title = {
             Text(
-                text = "Dettaglio Notifica", // Titolo più specifico
+                text = "Dettaglio Notifica",
                 style = typography.titleLarge,
             )
         },
@@ -136,7 +137,7 @@ private fun NotificationDetailTopAppBar(
             }
         },
         actions = {
-            IconButton(onClick = { /* */ }) {
+            IconButton(onClick = { /* TODO: Implementa menu opzioni */ }) {
                 Icon(
                     imageVector = Icons.Filled.MoreVert,
                     contentDescription = "Menu"
@@ -149,6 +150,7 @@ private fun NotificationDetailTopAppBar(
             navigationIconContentColor = colorScheme.onPrimary,
             actionIconContentColor = colorScheme.onPrimary
         )
+        // Non ha padding hardcoded da sostituire direttamente qui
     )
 }
 
@@ -160,40 +162,43 @@ private fun NotificationDetailContent(
     onAccept: () -> Unit,
     onReject: () -> Unit,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions // Aggiunto
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(colorScheme.primary) // Sfondo primario per l'effetto "notch" superiore
+            .background(colorScheme.primary)
     ) {
-        // Box principale con angoli arrotondati solo in alto
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                .background(colorScheme.background) // Sfondo del contenuto effettivo
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween // Spinge i bottoni in basso
+                .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)) // 20.dp non in Dimensions, lasciato invariato
+                .background(colorScheme.background)
+                .padding(dimensions.paddingMedium), // SOSTITUITO 16.dp
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f)) { // Colonna per header e dettagli proposta (scrollabile)
+            Column(modifier = Modifier.weight(1f)) {
                 NotificationHeaderCard(
                     senderType = notificationDetail.senderType,
                     senderName = notificationDetail.senderName,
                     colorScheme = colorScheme,
-                    typography = typography
+                    typography = typography,
+                    dimensions = dimensions // Passa dimensions
                 )
-                Spacer(modifier = Modifier.height(16.dp)) // Spazio tra header e dettagli
+                Spacer(modifier = Modifier.height(dimensions.spacingMedium)) // SOSTITUITO 16.dp
                 ProposalDetailsCard(
-                    message = formattedMessage, // Usa il messaggio formattato
+                    message = formattedMessage,
                     colorScheme = colorScheme,
-                    typography = typography
+                    typography = typography,
+                    dimensions = dimensions // Passa dimensions
                 )
             }
             ActionButtonsSection(
                 onAccept = onAccept,
                 onReject = onReject,
-                modifier = Modifier.padding(top = 16.dp) // Spazio prima dei bottoni
+                modifier = Modifier.padding(top = dimensions.paddingMedium), // SOSTITUITO 16.dp
+                dimensions = dimensions // Passa dimensions
             )
         }
     }
@@ -204,35 +209,36 @@ private fun NotificationHeaderCard(
     senderType: String,
     senderName: String,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions // Aggiunto
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp)) // Angoli più dolci
-            .background(colorScheme.surfaceVariant) // Un colore di sfondo per la card interna
-            .padding(16.dp),
+            .clip(RoundedCornerShape(dimensions.cornerRadiusMedium)) // SOSTITUITO 12.dp
+            .background(colorScheme.surfaceVariant)
+            .padding(dimensions.paddingMedium), // SOSTITUITO 16.dp
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(64.dp) // Dimensione icona leggermente aggiustata
-                .clip(RoundedCornerShape(10.dp))
-                .background(colorScheme.primaryContainer), // Colore per il box icona
+                .size(dimensions.bottomNavHeight) // SOSTITUITO 64.dp
+                .clip(RoundedCornerShape(10.dp)) // 10.dp non in Dimensions, lasciato invariato
+                .background(colorScheme.primaryContainer),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Phone, // o un'icona più specifica basata su senderType
+                imageVector = Icons.Default.Phone,
                 contentDescription = "Icona Notifica",
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(dimensions.iconSizeLarge), // SOSTITUITO 32.dp con 36.dp (più vicino e da Dimensions)
                 tint = colorScheme.onPrimaryContainer
             )
         }
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(dimensions.spacingMedium)) // SOSTITUITO 16.dp
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = senderType,
-                style = typography.titleMedium.copy(fontWeight = FontWeight.Bold), // Titolo più appropriato
+                style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = colorScheme.onSurfaceVariant
             )
             Text(
@@ -248,24 +254,27 @@ private fun NotificationHeaderCard(
 private fun ProposalDetailsCard(
     message: String,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions // Aggiunto
 ) {
     val scrollState = rememberScrollState()
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(colorScheme.surfaceVariant.copy(alpha = 0.5f)) // Sfondo leggermente diverso
-            .padding(horizontal = 16.dp, vertical = 12.dp) // Padding interno
+            .clip(RoundedCornerShape(dimensions.cornerRadiusMedium)) // SOSTITUITO 12.dp
+            .background(colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(
+                horizontal = dimensions.paddingMedium, // SOSTITUITO 16.dp
+                vertical = 12.dp // 12.dp non in Dimensions, lasciato invariato
+            )
     ) {
         Text(
             text = message,
             style = typography.bodyLarge,
             color = colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .fillMaxSize() // Occupa tutto lo spazio del Box
-                .verticalScroll(scrollState) // Rende il testo scrollabile
+                .fillMaxSize()
+                .verticalScroll(scrollState)
         )
     }
 }
@@ -274,11 +283,12 @@ private fun ProposalDetailsCard(
 private fun ActionButtonsSection(
     onAccept: () -> Unit,
     onReject: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    dimensions: Dimensions // Aggiunto
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp) // Spazio tra i bottoni
+        verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium) // SOSTITUITO 12.dp con 16.dp
     ) {
         AppPrimaryButton(
             onClick = onAccept,
@@ -298,11 +308,7 @@ private fun ActionButtonsSection(
 @Composable
 fun NotificationDetailScreenPreview() {
     val navController = rememberNavController()
-    // Per testare un messaggio più lungo nella preview:
     val previewViewModel = viewModel<NotificationDetailViewModel>()
-    // Puoi modificare _currentNotification.value nel ViewModel per testare scenari specifici se necessario,
-    // ma la preview userà i dati di default del ViewModel.
-
     NotificationDetailScreen(
         navController = navController,
         viewModel = previewViewModel
