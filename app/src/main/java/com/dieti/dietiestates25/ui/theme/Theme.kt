@@ -1,6 +1,10 @@
+@file:Suppress("DEPRECATION")
+
 package com.dieti.dietiestates25.ui.theme
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -129,6 +133,12 @@ val typography = Typography(
         lineHeight = 16.sp
     )
 )
+// Funzione helper per trovare l'Activity dal Context
+private fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
 
 @Composable
 fun DietiEstatesTheme(
@@ -136,8 +146,8 @@ fun DietiEstatesTheme(
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+    val selectedColorScheme = when {
+        dynamicColor -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
@@ -148,19 +158,31 @@ fun DietiEstatesTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
-            val barColor = colorScheme.primary.toArgb()
+            // Ottieni l'Activity in modo sicuro
+            val activity = view.context.findActivity()
+            if (activity != null) {
+                val window = activity.window
 
-            window.statusBarColor = barColor
-            window.navigationBarColor = barColor
+                // Configurazione per un'esperienza Edge-to-Edge
+                // Questa riga è cruciale e IDEALMENTE andrebbe chiamata una volta
+                // nell'onCreate dell'Activity. Se la lasci qui, assicurati che sia l'effetto desiderato.
+                WindowCompat.setDecorFitsSystemWindows(window, false)
 
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
-            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = darkTheme
+                // Rendi trasparenti le barre di sistema
+                window.statusBarColor = Color.Transparent.toArgb()
+                window.navigationBarColor = Color.Transparent.toArgb() // O un colore semi-trasparente
+
+                // Imposta il colore delle icone delle barre di sistema
+                val insetsController = WindowCompat.getInsetsController(window, view)
+                val useLightIcons = !darkTheme // Tema chiaro -> icone scure; Tema scuro -> icone chiare
+                insetsController.isAppearanceLightStatusBars = useLightIcons
+                insetsController.isAppearanceLightNavigationBars = useLightIcons
+            }
         }
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = selectedColorScheme,
         typography = typography,
         content = content
     )

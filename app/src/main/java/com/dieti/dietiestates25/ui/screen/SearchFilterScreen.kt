@@ -1,10 +1,13 @@
+@file:Suppress("DEPRECATION") // Valuta se puoi rimuovere questa soppressione aggiornando le API usate
+
 package com.dieti.dietiestates25.ui.screen
 
 import android.app.Activity
+import android.content.Context // Import per la funzione helper findActivity
+import android.content.ContextWrapper // Import per la funzione helper findActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,71 +28,73 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
-import com.dieti.dietiestates25.ui.theme.Dimensions
-// Importa i nuovi componenti generici
 import com.dieti.dietiestates25.ui.components.FilterSection
+import com.dieti.dietiestates25.ui.components.PredefinedRange
 import com.dieti.dietiestates25.ui.components.RangeFilterInput
 import com.dieti.dietiestates25.ui.components.SelectableOptionButton
 import com.dieti.dietiestates25.ui.components.SingleChoiceToggleGroup
-import com.dieti.dietiestates25.ui.components.PredefinedRange
-import com.dieti.dietiestates25.ui.navigation.Screen
-
-// Rimuovi defaultOutlineTextFieldColors se non è più usato direttamente qui
-// import com.dieti.dietiestates25.ui.components.defaultOutlineTextFieldColors
+import com.dieti.dietiestates25.ui.components.defaultOutlineTextFieldColors
+import com.dieti.dietiestates25.ui.model.FilterModel // Assicurati che sia il path corretto
+import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.utils.findActivity
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchFilterScreen(
-    navController: NavController,
-    idUtente: String = "utente",
-    comune: String = "napoli",
-    ricerca: String = "varcaturo", // Questo valore potrebbe essere usato per pre-impostare filtri o mostrare contesto
-    onNavigateBack: () -> Unit = { navController.popBackStack() }
+    navController: NavController, // Usato principalmente per il default di onNavigateBack
+    idUtente: String,        // Parametro di contesto
+    comune: String,          // Parametro di contesto
+    ricercaQueryText: String,// Parametro di contesto
+    onNavigateBack: () -> Unit, // Azione per tornare indietro (chiude sheet o popBackStack)
+    onApplyFilters: (FilterModel) -> Unit, // Azione per applicare i filtri
+    isFullScreenContext: Boolean = true // True se schermata intera, False se in uno sheet
 ) {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
         val dimensions = Dimensions
 
-        // Status bar handling
+        // Gestione Status Bar solo se in contesto full-screen
         val view = LocalView.current
-        if (!view.isInEditMode) {
+        if (isFullScreenContext && !view.isInEditMode) {
             SideEffect {
-                val window = (view.context as Activity).window
-                window.statusBarColor = colorScheme.primary.toArgb()
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false // Light icons on dark primary
+                val activity = view.context.findActivity()
+                activity?.window?.let { window ->
+                    window.statusBarColor = colorScheme.primary.toArgb()
+                    WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+                }
             }
         }
 
-        // State per i filtri selezionati
+        // --- Stati dei Filtri Interni ---
         var selectedPurchaseType by remember { mutableStateOf<String?>(null) }
         val purchaseOptions = listOf("Compra", "Affitta")
 
-        var selectedBathrooms by remember { mutableStateOf<Int?>(null) }
-        val bathroomOptions = listOf(1, 2, 3) // Per i pulsanti diretti
-
-        var selectedCondition by remember { mutableStateOf<String?>(null) }
-        val conditionOptionsFirstRow = listOf("Nuovo", "Ottimo")
-        val conditionOptionsSecondRow = listOf("Buono", "Da ristrutturare")
-
-
-        // --- State per PREZZO ---
         val priceValueRange = 0f..2000000f
         val priceSteps = ((priceValueRange.endInclusive - priceValueRange.start) / 10000f - 1).toInt().coerceAtLeast(0)
         var minPriceText by remember { mutableStateOf("") }
         var maxPriceText by remember { mutableStateOf("") }
         var priceSliderPosition by remember { mutableStateOf(priceValueRange.start..priceValueRange.endInclusive) }
 
-        // --- State per SUPERFICIE ---
         val surfaceValueRange = 0f..1000f
         val surfaceSteps = ((surfaceValueRange.endInclusive - surfaceValueRange.start) / 5f - 1).toInt().coerceAtLeast(0)
         var minSurfaceText by remember { mutableStateOf("") }
         var maxSurfaceText by remember { mutableStateOf("") }
         var surfaceSliderPosition by remember { mutableStateOf(surfaceValueRange.start..surfaceValueRange.endInclusive) }
 
-        // Sincronizzazione per PREZZO
+        var minRooms by remember { mutableStateOf("") }
+        var maxRooms by remember { mutableStateOf("") }
+
+        var selectedBathrooms by remember { mutableStateOf<Int?>(null) }
+        val bathroomOptions = listOf(1, 2, 3)
+
+        var selectedCondition by remember { mutableStateOf<String?>(null) }
+        val conditionOptionsFirstRow = listOf("Nuovo", "Ottimo")
+        val conditionOptionsSecondRow = listOf("Buono", "Da ristrutturare")
+
+        // --- Sincronizzazione UI per Prezzo e Superficie ---
         LaunchedEffect(priceSliderPosition) {
             minPriceText = if (priceSliderPosition.start <= priceValueRange.start) "" else priceSliderPosition.start.toInt().toString()
             maxPriceText = if (priceSliderPosition.endInclusive >= priceValueRange.endInclusive) "" else priceSliderPosition.endInclusive.toInt().toString()
@@ -96,14 +102,9 @@ fun SearchFilterScreen(
         fun updatePriceSliderFromText() {
             val minP = minPriceText.toFloatOrNull() ?: priceValueRange.start
             val maxP = maxPriceText.toFloatOrNull() ?: priceValueRange.endInclusive
-            if (minP <= maxP) {
-                priceSliderPosition = minP.coerceIn(priceValueRange)..maxP.coerceIn(priceValueRange)
-            } else {
-                // Opzionale: gestisci input invalido, es. non aggiornare o mostrare errore
-            }
+            if (minP <= maxP) priceSliderPosition = minP.coerceIn(priceValueRange)..maxP.coerceIn(priceValueRange)
         }
 
-        // Sincronizzazione per SUPERFICIE
         LaunchedEffect(surfaceSliderPosition) {
             minSurfaceText = if (surfaceSliderPosition.start <= surfaceValueRange.start) "" else surfaceSliderPosition.start.toInt().toString()
             maxSurfaceText = if (surfaceSliderPosition.endInclusive >= surfaceValueRange.endInclusive) "" else surfaceSliderPosition.endInclusive.toInt().toString()
@@ -111,109 +112,138 @@ fun SearchFilterScreen(
         fun updateSurfaceSliderFromText() {
             val minS = minSurfaceText.toFloatOrNull() ?: surfaceValueRange.start
             val maxS = maxSurfaceText.toFloatOrNull() ?: surfaceValueRange.endInclusive
-            if (minS <= maxS) {
-                surfaceSliderPosition = minS.coerceIn(surfaceValueRange)..maxS.coerceIn(surfaceValueRange)
-            }
+            if (minS <= maxS) surfaceSliderPosition = minS.coerceIn(surfaceValueRange)..maxS.coerceIn(surfaceValueRange)
         }
 
-        val predefinedPriceRanges = listOf(
-            PredefinedRange("€0-100k", 0f, 100000f),
-            PredefinedRange("€100k-250k", 100000f, 250000f),
-            PredefinedRange("€250k-500k", 250000f, 500000f),
-            PredefinedRange(">€500k", 500000f, priceValueRange.endInclusive)
-        )
-        val predefinedSurfaceRanges = listOf(
-            PredefinedRange("0-50mq", 0f, 50f),
-            PredefinedRange("50-100mq", 50f, 100f),
-            PredefinedRange("100-150mq", 100f, 150f),
-            PredefinedRange(">150mq", 150f, surfaceValueRange.endInclusive)
-        )
+        val predefinedPriceRanges = remember(priceValueRange.endInclusive) {
+            listOf(
+                PredefinedRange("€0-100k", 0f, 100000f),
+                PredefinedRange("€100k-250k", 100000f, 250000f),
+                PredefinedRange("€250k-500k", 250000f, 500000f),
+                PredefinedRange(">€500k", 500000f, priceValueRange.endInclusive)
+            )
+        }
+        val predefinedSurfaceRanges = remember(surfaceValueRange.endInclusive) {
+            listOf(
+                PredefinedRange("0-50mq", 0f, 50f),
+                PredefinedRange("50-100mq", 50f, 100f),
+                PredefinedRange("100-150mq", 100f, 150f),
+                PredefinedRange(">150mq", 150f, surfaceValueRange.endInclusive)
+            )
+        }
 
-        // State per Locali
-        var minRooms by remember { mutableStateOf("") }
-        var maxRooms by remember { mutableStateOf("") }
-
-
+        fun resetAllFilters() {
+            selectedPurchaseType = null
+            selectedBathrooms = null
+            selectedCondition = null
+            minPriceText = ""
+            maxPriceText = ""
+            priceSliderPosition = priceValueRange.start..priceValueRange.endInclusive
+            minSurfaceText = ""
+            maxSurfaceText = ""
+            surfaceSliderPosition = surfaceValueRange.start..surfaceValueRange.endInclusive
+            minRooms = ""
+            maxRooms = ""
+        }
         Scaffold(
-            modifier = Modifier.statusBarsPadding(),
+            modifier = if (isFullScreenContext) Modifier.statusBarsPadding() else Modifier,
             topBar = {
                 TopAppBar(
                     title = {
                         Text(
-                            text = "SELEZIONA FILTRI",
-                            color = colorScheme.onPrimary,
-                            style = typography.titleMedium,
-                            letterSpacing = 1.sp,
-                            modifier = Modifier.fillMaxWidth(),
+                            "FILTRI RICERCA",
+                            style = typography.titleMedium.copy(letterSpacing = 0.5.sp),
+                            color = if (isFullScreenContext) colorScheme.onPrimary else colorScheme.primary,
+                            modifier = if(isFullScreenContext) Modifier
+                                .fillMaxWidth().wrapContentHeight() else
+                                Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center
                         )
                     },
                     navigationIcon = {
                         IconButton(
                             onClick = onNavigateBack,
-                            modifier = Modifier
-                                .size(dimensions.iconSizeExtraLarge)
-                                .padding(dimensions.spacingSmall)
-                                .background(colorScheme.secondary.copy(alpha = 0.2f), CircleShape)
+                            modifier = Modifier.size(dimensions.iconSizeLarge + dimensions.spacingSmall)
+                                .padding(start = if (isFullScreenContext) dimensions.spacingExtraSmall else dimensions.spacingNone)
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Indietro",
-                                tint = colorScheme.onPrimary,
-                                modifier = Modifier.size(dimensions.iconSizeMedium)
+                                Icons.AutoMirrored.Filled.ArrowBack, "Indietro",
+                                tint = if (isFullScreenContext) colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     },
                     actions = {
                         TextButton(
-                            onClick = {
-                                selectedPurchaseType = null
-                                selectedBathrooms = null
-                                selectedCondition = null
-                                minPriceText = ""
-                                maxPriceText = ""
-                                priceSliderPosition = priceValueRange.start..priceValueRange.endInclusive
-                                minSurfaceText = ""
-                                maxSurfaceText = ""
-                                surfaceSliderPosition = surfaceValueRange.start..surfaceValueRange.endInclusive
-                                minRooms = ""
-                                maxRooms = ""
-                            },
-                            colors = ButtonDefaults.textButtonColors(contentColor = colorScheme.onPrimary)
+                            onClick = { resetAllFilters() },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = if (isFullScreenContext) colorScheme.onPrimary else colorScheme.primary
+                            )
                         ) {
-                            Text("Reset", style = typography.labelLarge)
+                            Text("RESET", style = typography.labelLarge.copy(fontWeight = FontWeight.Medium))
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary)
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = if (isFullScreenContext) colorScheme.primary else colorScheme.surface
+                    ),
+                    scrollBehavior = if (isFullScreenContext) TopAppBarDefaults.pinnedScrollBehavior() else null
                 )
             },
             bottomBar = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(colorScheme.surface)
-                        .padding(dimensions.paddingMedium),
-                    contentAlignment = Alignment.Center
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shadowElevation = if (isFullScreenContext) dimensions.elevationMedium else dimensions.spacingNone, // Nessuna ombra se in sheet
+                    color = colorScheme.surface
                 ) {
                     Button(
-                        onClick = { navController.navigate(Screen.ApartmentListingScreen.withArgs(idUtente, comune, ricerca)) },
+                        onClick = {
+                            val finalMinPrice = when {
+                                minPriceText.isNotBlank() -> minPriceText.toFloatOrNull()
+                                priceSliderPosition.start > priceValueRange.start -> priceSliderPosition.start
+                                else -> null
+                            }
+                            val finalMaxPrice = when {
+                                maxPriceText.isNotBlank() -> maxPriceText.toFloatOrNull()
+                                priceSliderPosition.endInclusive < priceValueRange.endInclusive -> priceSliderPosition.endInclusive
+                                else -> null
+                            }
+                            val finalMinSurface = when {
+                                minSurfaceText.isNotBlank() -> minSurfaceText.toFloatOrNull()
+                                surfaceSliderPosition.start > surfaceValueRange.start -> surfaceSliderPosition.start
+                                else -> null
+                            }
+                            val finalMaxSurface = when {
+                                maxSurfaceText.isNotBlank() -> maxSurfaceText.toFloatOrNull()
+                                surfaceSliderPosition.endInclusive < surfaceValueRange.endInclusive -> surfaceSliderPosition.endInclusive
+                                else -> null
+                            }
+
+                            val appliedFilters = FilterModel(
+                                purchaseType = selectedPurchaseType,
+                                minPrice = finalMinPrice,
+                                maxPrice = finalMaxPrice,
+                                minSurface = finalMinSurface,
+                                maxSurface = finalMaxSurface,
+                                minRooms = minRooms.toIntOrNull(),
+                                maxRooms = maxRooms.toIntOrNull(),
+                                bathrooms = selectedBathrooms,
+                                condition = selectedCondition
+                            )
+                            onApplyFilters(appliedFilters)
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(dimensions.paddingMedium)
                             .height(dimensions.buttonHeight),
-                        shape = RoundedCornerShape(dimensions.spacingSmall),
+                        shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = colorScheme.primary,
                             contentColor = colorScheme.onPrimary
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = dimensions.elevationLarge,
-                            pressedElevation = dimensions.elevationMedium
                         )
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                             Icon(Icons.Default.Search, "Cerca", tint = colorScheme.onPrimary)
                             Spacer(modifier = Modifier.width(dimensions.spacingSmall))
-                            Text("Mostra risultati", color = colorScheme.onPrimary, style = typography.labelLarge)
+                            Text("MOSTRA RISULTATI", style = typography.labelLarge.copy(fontWeight = FontWeight.Medium))
                         }
                     }
                 }
@@ -225,20 +255,28 @@ fun SearchFilterScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .background(colorScheme.background)
-                    .padding(horizontal = dimensions.paddingMedium)
+                    .padding(
+                        start = dimensions.paddingMedium,
+                        end = dimensions.paddingMedium,
+                        top = dimensions.paddingSmall,
+                        bottom = dimensions.paddingLarge
+                    )
             ) {
-                Spacer(modifier = Modifier.height(dimensions.spacingMedium))
-
-                SingleChoiceToggleGroup(
-                    options = purchaseOptions,
-                    selectedOption = selectedPurchaseType,
-                    onOptionSelected = { selectedPurchaseType = it },
+                FilterSection(
+                    title = "Tipo di Transazione",
                     dimensions = dimensions,
                     typography = typography,
                     colorScheme = colorScheme
-                )
-
-                Spacer(modifier = Modifier.height(dimensions.spacingLarge))
+                ) {
+                    SingleChoiceToggleGroup(
+                        options = purchaseOptions,
+                        selectedOption = selectedPurchaseType,
+                        onOptionSelected = { selectedPurchaseType = it },
+                        dimensions = dimensions,
+                        typography = typography,
+                        colorScheme = colorScheme
+                    )
+                }
 
                 RangeFilterInput(
                     title = "Prezzo",
@@ -286,25 +324,28 @@ fun SearchFilterScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
                     ) {
-                        OutlinedTextField( // Sarebbe bene usare un defaultOutlineTextFieldColors anche qui
+                        val textFieldColors = defaultOutlineTextFieldColors(colorScheme, typography)
+                        OutlinedTextField(
                             value = minRooms,
-                            onValueChange = { minRooms = it },
-                            label = { Text("Minimo") },
+                            onValueChange = { minRooms = it.filter { char -> char.isDigit() } },
+                            label = { Text("Min.") },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(dimensions.spacingSmall),
-                            colors = com.dieti.dietiestates25.ui.components.defaultOutlineTextFieldColors(colorScheme, typography), // Chiamata corretta
+                            colors = textFieldColors,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            textStyle = typography.bodyMedium.copy(color = colorScheme.onSurface)
+                            textStyle = typography.bodyMedium.copy(color = colorScheme.onSurface),
+                            singleLine = true
                         )
                         OutlinedTextField(
                             value = maxRooms,
-                            onValueChange = { maxRooms = it },
-                            label = { Text("Massimo") },
+                            onValueChange = { maxRooms = it.filter { char -> char.isDigit() } },
+                            label = { Text("Max.") },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(dimensions.spacingSmall),
-                            colors = com.dieti.dietiestates25.ui.components.defaultOutlineTextFieldColors(colorScheme, typography), // Chiamata corretta
+                            colors = textFieldColors,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            textStyle = typography.bodyMedium.copy(color = colorScheme.onSurface)
+                            textStyle = typography.bodyMedium.copy(color = colorScheme.onSurface),
+                            singleLine = true
                         )
                     }
                 }
@@ -332,8 +373,8 @@ fun SearchFilterScreen(
                         }
                         SelectableOptionButton(
                             text = ">3",
-                            isSelected = selectedBathrooms != null && selectedBathrooms!! > 3,
-                            onClick = { selectedBathrooms = if (selectedBathrooms != null && selectedBathrooms!! > 3) null else 4 },
+                            isSelected = selectedBathrooms == 4, // 4 rappresenta ">3"
+                            onClick = { selectedBathrooms = if (selectedBathrooms == 4) null else 4 },
                             modifier = Modifier.weight(1f),
                             dimensions = dimensions,
                             typography = typography,
@@ -343,7 +384,7 @@ fun SearchFilterScreen(
                 }
 
                 FilterSection(
-                    title = "Stato immobile",
+                    title = "Stato Immobile",
                     dimensions = dimensions,
                     typography = typography,
                     colorScheme = colorScheme
@@ -386,7 +427,7 @@ fun SearchFilterScreen(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(dimensions.spacingMedium)) // Spazio finale
+                Spacer(modifier = Modifier.height(dimensions.paddingLarge)) // Aggiunto padding maggiore alla fine
             }
         }
     }
@@ -396,9 +437,15 @@ fun SearchFilterScreen(
 @Composable
 fun PreviewFilterScreen() {
     val navController = rememberNavController()
-    SearchFilterScreen(
-        navController = navController,
-        idUtente = "utente",
-        ricerca = "varcaturo"
-    )
+    DietiEstatesTheme {
+        SearchFilterScreen(
+            navController = navController,
+            idUtente = "utentePreview",
+            comune = "Napoli",
+            ricercaQueryText = "Vomero",
+            onNavigateBack = {},
+            onApplyFilters = { filterModel -> println("Preview - Filtri applicati: $filterModel") },
+            isFullScreenContext = true // Simula contesto full-screen per la preview
+        )
+    }
 }

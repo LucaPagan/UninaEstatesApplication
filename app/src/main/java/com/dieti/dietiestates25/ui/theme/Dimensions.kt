@@ -4,6 +4,7 @@ import androidx.compose.ui.unit.dp
 
 object Dimensions {
     // Spacing
+    val spacingNone = 0.dp
     val spacingExtraSmall = 4.dp
     val spacingSmall = 8.dp
     val spacingMedium = 16.dp
