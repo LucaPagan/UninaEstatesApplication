@@ -1,10 +1,13 @@
+@file:Suppress("DEPRECATION") // Valuta se puoi rimuovere questa soppressione aggiornando le API usate
+
 package com.dieti.dietiestates25.ui.screen
 
-import androidx.compose.foundation.BorderStroke
+import android.app.Activity
+import android.content.Context // Import per la funzione helper findActivity
+import android.content.ContextWrapper // Import per la funzione helper findActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -15,209 +18,232 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.components.FilterSection
+import com.dieti.dietiestates25.ui.components.PredefinedRange
+import com.dieti.dietiestates25.ui.components.RangeFilterInput
+import com.dieti.dietiestates25.ui.components.SelectableOptionButton
+import com.dieti.dietiestates25.ui.components.SingleChoiceToggleGroup
+import com.dieti.dietiestates25.ui.components.defaultOutlineTextFieldColors
+import com.dieti.dietiestates25.ui.model.FilterModel // Assicurati che sia il path corretto
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
-import kotlinx.coroutines.launch
+import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.utils.findActivity
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchFilterScreen(
-    navController: NavController,
-    idUtente: String = "utente",
-    ricerca: String = "varcaturo",
-    onNavigateBack: () -> Unit = { navController.popBackStack() }
+    navController: NavController, // Usato principalmente per il default di onNavigateBack
+    idUtente: String,        // Parametro di contesto
+    comune: String,          // Parametro di contesto
+    ricercaQueryText: String,// Parametro di contesto
+    onNavigateBack: () -> Unit, // Azione per tornare indietro (chiude sheet o popBackStack)
+    onApplyFilters: (FilterModel) -> Unit, // Azione per applicare i filtri
+    isFullScreenContext: Boolean = true // True se schermata intera, False se in uno sheet
 ) {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
-        val scrollState = rememberScrollState()
-        val coroutineScope = rememberCoroutineScope()
+        val dimensions = Dimensions
 
-        // State per i filtri selezionati
+        // Gestione Status Bar solo se in contesto full-screen
+        val view = LocalView.current
+        if (isFullScreenContext && !view.isInEditMode) {
+            SideEffect {
+                val activity = view.context.findActivity()
+                activity?.window?.let { window ->
+                    window.statusBarColor = colorScheme.primary.toArgb()
+                    WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+                }
+            }
+        }
+
+        // --- Stati dei Filtri Interni ---
         var selectedPurchaseType by remember { mutableStateOf<String?>(null) }
-        var selectedBathrooms by remember { mutableStateOf<Int?>(null) }
-        var selectedCondition by remember { mutableStateOf<String?>(null) }
+        val purchaseOptions = listOf("Compra", "Affitta")
 
-        // State per i valori dei campi di input
-        var minPrice by remember { mutableStateOf("") }
-        var maxPrice by remember { mutableStateOf("") }
-        var minSurface by remember { mutableStateOf("") }
-        var maxSurface by remember { mutableStateOf("") }
+        val priceValueRange = 0f..2000000f
+        val priceSteps = ((priceValueRange.endInclusive - priceValueRange.start) / 10000f - 1).toInt().coerceAtLeast(0)
+        var minPriceText by remember { mutableStateOf("") }
+        var maxPriceText by remember { mutableStateOf("") }
+        var priceSliderPosition by remember { mutableStateOf(priceValueRange.start..priceValueRange.endInclusive) }
+
+        val surfaceValueRange = 0f..1000f
+        val surfaceSteps = ((surfaceValueRange.endInclusive - surfaceValueRange.start) / 5f - 1).toInt().coerceAtLeast(0)
+        var minSurfaceText by remember { mutableStateOf("") }
+        var maxSurfaceText by remember { mutableStateOf("") }
+        var surfaceSliderPosition by remember { mutableStateOf(surfaceValueRange.start..surfaceValueRange.endInclusive) }
+
         var minRooms by remember { mutableStateOf("") }
         var maxRooms by remember { mutableStateOf("") }
 
-        // State per i valori delle slider
-        val priceRange = remember { mutableStateOf(0f..1000000f) }
-        val currentPriceRange = remember { mutableStateOf(0f..500000f) }
+        var selectedBathrooms by remember { mutableStateOf<Int?>(null) }
+        val bathroomOptions = listOf(1, 2, 3)
 
-        val surfaceRange = remember { mutableStateOf(0f..500f) }
-        val currentSurfaceRange = remember { mutableStateOf(0f..100f) }
+        var selectedCondition by remember { mutableStateOf<String?>(null) }
+        val conditionOptionsFirstRow = listOf("Nuovo", "Ottimo")
+        val conditionOptionsSecondRow = listOf("Buono", "Da ristrutturare")
 
-        // Osservatori per aggiornare i campi di input dalle slider
-        LaunchedEffect(currentPriceRange.value) {
-            minPrice = currentPriceRange.value.start.toInt().toString()
-            maxPrice = currentPriceRange.value.endInclusive.toInt().toString()
+        // --- Sincronizzazione UI per Prezzo e Superficie ---
+        LaunchedEffect(priceSliderPosition) {
+            minPriceText = if (priceSliderPosition.start <= priceValueRange.start) "" else priceSliderPosition.start.toInt().toString()
+            maxPriceText = if (priceSliderPosition.endInclusive >= priceValueRange.endInclusive) "" else priceSliderPosition.endInclusive.toInt().toString()
+        }
+        fun updatePriceSliderFromText() {
+            val minP = minPriceText.toFloatOrNull() ?: priceValueRange.start
+            val maxP = maxPriceText.toFloatOrNull() ?: priceValueRange.endInclusive
+            if (minP <= maxP) priceSliderPosition = minP.coerceIn(priceValueRange)..maxP.coerceIn(priceValueRange)
         }
 
-        LaunchedEffect(currentSurfaceRange.value) {
-            minSurface = currentSurfaceRange.value.start.toInt().toString()
-            maxSurface = currentSurfaceRange.value.endInclusive.toInt().toString()
+        LaunchedEffect(surfaceSliderPosition) {
+            minSurfaceText = if (surfaceSliderPosition.start <= surfaceValueRange.start) "" else surfaceSliderPosition.start.toInt().toString()
+            maxSurfaceText = if (surfaceSliderPosition.endInclusive >= surfaceValueRange.endInclusive) "" else surfaceSliderPosition.endInclusive.toInt().toString()
+        }
+        fun updateSurfaceSliderFromText() {
+            val minS = minSurfaceText.toFloatOrNull() ?: surfaceValueRange.start
+            val maxS = maxSurfaceText.toFloatOrNull() ?: surfaceValueRange.endInclusive
+            if (minS <= maxS) surfaceSliderPosition = minS.coerceIn(surfaceValueRange)..maxS.coerceIn(surfaceValueRange)
         }
 
-        // Osservatori per aggiornare le slider dai campi di input
-        LaunchedEffect(minPrice) {
-            if (minPrice.isNotEmpty()) {
-                val minPriceValue = minPrice.toFloatOrNull() ?: 0f
-                if (minPriceValue <= currentPriceRange.value.endInclusive) {
-                    currentPriceRange.value = minPriceValue..currentPriceRange.value.endInclusive
-                }
-            }
+        val predefinedPriceRanges = remember(priceValueRange.endInclusive) {
+            listOf(
+                PredefinedRange("€0-100k", 0f, 100000f),
+                PredefinedRange("€100k-250k", 100000f, 250000f),
+                PredefinedRange("€250k-500k", 250000f, 500000f),
+                PredefinedRange(">€500k", 500000f, priceValueRange.endInclusive)
+            )
+        }
+        val predefinedSurfaceRanges = remember(surfaceValueRange.endInclusive) {
+            listOf(
+                PredefinedRange("0-50mq", 0f, 50f),
+                PredefinedRange("50-100mq", 50f, 100f),
+                PredefinedRange("100-150mq", 100f, 150f),
+                PredefinedRange(">150mq", 150f, surfaceValueRange.endInclusive)
+            )
         }
 
-        LaunchedEffect(maxPrice) {
-            if (maxPrice.isNotEmpty()) {
-                val maxPriceValue = maxPrice.toFloatOrNull() ?: priceRange.value.endInclusive
-                if (maxPriceValue >= currentPriceRange.value.start) {
-                    currentPriceRange.value = currentPriceRange.value.start..maxPriceValue
-                }
-            }
-        }
-
-        LaunchedEffect(minSurface) {
-            if (minSurface.isNotEmpty()) {
-                val minSurfaceValue = minSurface.toFloatOrNull() ?: 0f
-                if (minSurfaceValue <= currentSurfaceRange.value.endInclusive) {
-                    currentSurfaceRange.value = minSurfaceValue..currentSurfaceRange.value.endInclusive
-                }
-            }
-        }
-
-        LaunchedEffect(maxSurface) {
-            if (maxSurface.isNotEmpty()) {
-                val maxSurfaceValue = maxSurface.toFloatOrNull() ?: surfaceRange.value.endInclusive
-                if (maxSurfaceValue >= currentSurfaceRange.value.start) {
-                    currentSurfaceRange.value = currentSurfaceRange.value.start..maxSurfaceValue
-                }
-            }
-        }
-
-        // Funzione di reset per tutti i filtri
-        fun resetFilters() {
+        fun resetAllFilters() {
             selectedPurchaseType = null
             selectedBathrooms = null
             selectedCondition = null
-            minPrice = ""
-            maxPrice = ""
-            minSurface = ""
-            maxSurface = ""
+            minPriceText = ""
+            maxPriceText = ""
+            priceSliderPosition = priceValueRange.start..priceValueRange.endInclusive
+            minSurfaceText = ""
+            maxSurfaceText = ""
+            surfaceSliderPosition = surfaceValueRange.start..surfaceValueRange.endInclusive
             minRooms = ""
             maxRooms = ""
-            currentPriceRange.value = 0f..500000f
-            currentSurfaceRange.value = 0f..100f
-            coroutineScope.launch {
-                scrollState.animateScrollTo(0)
-            }
         }
-
         Scaffold(
+            modifier = if (isFullScreenContext) Modifier.statusBarsPadding() else Modifier,
             topBar = {
                 TopAppBar(
                     title = {
                         Text(
-                            text = "FILTRI DI RICERCA",
-                            color = colorScheme.onPrimary,
-                            style = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                            letterSpacing = 1.sp,
-                            modifier = Modifier.fillMaxWidth(),
+                            "FILTRI RICERCA",
+                            style = typography.titleMedium.copy(letterSpacing = 0.5.sp),
+                            color = if (isFullScreenContext) colorScheme.onPrimary else colorScheme.primary,
+                            modifier = if(isFullScreenContext) Modifier
+                                .fillMaxWidth().wrapContentHeight() else
+                                Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center
                         )
                     },
                     navigationIcon = {
                         IconButton(
                             onClick = onNavigateBack,
-                            modifier = Modifier
-                                .padding(start = 8.dp)
-                                .size(40.dp)
-                                .background(colorScheme.secondary.copy(alpha = 0.2f), CircleShape)
+                            modifier = Modifier.size(dimensions.iconSizeLarge + dimensions.spacingSmall)
+                                .padding(start = if (isFullScreenContext) dimensions.spacingExtraSmall else dimensions.spacingNone)
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Indietro",
-                                tint = colorScheme.onPrimary,
-                                modifier = Modifier.size(24.dp)
+                                Icons.AutoMirrored.Filled.ArrowBack, "Indietro",
+                                tint = if (isFullScreenContext) colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     },
                     actions = {
                         TextButton(
-                            onClick = { resetFilters() },
-                            colors = ButtonDefaults.textButtonColors(contentColor = colorScheme.onPrimary)
-                        ) {
-                            Text(
-                                text = "Reset",
-                                style = typography.labelLarge,
-                                fontWeight = FontWeight.Medium
+                            onClick = { resetAllFilters() },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = if (isFullScreenContext) colorScheme.onPrimary else colorScheme.primary
                             )
+                        ) {
+                            Text("RESET", style = typography.labelLarge.copy(fontWeight = FontWeight.Medium))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colorScheme.primary
-                    )
+                        containerColor = if (isFullScreenContext) colorScheme.primary else colorScheme.surface
+                    ),
+                    scrollBehavior = if (isFullScreenContext) TopAppBarDefaults.pinnedScrollBehavior() else null
                 )
             },
             bottomBar = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(colorScheme.background)
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shadowElevation = if (isFullScreenContext) dimensions.elevationMedium else dimensions.spacingNone, // Nessuna ombra se in sheet
+                    color = colorScheme.surface
                 ) {
                     Button(
                         onClick = {
-                            // Navigazione ai risultati con i filtri applicati
-                            // TODO: Implementare la logica di navigazione con parametri
+                            val finalMinPrice = when {
+                                minPriceText.isNotBlank() -> minPriceText.toFloatOrNull()
+                                priceSliderPosition.start > priceValueRange.start -> priceSliderPosition.start
+                                else -> null
+                            }
+                            val finalMaxPrice = when {
+                                maxPriceText.isNotBlank() -> maxPriceText.toFloatOrNull()
+                                priceSliderPosition.endInclusive < priceValueRange.endInclusive -> priceSliderPosition.endInclusive
+                                else -> null
+                            }
+                            val finalMinSurface = when {
+                                minSurfaceText.isNotBlank() -> minSurfaceText.toFloatOrNull()
+                                surfaceSliderPosition.start > surfaceValueRange.start -> surfaceSliderPosition.start
+                                else -> null
+                            }
+                            val finalMaxSurface = when {
+                                maxSurfaceText.isNotBlank() -> maxSurfaceText.toFloatOrNull()
+                                surfaceSliderPosition.endInclusive < surfaceValueRange.endInclusive -> surfaceSliderPosition.endInclusive
+                                else -> null
+                            }
+
+                            val appliedFilters = FilterModel(
+                                purchaseType = selectedPurchaseType,
+                                minPrice = finalMinPrice,
+                                maxPrice = finalMaxPrice,
+                                minSurface = finalMinSurface,
+                                maxSurface = finalMaxSurface,
+                                minRooms = minRooms.toIntOrNull(),
+                                maxRooms = maxRooms.toIntOrNull(),
+                                bathrooms = selectedBathrooms,
+                                condition = selectedCondition
+                            )
+                            onApplyFilters(appliedFilters)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
+                            .padding(dimensions.paddingMedium)
+                            .height(dimensions.buttonHeight),
+                        shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = colorScheme.primary,
                             contentColor = colorScheme.onPrimary
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 6.dp,
-                            pressedElevation = 2.dp
                         )
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Cerca",
-                                tint = colorScheme.onPrimary
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = "MOSTRA RISULTATI",
-                                color = colorScheme.onPrimary,
-                                style = typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp
-                            )
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                            Icon(Icons.Default.Search, "Cerca", tint = colorScheme.onPrimary)
+                            Spacer(modifier = Modifier.width(dimensions.spacingSmall))
+                            Text("MOSTRA RISULTATI", style = typography.labelLarge.copy(fontWeight = FontWeight.Medium))
                         }
                     }
                 }
@@ -227,732 +253,199 @@ fun SearchFilterScreen(
                 modifier = Modifier
                     .padding(paddingValues)
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
+                    .verticalScroll(rememberScrollState())
                     .background(colorScheme.background)
-                    .padding(horizontal = 16.dp)
-            ) {
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Sezione tipo di acquisto (Compra/Affitta)
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = colorScheme.surface
-                    ),
-                    elevation = CardDefaults.cardElevation(
-                        defaultElevation = 2.dp
+                    .padding(
+                        start = dimensions.paddingMedium,
+                        end = dimensions.paddingMedium,
+                        top = dimensions.paddingSmall,
+                        bottom = dimensions.paddingLarge
                     )
+            ) {
+                FilterSection(
+                    title = "Tipo di Transazione",
+                    dimensions = dimensions,
+                    typography = typography,
+                    colorScheme = colorScheme
+                ) {
+                    SingleChoiceToggleGroup(
+                        options = purchaseOptions,
+                        selectedOption = selectedPurchaseType,
+                        onOptionSelected = { selectedPurchaseType = it },
+                        dimensions = dimensions,
+                        typography = typography,
+                        colorScheme = colorScheme
+                    )
+                }
+
+                RangeFilterInput(
+                    title = "Prezzo",
+                    minTextFieldValue = minPriceText,
+                    onMinTextFieldChange = { minPriceText = it; updatePriceSliderFromText() },
+                    maxTextFieldValue = maxPriceText,
+                    onMaxTextFieldChange = { maxPriceText = it; updatePriceSliderFromText() },
+                    sliderPosition = priceSliderPosition,
+                    onSliderPositionChange = { priceSliderPosition = it },
+                    valueRange = priceValueRange,
+                    predefinedRanges = predefinedPriceRanges,
+                    onPredefinedRangeSelected = { range -> priceSliderPosition = range.min..range.max },
+                    unitSuffix = "€",
+                    steps = priceSteps,
+                    dimensions = dimensions,
+                    typography = typography,
+                    colorScheme = colorScheme
+                )
+
+                RangeFilterInput(
+                    title = "Superficie",
+                    minTextFieldValue = minSurfaceText,
+                    onMinTextFieldChange = { minSurfaceText = it; updateSurfaceSliderFromText() },
+                    maxTextFieldValue = maxSurfaceText,
+                    onMaxTextFieldChange = { maxSurfaceText = it; updateSurfaceSliderFromText() },
+                    sliderPosition = surfaceSliderPosition,
+                    onSliderPositionChange = { surfaceSliderPosition = it },
+                    valueRange = surfaceValueRange,
+                    predefinedRanges = predefinedSurfaceRanges,
+                    onPredefinedRangeSelected = { range -> surfaceSliderPosition = range.min..range.max },
+                    unitSuffix = "mq",
+                    steps = surfaceSteps,
+                    dimensions = dimensions,
+                    typography = typography,
+                    colorScheme = colorScheme
+                )
+
+                FilterSection(
+                    title = "Locali",
+                    dimensions = dimensions,
+                    typography = typography,
+                    colorScheme = colorScheme
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
+                    ) {
+                        val textFieldColors = defaultOutlineTextFieldColors(colorScheme, typography)
+                        OutlinedTextField(
+                            value = minRooms,
+                            onValueChange = { minRooms = it.filter { char -> char.isDigit() } },
+                            label = { Text("Min.") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(dimensions.spacingSmall),
+                            colors = textFieldColors,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            textStyle = typography.bodyMedium.copy(color = colorScheme.onSurface),
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = maxRooms,
+                            onValueChange = { maxRooms = it.filter { char -> char.isDigit() } },
+                            label = { Text("Max.") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(dimensions.spacingSmall),
+                            colors = textFieldColors,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            textStyle = typography.bodyMedium.copy(color = colorScheme.onSurface),
+                            singleLine = true
+                        )
+                    }
+                }
+
+                FilterSection(
+                    title = "Bagni",
+                    dimensions = dimensions,
+                    typography = typography,
+                    colorScheme = colorScheme
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
+                    ) {
+                        bathroomOptions.forEach { count ->
+                            SelectableOptionButton(
+                                text = count.toString(),
+                                isSelected = selectedBathrooms == count,
+                                onClick = { selectedBathrooms = if (selectedBathrooms == count) null else count },
+                                modifier = Modifier.weight(1f),
+                                dimensions = dimensions,
+                                typography = typography,
+                                colorScheme = colorScheme
+                            )
+                        }
+                        SelectableOptionButton(
+                            text = ">3",
+                            isSelected = selectedBathrooms == 4, // 4 rappresenta ">3"
+                            onClick = { selectedBathrooms = if (selectedBathrooms == 4) null else 4 },
+                            modifier = Modifier.weight(1f),
+                            dimensions = dimensions,
+                            typography = typography,
+                            colorScheme = colorScheme
+                        )
+                    }
+                }
+
+                FilterSection(
+                    title = "Stato Immobile",
+                    dimensions = dimensions,
+                    typography = typography,
+                    colorScheme = colorScheme
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Tipo di annuncio",
-                            style = typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = colorScheme.onSurface,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                                .padding(4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            listOf("Compra", "Affitta").forEach { option ->
-                                val selected = option == selectedPurchaseType
-                                Button(
-                                    onClick = {
-                                        selectedPurchaseType = if (selected) null else option
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(48.dp),
-                                    shape = RoundedCornerShape(6.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (selected) colorScheme.primary else Color.Transparent,
-                                        contentColor = if (selected) colorScheme.onPrimary else colorScheme.onSurfaceVariant
-                                    ),
-                                    elevation = ButtonDefaults.buttonElevation(
-                                        defaultElevation = if (selected) 2.dp else 0.dp,
-                                        pressedElevation = 0.dp
-                                    )
-                                ) {
-                                    Text(
-                                        text = option,
-                                        style = typography.labelLarge,
-                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Sezione Prezzo con slider
-                FilterCard(title = "Prezzo", typography = typography, colorScheme = colorScheme) {
-                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Slider per il prezzo
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            RangeSlider(
-                                value = currentPriceRange.value,
-                                onValueChange = { range ->
-                                    currentPriceRange.value = range
-                                },
-                                valueRange = priceRange.value,
-                                steps = 50,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 4.dp),
-                                colors = SliderDefaults.colors(
-                                    thumbColor = colorScheme.primary,
-                                    activeTrackColor = colorScheme.primary,
-                                    inactiveTrackColor = colorScheme.onSurface.copy(alpha = 0.2f)
-                                )
-                            )
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "€${currentPriceRange.value.start.toInt()}",
-                                    style = typography.bodySmall,
-                                    color = colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = "€${currentPriceRange.value.endInclusive.toInt()}",
-                                    style = typography.bodySmall,
-                                    color = colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        // Preset buttons for price
-                        Text(
-                            text = "Preset rapidi",
-                            style = typography.bodySmall,
-                            color = colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            PresetButton(
-                                text = "< 100K",
-                                onClick = {
-                                    currentPriceRange.value = 0f..100000f
-                                    minPrice = "0"
-                                    maxPrice = "100000"
-                                },
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                isSelected = currentPriceRange.value.endInclusive <= 100000f && currentPriceRange.value.start == 0f,
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            PresetButton(
-                                text = "100K-300K",
-                                onClick = {
-                                    currentPriceRange.value = 100000f..300000f
-                                    minPrice = "100000"
-                                    maxPrice = "300000"
-                                },
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                isSelected = currentPriceRange.value.start == 100000f && currentPriceRange.value.endInclusive == 300000f,
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            PresetButton(
-                                text = "> 300K",
-                                onClick = {
-                                    currentPriceRange.value = 300000f..1000000f
-                                    minPrice = "300000"
-                                    maxPrice = "1000000"
-                                },
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                isSelected = currentPriceRange.value.start == 300000f && currentPriceRange.value.endInclusive == 1000000f,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Input fields for price
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            OutlinedTextField(
-                                value = minPrice,
-                                onValueChange = { minPrice = it },
-                                label = { Text("Prezzo min") },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = colorScheme.primary,
-                                    unfocusedBorderColor = colorScheme.onSurface.copy(alpha = 0.3f),
-                                    focusedLabelColor = colorScheme.primary,
-                                    unfocusedLabelColor = colorScheme.onSurface.copy(alpha = 0.6f),
-                                    cursorColor = colorScheme.primary
-                                ),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                leadingIcon = {
-                                    Text(
-                                        text = "€",
-                                        style = typography.bodyLarge,
-                                        color = colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(start = 12.dp)
-                                    )
-                                }
-                            )
-
-                            OutlinedTextField(
-                                value = maxPrice,
-                                onValueChange = { maxPrice = it },
-                                label = { Text("Prezzo max") },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = colorScheme.primary,
-                                    unfocusedBorderColor = colorScheme.onSurface.copy(alpha = 0.3f),
-                                    focusedLabelColor = colorScheme.primary,
-                                    unfocusedLabelColor = colorScheme.onSurface.copy(alpha = 0.6f),
-                                    cursorColor = colorScheme.primary
-                                ),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                leadingIcon = {
-                                    Text(
-                                        text = "€",
-                                        style = typography.bodyLarge,
-                                        color = colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(start = 12.dp)
-                                    )
-                                }
-                            )
-                        }
-                    }
-                }
-
-                // Sezione Superficie con slider
-                FilterCard(title = "Superficie (mq)", typography = typography, colorScheme = colorScheme) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Slider per superficie
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            RangeSlider(
-                                value = currentSurfaceRange.value,
-                                onValueChange = { range ->
-                                    currentSurfaceRange.value = range
-                                },
-                                valueRange = surfaceRange.value,
-                                steps = 50,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 4.dp),
-                                colors = SliderDefaults.colors(
-                                    thumbColor = colorScheme.primary,
-                                    activeTrackColor = colorScheme.primary,
-                                    inactiveTrackColor = colorScheme.onSurface.copy(alpha = 0.2f)
-                                )
-                            )
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "${currentSurfaceRange.value.start.toInt()} mq",
-                                    style = typography.bodySmall,
-                                    color = colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = "${currentSurfaceRange.value.endInclusive.toInt()} mq",
-                                    style = typography.bodySmall,
-                                    color = colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        // Preset buttons for surface
-                        Text(
-                            text = "Preset rapidi",
-                            style = typography.bodySmall,
-                            color = colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            PresetButton(
-                                text = "< 50 mq",
-                                onClick = {
-                                    currentSurfaceRange.value = 0f..50f
-                                    minSurface = "0"
-                                    maxSurface = "50"
-                                },
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                isSelected = currentSurfaceRange.value.endInclusive <= 50f && currentSurfaceRange.value.start == 0f,
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            PresetButton(
-                                text = "50-100 mq",
-                                onClick = {
-                                    currentSurfaceRange.value = 50f..100f
-                                    minSurface = "50"
-                                    maxSurface = "100"
-                                },
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                isSelected = currentSurfaceRange.value.start == 50f && currentSurfaceRange.value.endInclusive == 100f,
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            PresetButton(
-                                text = "> 100 mq",
-                                onClick = {
-                                    currentSurfaceRange.value = 100f..500f
-                                    minSurface = "100"
-                                    maxSurface = "500"
-                                },
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                isSelected = currentSurfaceRange.value.start == 100f && currentSurfaceRange.value.endInclusive == 500f,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Input fields for surface
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            OutlinedTextField(
-                                value = minSurface,
-                                onValueChange = { minSurface = it },
-                                label = { Text("Superficie min") },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = colorScheme.primary,
-                                    unfocusedBorderColor = colorScheme.onSurface.copy(alpha = 0.3f),
-                                    focusedLabelColor = colorScheme.primary,
-                                    unfocusedLabelColor = colorScheme.onSurface.copy(alpha = 0.6f),
-                                    cursorColor = colorScheme.primary
-                                ),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                trailingIcon = {
-                                    Text(
-                                        text = "mq",
-                                        style = typography.bodyMedium,
-                                        color = colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(end = 12.dp)
-                                    )
-                                }
-                            )
-
-                            OutlinedTextField(
-                                value = maxSurface,
-                                onValueChange = { maxSurface = it },
-                                label = { Text("Superficie max") },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = colorScheme.primary,
-                                    unfocusedBorderColor = colorScheme.onSurface.copy(alpha = 0.3f),
-                                    focusedLabelColor = colorScheme.primary,
-                                    unfocusedLabelColor = colorScheme.onSurface.copy(alpha = 0.6f),
-                                    cursorColor = colorScheme.primary
-                                ),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                trailingIcon = {
-                                    Text(
-                                        text = "mq",
-                                        style = typography.bodyMedium,
-                                        color = colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(end = 12.dp)
-                                    )
-                                }
-                            )
-                        }
-                    }
-                }
-
-                // Sezione Locali
-                FilterCard(title = "Locali", typography = typography, colorScheme = colorScheme) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Preset buttons for rooms
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            PresetButton(
-                                text = "1-2",
-                                onClick = {
-                                    minRooms = "1"
-                                    maxRooms = "2"
-                                },
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                isSelected = minRooms == "1" && maxRooms == "2",
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            PresetButton(
-                                text = "3-4",
-                                onClick = {
-                                    minRooms = "3"
-                                    maxRooms = "4"
-                                },
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                isSelected = minRooms == "3" && maxRooms == "4",
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            PresetButton(
-                                text = "5+",
-                                onClick = {
-                                    minRooms = "5"
-                                    maxRooms = ""
-                                },
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                isSelected = minRooms == "5" && maxRooms == "",
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        // Input fields for rooms
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            OutlinedTextField(
-                                value = minRooms,
-                                onValueChange = { minRooms = it },
-                                label = { Text("Locali min") },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = colorScheme.primary,
-                                    unfocusedBorderColor = colorScheme.onSurface.copy(alpha = 0.3f),
-                                    focusedLabelColor = colorScheme.primary,
-                                    unfocusedLabelColor = colorScheme.onSurface.copy(alpha = 0.6f),
-                                    cursorColor = colorScheme.primary
-                                ),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true
-                            )
-
-                            OutlinedTextField(
-                                value = maxRooms,
-                                onValueChange = { maxRooms = it },
-                                label = { Text("Locali max") },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = colorScheme.primary,
-                                    unfocusedBorderColor = colorScheme.onSurface.copy(alpha = 0.3f),
-                                    focusedLabelColor = colorScheme.primary,
-                                    unfocusedLabelColor = colorScheme.onSurface.copy(alpha = 0.6f),
-                                    cursorColor = colorScheme.primary
-                                ),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true
-                            )
-                        }
-                    }
-                }
-
-                // Sezione Bagni
-                FilterCard(title = "Bagni", typography = typography, colorScheme = colorScheme) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
                         ) {
-                            listOf(1, 2, 3, 4).forEach { count ->
-                                val isSelected = selectedBathrooms == count
-                                BathroomButton(
-                                    text = if (count < 4) count.toString() else "4+",
-                                    isSelected = isSelected,
-                                    onClick = {
-                                        selectedBathrooms = if (isSelected) null else count
-                                    },
-                                    colorScheme = colorScheme,
+                            conditionOptionsFirstRow.forEach { condition ->
+                                SelectableOptionButton(
+                                    text = condition,
+                                    isSelected = selectedCondition == condition,
+                                    onClick = { selectedCondition = if (selectedCondition == condition) null else condition },
+                                    modifier = Modifier.weight(1f),
+                                    dimensions = dimensions,
                                     typography = typography,
-                                    modifier = Modifier.weight(1f)
+                                    colorScheme = colorScheme
+                                )
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
+                        ) {
+                            conditionOptionsSecondRow.forEach { condition ->
+                                SelectableOptionButton(
+                                    text = condition,
+                                    isSelected = selectedCondition == condition,
+                                    onClick = { selectedCondition = if (selectedCondition == condition) null else condition },
+                                    modifier = Modifier.weight(1f),
+                                    dimensions = dimensions,
+                                    typography = typography,
+                                    colorScheme = colorScheme
                                 )
                             }
                         }
                     }
                 }
-
-                // Sezione Stato immobile
-                FilterCard(title = "Stato immobile", typography = typography, colorScheme = colorScheme) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        // Prima riga di opzioni
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            PropertyConditionButton(
-                                text = "Nuovo",
-                                isSelected = selectedCondition == "Nuovo",
-                                onClick = {
-                                    selectedCondition = if (selectedCondition == "Nuovo") null else "Nuovo"
-                                },
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            PropertyConditionButton(
-                                text = "Ottimo",
-                                isSelected = selectedCondition == "Ottimo",
-                                onClick = {
-                                    selectedCondition = if (selectedCondition == "Ottimo") null else "Ottimo"
-                                },
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        // Seconda riga di opzioni
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            PropertyConditionButton(
-                                text = "Buono",
-                                isSelected = selectedCondition == "Buono",
-                                onClick = {
-                                    selectedCondition = if (selectedCondition == "Buono") null else "Buono"
-                                },
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            PropertyConditionButton(
-                                text = "Da ristrutturare",
-                                isSelected = selectedCondition == "Da ristrutturare",
-                                onClick = {
-                                    selectedCondition = if (selectedCondition == "Da ristrutturare") null else "Da ristrutturare"
-                                },
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-
-                // Spazio aggiuntivo dopo l'ultimo filtro per garantire che il contenuto non sia coperto dal bottone
-                Spacer(modifier = Modifier.height(100.dp))
+                Spacer(modifier = Modifier.height(dimensions.paddingLarge)) // Aggiunto padding maggiore alla fine
             }
         }
     }
 }
 
-/**
- * Componente card per filtrare le sezioni
- */
-@Composable
-fun FilterCard(
-    title: String,
-    typography: Typography,
-    colorScheme: ColorScheme,
-    content: @Composable () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = title,
-                style = typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = colorScheme.onSurface,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            content()
-        }
-    }
-}
-
-/**
- * Bottone per i preset rapidi
- */
-@Composable
-fun PresetButton(
-    text: String,
-    onClick: () -> Unit,
-    colorScheme: ColorScheme,
-    typography: Typography,
-    isSelected: Boolean,
-    modifier: Modifier = Modifier
-) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(6.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = if (isSelected) colorScheme.primary else colorScheme.surfaceVariant.copy(alpha = 0.5f),
-            contentColor = if (isSelected) colorScheme.onPrimary else colorScheme.onSurfaceVariant
-        ),
-        border = BorderStroke(
-            1.dp,
-            if (isSelected) colorScheme.primary else colorScheme.onSurface.copy(alpha = 0.2f)
-        ),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
-    ) {
-        Text(
-            text = text,
-            style = typography.labelMedium,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-/**
- * Bottone per i bagni
- */
-@Composable
-fun BathroomButton(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    colorScheme: ColorScheme,
-    typography: Typography,
-    modifier: Modifier = Modifier
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) colorScheme.primary else colorScheme.surfaceVariant.copy(alpha = 0.7f),
-            contentColor = if (isSelected) colorScheme.onPrimary else colorScheme.onSurfaceVariant
-        ),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = if (isSelected) 4.dp else 0.dp,
-            pressedElevation = 2.dp
-        ),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
-    ) {
-        Text(
-            text = text,
-            style = typography.labelLarge,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-/**
- * Bottone per le condizioni immobile
- */
-@Composable
-fun PropertyConditionButton(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    colorScheme: ColorScheme,
-    typography: Typography,
-    modifier: Modifier = Modifier
-) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = if (isSelected) colorScheme.primary else Color.Transparent,
-            contentColor = if (isSelected) colorScheme.onPrimary else colorScheme.onSurface
-        ),
-        border = BorderStroke(
-            1.dp,
-            if (isSelected) colorScheme.primary else colorScheme.onSurface.copy(alpha = 0.3f)
-        ),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 14.dp)
-    ) {
-        Text(
-            text = text,
-            style = typography.labelLarge,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-@Preview(showBackground = true)
+@Preview(showBackground = true, device = "spec:width=411dp,height=891dp,dpi=420")
 @Composable
 fun PreviewFilterScreen() {
     val navController = rememberNavController()
-    SearchFilterScreen(
-        navController = navController,
-        idUtente = "utente",
-        ricerca = "varcaturo"
-    )
+    DietiEstatesTheme {
+        SearchFilterScreen(
+            navController = navController,
+            idUtente = "utentePreview",
+            comune = "Napoli",
+            ricercaQueryText = "Vomero",
+            onNavigateBack = {},
+            onApplyFilters = { filterModel -> println("Preview - Filtri applicati: $filterModel") },
+            isFullScreenContext = true // Simula contesto full-screen per la preview
+        )
+    }
 }

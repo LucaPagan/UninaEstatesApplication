@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
-// Sample Data for HomeScreen (remains the same)
 data class Property(
     val id: Int,
     val price: String,
@@ -51,7 +50,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val dimensions = Dimensions
-        val comune = "Napoli" // Esempio: Potresti voler passare il comune dell'utente reale
+        val comune = "Napoli"
 
         val gradientColors = listOf(
             colorScheme.primary.copy(alpha = 0.7f),
