@@ -651,3 +651,48 @@ fun CustomSearchAppBar(
         }
     }
 }
+
+/**
+ * Un IconButton generalizzato con uno sfondo circolare.
+ *
+ * @param onClick Azione da eseguire al click.
+ * @param iconVector L'ImageVector per l'icona.
+ * @param contentDescription Descrizione per l'accessibilità.
+ * @param modifier Modificatori per l'IconButton.
+ * @param backgroundColor Colore di sfondo del cerchio. Defaulta a `MaterialTheme.colorScheme.primaryContainer`.
+ * @param iconTint Colore dell'icona. Defaulta a `MaterialTheme.colorScheme.onPrimaryContainer`.
+ * @param buttonSize Dimensione del cerchio di sfondo. Defaulta a 40.dp.
+ * @param iconSize Dimensione dell'icona. Defaulta a 22.dp.
+ */
+@Composable
+fun CircularIconActionButton(
+    onClick: () -> Unit,
+    iconVector: ImageVector,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    iconTint: Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    buttonSize: Dp = 40.dp,
+    circleSize: Dp = 200.dp,
+    iconSize: Dp = 22.dp
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier.size(buttonSize) // Applica il modifier passato all'IconButton esterno
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .size(circleSize)
+                .background(backgroundColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = iconVector,
+                contentDescription = contentDescription,
+                tint = iconTint,
+                modifier = Modifier.size(iconSize)
+            )
+        }
+    }
+}

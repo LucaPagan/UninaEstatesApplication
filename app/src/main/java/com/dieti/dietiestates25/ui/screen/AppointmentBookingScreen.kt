@@ -1,15 +1,20 @@
 package com.dieti.dietiestates25.ui.screen
 
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import com.dieti.dietiestates25.ui.components.CalendarView
+import com.dieti.dietiestates25.ui.components.AppPrimaryButton
+import com.dieti.dietiestates25.ui.components.CircularIconActionButton
+import com.dieti.dietiestates25.ui.theme.Dimensions
+
 import java.time.LocalDate
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.BorderStroke // Mantenuto per NotificationBox
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable // Mantenuto per TimeSlotSelector
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape // Mantenuto per TimeSlotSelector e NotificationBox
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -18,20 +23,18 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip // Mantenuto per TimeSlotSelector
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight // Mantenuto per NotificationBox
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.ui.components.CalendarView
-import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 
 
-@SuppressLint("UnusedBoxWithConstraintsScope") // Riconsidera se `BoxWithConstraints` era davvero necessario
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentBookingScreen(
@@ -40,11 +43,9 @@ fun AppointmentBookingScreen(
     DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
+        val dimensions = Dimensions // Istanza locale per un accesso più breve
 
-        // Lo stato iniziale di selectedDate ora può essere gestito meglio da CalendarView,
-        // ma manteniamolo qui se serve per altre logiche o per il BottomBar.
-        // CalendarView gestirà la sua selezione interna e la notificherà.
-        var selectedDate by remember { mutableStateOf(LocalDate.now()) } // Inizializza con oggi
+        var selectedDate by remember { mutableStateOf(LocalDate.now()) }
         var selectedTimeSlot by remember { mutableStateOf<Int?>(0) }
         val scrollState = rememberScrollState()
         val haptic = LocalHapticFeedback.current
@@ -57,6 +58,7 @@ fun AppointmentBookingScreen(
                     haptic = haptic,
                     colorScheme = colorScheme,
                     typography = typography
+                    // dimensions = dimensions // Passa dimensions se necessario direttamente qui
                 )
             },
             bottomBar = {
@@ -64,11 +66,9 @@ fun AppointmentBookingScreen(
                     haptic = haptic,
                     colorScheme = colorScheme,
                     onProceedClick = {
-                        // Logica da eseguire quando si clicca "Prosegui"
-                        // Usa selectedDate e selectedTimeSlot
                         println("Data selezionata: $selectedDate, Fascia oraria: ${selectedTimeSlot?.let { it + 1 }}")
-                        // navController.navigate(...)
-                    }
+                    },
+                    dimensions = dimensions
                 )
             }
         ) { paddingValues ->
@@ -80,7 +80,8 @@ fun AppointmentBookingScreen(
                 selectedTimeSlot = selectedTimeSlot,
                 onTimeSlotSelected = { newTimeSlot -> selectedTimeSlot = newTimeSlot },
                 colorScheme = colorScheme,
-                typography = typography
+                typography = typography,
+                dimensions = dimensions
             )
         }
     }
@@ -103,24 +104,31 @@ private fun AppointmentBookingTopAppBar(
                 )
             },
             navigationIcon = {
-                IconButton(onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    navController.popBackStack()
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Chiudi",
-                        tint = colorScheme.onPrimary // Assicura visibilità
-                    )
-                }
+                CircularIconActionButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        navController.popBackStack()
+                    },
+                    iconVector = Icons.Default.Close,
+                    contentDescription = "Chiudi",
+                    backgroundColor = colorScheme.primaryContainer,
+                    iconTint = colorScheme.onPrimaryContainer
+                    // buttonSize e iconSize usano i default di CircularIconActionButton (40.dp e 24.dp)
+                    // Se questi valori (40.dp, 24.dp) non sono in Dimensions, rimangono così
+                )
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = colorScheme.primary,
-                titleContentColor = colorScheme.onPrimary
+                titleContentColor = colorScheme.onPrimary,
+                navigationIconContentColor = colorScheme.onPrimaryContainer,
+                actionIconContentColor = colorScheme.onPrimary
             ),
-            modifier = Modifier.statusBarsPadding() // Usa l'padding della status bar
+            modifier = Modifier.statusBarsPadding()
         )
-        HorizontalDivider(color = colorScheme.onSurfaceVariant, thickness = 1.dp)
+        HorizontalDivider(
+            color = colorScheme.onPrimary.copy(alpha = 0.3f),
+            thickness = 1.dp // 1.dp non in Dimensions, lasciato invariato
+        )
     }
 }
 
@@ -129,21 +137,25 @@ private fun AppointmentBookingTopAppBar(
 private fun AppointmentBookingBottomBar(
     haptic: HapticFeedback,
     colorScheme: ColorScheme,
-    onProceedClick: () -> Unit
+    onProceedClick: () -> Unit,
+    dimensions: Dimensions // Aggiunto
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding() // Usa l'padding della navigation bar
+            .navigationBarsPadding()
     ) {
-        HorizontalDivider(color = colorScheme.onSurfaceVariant, thickness = 1.dp) // Colore più standard per i divisori
+        HorizontalDivider(
+            color = colorScheme.onSurfaceVariant,
+            thickness = 1.dp // 1.dp non in Dimensions, lasciato invariato
+        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(colorScheme.surface) // Usa surface per coerenza con il contenuto
-                .padding(16.dp),
+                .background(colorScheme.surface)
+                .padding(dimensions.paddingMedium), // SOSTITUITO 16.dp
         ) {
-            AppPrimaryButton( // Utilizzo del componente bottone primario
+            AppPrimaryButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onProceedClick()
@@ -164,66 +176,56 @@ private fun AppointmentBookingContent(
     selectedTimeSlot: Int?,
     onTimeSlotSelected: (Int) -> Unit,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions // Aggiunto
 ) {
-    Box( // Box esterno per il background e il padding generale dal Scaffold
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(colorScheme.surface) // Background principale
-            .padding(paddingValues) // Applica i padding dello Scaffold
+            .background(colorScheme.surface)
+            .padding(paddingValues)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(horizontal = 16.dp) // Padding orizzontale per il contenuto
+                .padding(horizontal = dimensions.paddingMedium) // SOSTITUITO 16.dp
                 .imePadding()
         ) {
-
-            Spacer(modifier = Modifier.height(16.dp))
-
+            Spacer(modifier = Modifier.height(dimensions.spacingMedium)) // SOSTITUITO 16.dp
             ScreenSectionTitle(
                 title = "Seleziona il tuo giorno disponibile",
                 colorScheme = colorScheme,
                 typography = typography
             )
-
-            Spacer(modifier = Modifier.height(8.dp)) // Spazio ridotto prima del calendario
-
-            // Utilizzo del componente CalendarView estratto
+            Spacer(modifier = Modifier.height(dimensions.spacingSmall)) // SOSTITUITO 8.dp
             CalendarView(
-                initialSelectedDate = selectedDate, // Passa la data selezionata
-                onDateSelected = onDateSelected,    // Callback per aggiornare la data
+                initialSelectedDate = selectedDate,
+                onDateSelected = onDateSelected,
                 colorScheme = colorScheme,
                 typography = typography
-                // Non serve un modifier specifico qui se deve prendere tutta la larghezza
             )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
+            Spacer(modifier = Modifier.height(dimensions.spacingLarge)) // SOSTITUITO 24.dp
             ScreenSectionTitle(
                 title = "Scegli la fascia oraria",
                 colorScheme = colorScheme,
                 typography = typography
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
+            Spacer(modifier = Modifier.height(12.dp)) // 12.dp non in Dimensions, lasciato invariato
             TimeSlotSelector(
                 selectedTimeSlot = selectedTimeSlot,
                 onTimeSlotSelected = onTimeSlotSelected,
                 colorScheme = colorScheme,
-                typography = typography
+                typography = typography,
+                dimensions = dimensions
             )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
+            Spacer(modifier = Modifier.height(dimensions.spacingLarge)) // SOSTITUITO 24.dp
             NotificationBox(
                 colorScheme = colorScheme,
-                typography = typography
+                typography = typography,
+                dimensions = dimensions
             )
-
-            Spacer(modifier = Modifier.height(24.dp)) // Spazio alla fine per scroll
+            Spacer(modifier = Modifier.height(dimensions.spacingLarge)) // SOSTITUITO 24.dp
         }
     }
 }
@@ -237,43 +239,42 @@ private fun ScreenSectionTitle(
     Text(
         text = title,
         style = typography.titleMedium,
-        color = colorScheme.onSurface // Testo sul colore di superficie
+        color = colorScheme.onSurface
     )
 }
 
 
 @Composable
-fun TimeSlotSelector( // Lasciato pubblico se usato altrove, altrimenti private
+fun TimeSlotSelector(
     selectedTimeSlot: Int?,
     onTimeSlotSelected: (Int) -> Unit,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions // Aggiunto
 ) {
     val timeSlots = remember { listOf("9-12", "12-14", "14-17", "17-20") }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(0.dp) // Nessuno spazio, gestito dai bordi/divisori
+        horizontalArrangement = Arrangement.spacedBy(0.dp) // 0.dp ok
     ) {
         timeSlots.forEachIndexed { index, slot ->
             val isSelected = index == selectedTimeSlot
-            // Definisci le forme per gli angoli arrotondati
             val shape = when (index) {
-                0 -> RoundedCornerShape(topStart = 24.dp, bottomStart = 24.dp, topEnd = 0.dp, bottomEnd = 0.dp)
-                timeSlots.size - 1 -> RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = 24.dp, bottomEnd = 24.dp)
-                else -> RoundedCornerShape(0.dp)
+                0 -> RoundedCornerShape(topStart = dimensions.cornerRadiusLarge, bottomStart = dimensions.cornerRadiusLarge, topEnd = 0.dp, bottomEnd = 0.dp) // SOSTITUITO 24.dp
+                timeSlots.size - 1 -> RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = dimensions.cornerRadiusLarge, bottomEnd = dimensions.cornerRadiusLarge) // SOSTITUITO 24.dp
+                else -> RoundedCornerShape(0.dp) // 0.dp ok
             }
-
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(48.dp)
-                    .clip(shape) // Applica la forma prima del background e del click
+                    .height(dimensions.iconSizeExtraLarge) // SOSTITUITO 48.dp
+                    .clip(shape)
                     .background(
                         if (isSelected) colorScheme.primary else colorScheme.secondary
                     )
                     .clickable { onTimeSlotSelected(index) },
-                contentAlignment = Alignment.Center // Allinea il testo al centro
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = slot,
@@ -281,47 +282,44 @@ fun TimeSlotSelector( // Lasciato pubblico se usato altrove, altrimenti private
                     style = typography.labelLarge
                 )
             }
-
-            // Aggiungi il divisore solo tra i pulsanti
             if (index < timeSlots.size - 1) {
                 Box(
                     modifier = Modifier
-                        .width(1.dp)
-                        .height(24.dp) // Altezza del divisore
-                        .background(color = colorScheme.outline.copy(alpha = 0.5f)) // Colore del divisore più sottile
-                        .align(Alignment.CenterVertically) // Allinea il divisore verticalmente
+                        .width(1.dp) // 1.dp non in Dimensions
+                        .height(dimensions.spacingLarge) // SOSTITUITO 24.dp
+                        .background(color = colorScheme.outline.copy(alpha = 0.5f))
+                        .align(Alignment.CenterVertically)
                 )
             }
         }
     }
 }
 
-
 @Composable
-fun NotificationBox( // Lasciato pubblico se usato altrove, altrimenti private
+fun NotificationBox(
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions // Aggiunto
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = colorScheme.secondaryContainer, // Usa secondaryContainer per coerenza
-        border = BorderStroke(1.dp, colorScheme.outline)
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(dimensions.cornerRadiusMedium), // SOSTITUITO 12.dp
+        color = colorScheme.secondaryContainer,
+        border = BorderStroke(1.dp, colorScheme.outline) // 1.dp non in Dimensions
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(dimensions.paddingMedium) // SOSTITUITO 16.dp
         ) {
             Text(
                 text = "Questa non è una prenotazione effettiva:",
                 style = typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                color = colorScheme.onSecondaryContainer // Testo su secondaryContainer
+                color = colorScheme.onSecondaryContainer
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingExtraSmall)) // SOSTITUITO 4.dp
             Text(
                 text = "La tua richiesta sarà inviata all'inserzionista che si occuperà di ricontattarti.",
                 style = typography.bodySmall,
-                color = colorScheme.onSecondaryContainer // Testo su secondaryContainer
+                color = colorScheme.onSecondaryContainer
             )
         }
     }
@@ -329,7 +327,7 @@ fun NotificationBox( // Lasciato pubblico se usato altrove, altrimenti private
 
 @Preview(showBackground = true)
 @Composable
-fun AppointmentBookingScreenPreview() { // Rinominato per coerenza
+fun AppointmentBookingScreenPreview() {
     val navController = rememberNavController()
     AppointmentBookingScreen(navController = navController)
 }

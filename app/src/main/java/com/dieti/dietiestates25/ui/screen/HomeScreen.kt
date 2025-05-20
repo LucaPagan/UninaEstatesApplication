@@ -1,28 +1,5 @@
 package com.dieti.dietiestates25.ui.screen
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.components.AppIconDisplay
 import com.dieti.dietiestates25.ui.components.AppSecondaryButton
@@ -33,6 +10,25 @@ import com.dieti.dietiestates25.ui.components.PropertyShowcaseSection
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 // Sample Data for HomeScreen (remains the same)
 data class Property(
@@ -110,7 +106,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
 
                                 onClick = {
                                     // QUESTA AZIONE viene eseguita quando si clicca sulla card
-                                    navController.navigate("propertyDetail/${property.id}")
+                                    navController.navigate(Screen.PropertyScreen.route)
                                 }
                             )
                         },
@@ -142,8 +138,8 @@ fun HomeScreenHeader(idUtente: String) {
             .background(colorScheme.primary)
             .clip(RoundedCornerShape(bottomStart = dimensions.cornerRadiusLarge, bottomEnd = dimensions.cornerRadiusLarge))
             .padding(horizontal = dimensions.paddingLarge)
-            .padding(top = 40.dp, bottom = dimensions.paddingLarge), // Mantenuto il paddingTop specifico per allinearsi col design
-        contentAlignment = Alignment.BottomStart
+            .padding(top = 25.dp, bottom = dimensions.paddingLarge), // Mantenuto il paddingTop specifico per allinearsi col design
+        contentAlignment = Alignment.CenterStart
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
