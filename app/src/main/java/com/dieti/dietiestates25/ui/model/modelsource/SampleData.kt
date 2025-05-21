@@ -14,5 +14,18 @@ val sampleListingProperties = listOf(
     // Aggiungi altri immobili di esempio se necessario
 )
 
+// Potresti mettere questo in un file di utilità o costanti
+data class PhonePrefix(val displayName: String, val prefix: String, val flagEmoji: String)
+
+val CommonPhonePrefixes = listOf(
+    PhonePrefix("Italia (+39)", "+39", "🇮🇹"),
+    PhonePrefix("Regno Unito (+44)", "+44", "🇬🇧"),
+    PhonePrefix("Stati Uniti (+1)", "+1", "🇺🇸"),
+    PhonePrefix("Germania (+49)", "+49", "🇩🇪"),
+    PhonePrefix("Francia (+33)", "+33", "🇫🇷"),
+    PhonePrefix("Spagna (+34)", "+34", "🇪🇸"),
+    // Aggiungi altri prefissi comuni o una lista più completa
+)
+val DefaultPhonePrefix = CommonPhonePrefixes.first { it.prefix == "+39" } // Italia come default
 // Potresti avere anche altri dati di esempio qui
 // val sampleAgentProfiles = listOf(...)
