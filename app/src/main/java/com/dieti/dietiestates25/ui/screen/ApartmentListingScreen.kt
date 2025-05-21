@@ -1,6 +1,5 @@
-@file:Suppress("DEPRECATION")
-
 package com.dieti.dietiestates25.ui.screen
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,26 +14,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppPropertyCard
 import com.dieti.dietiestates25.ui.components.AppPropertyViewButton
 import com.dieti.dietiestates25.ui.model.FilterModel
-import com.dieti.dietiestates25.ui.model.PropertyModel
 import com.dieti.dietiestates25.ui.model.modelsource.sampleListingProperties
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.ui.utils.findActivity // Importa la tua funzione helper
-import com.dieti.dietiestates25.ui.utils.parsePriceToFloat // Importa la tua funzione helper
+import com.dieti.dietiestates25.ui.utils.parsePriceToFloat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +38,6 @@ fun ApartmentListingScreen(
     comune: String,
     ricerca: String,
 ) {
-    DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
         val dimensions = Dimensions
@@ -56,7 +49,7 @@ fun ApartmentListingScreen(
         val initialFiltersFromNav = remember(currentBackStackEntry) {
             currentBackStackEntry?.arguments?.let { args ->
                 val pType = args.getString("purchaseType")
-                val mPrice = args.getFloat("minPrice").takeIf { it != -1f && it != 0f } // Considera 0 come non impostato
+                val mPrice = args.getFloat("minPrice").takeIf { it != -1f && it != 0f }
                 val mxPrice = args.getFloat("maxPrice").takeIf { it != -1f }
                 val mSurf = args.getFloat("minSurface").takeIf { it != -1f && it != 0f }
                 val mxSurf = args.getFloat("maxSurface").takeIf { it != -1f }
@@ -76,17 +69,6 @@ fun ApartmentListingScreen(
         }
         var appliedFilters by remember { mutableStateOf(initialFiltersFromNav) }
 
-        val view = LocalView.current
-        if (!view.isInEditMode) {
-            SideEffect {
-                val activity = view.context.findActivity()
-                activity?.window?.let { window ->
-                    window.statusBarColor = colorScheme.primary.toArgb()
-                    WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-                }
-            }
-        }
-
         val gradientColors = arrayOf(
             0.0f to colorScheme.primary, 0.20f to colorScheme.background,
             0.60f to colorScheme.background, 1.0f to colorScheme.primary
@@ -98,7 +80,10 @@ fun ApartmentListingScreen(
                 .background(Brush.verticalGradient(colorStops = gradientColors))
                 .statusBarsPadding()
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding(),
+            ) {
                 HeaderBar(
                     navController = navController, colorScheme = colorScheme, typography = typography,
                     dimensions = dimensions, onFilterClick = { showFilterSheet = true },
@@ -112,13 +97,7 @@ fun ApartmentListingScreen(
                     } else {
                         sampleListingProperties.filter { property ->
                             var match = true
-                            currentFilters.purchaseType?.let { type ->
-                                // Questa logica di match dipende da come `property.type` è strutturato
-                                // Se property.type è "Appartamento", "Villa" e il filtro è "Compra"/"Affitta"
-                                // allora questo filtro non si applica direttamente a property.type.
-                                // Avresti bisogno di un campo `transactionType` in PropertyModel.
-                                // Per ora, lo commento o assumo una logica di placeholder.
-                                // if (property.type.lowercase() != type.lowercase()) match = false
+                            currentFilters.purchaseType?.let { _ ->
                             }
                             val propertyPriceFloat = property.price.parsePriceToFloat()
 
@@ -153,13 +132,13 @@ fun ApartmentListingScreen(
                         modifier = Modifier.weight(1f),
                         contentPadding = PaddingValues(
                             start = dimensions.paddingMedium, end = dimensions.paddingMedium,
-                            top = dimensions.paddingSmall, bottom = dimensions.paddingLarge + dimensions.buttonHeight // Spazio per eventuale bottom nav / respiro
+                            top = dimensions.paddingSmall, bottom = dimensions.paddingLarge + dimensions.buttonHeight
                         ),
                         verticalArrangement = Arrangement.spacedBy(dimensions.paddingMedium)
                     ) {
                         item {
                             Text(
-                                text = "Annunci immobiliari a $comune", // Titolo più contestualizzato
+                                text = "Annunci immobiliari a $comune",
                                 style = typography.titleLarge,
                                 color = colorScheme.onBackground,
                                 fontWeight = FontWeight.Bold,
@@ -170,7 +149,7 @@ fun ApartmentListingScreen(
                             AppPropertyCard(
                                 price = property.price,
                                 address = property.location,
-                                details = listOf(property.type), // Adatta con dettagli reali da PropertyModel
+                                details = listOf(property.type),
                                 imageResId = property.imageRes,
                                 onClick = { navController.navigate(Screen.PropertyScreen.route) },
                                 actionButton = {
@@ -188,17 +167,16 @@ fun ApartmentListingScreen(
             if (showFilterSheet) {
                 ModalBottomSheet(
                     onDismissRequest = { showFilterSheet = false },
-                    sheetState = sheetState, // Usa lo sheetState definito sopra
+                    sheetState = sheetState,
                     containerColor = colorScheme.background,
                     shape = RoundedCornerShape(topStart = dimensions.cornerRadiusLarge, topEnd = dimensions.cornerRadiusLarge),
-                    scrimColor = Color.Black.copy(alpha = 0.32f)
-                    // windowInsets = BottomSheetDefaults.windowInsets // Usa i default o personalizza se necessario
+                    scrimColor = Color.Black.copy(alpha = 0.32f),
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .defaultMinSize(minHeight = dimensions.buttonHeight * 10) // Altezza minima più generosa
-                            .navigationBarsPadding()
+                            .defaultMinSize(minHeight = dimensions.buttonHeight * 10)
+                            .fillMaxHeight(0.87f)
                     ) {
                         SearchFilterScreen(
                             navController = navController,
@@ -216,7 +194,6 @@ fun ApartmentListingScreen(
                 }
             }
         }
-    }
 }
 
 @Composable

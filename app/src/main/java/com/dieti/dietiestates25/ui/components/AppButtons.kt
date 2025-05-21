@@ -754,23 +754,28 @@ fun CustomSearchAppBar(
         shadowElevation = Dimensions.elevationMedium
     ) {
         Row(
-            modifier = Modifier1
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = Dimensions.paddingSmall)
-                .padding(start = Dimensions.paddingSmall, end = Dimensions.paddingMedium),
-            verticalAlignment = Alignment.CenterVertically
+                // Aggiungi padding verticale all'intera Row. Questo ingrandirà la barra.
+                .padding(
+                    horizontal = Dimensions.spacingSmall, // Padding ai lati della barra
+                    vertical = Dimensions.spacingSmall    // Padding sopra e sotto il contenuto (es. 8dp + 8dp)
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            // Spazio tra IconButton e TextField gestito da Arrangement.spacedBy
+            horizontalArrangement = Arrangement.spacedBy(Dimensions.spacingSmall)
         ) {
             IconButton(
                 onClick = onBackPressed,
-                modifier = Modifier1
-                    .size(Dimensions.iconSizeLarge + Dimensions.spacingSmall)
+                modifier = Modifier // Rimosso padding orizzontale specifico, gestito da Row
+                    .size(Dimensions.iconSizeLarge + Dimensions.spacingSmall) // Es. 44dp
                     .background(colorScheme.primaryContainer.copy(alpha = 0.3f), CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Indietro",
                     tint = colorScheme.onPrimary,
-                    modifier = Modifier1.size(Dimensions.iconSizeMedium)
+                    modifier = Modifier.size(Dimensions.iconSizeMedium)
                 )
             }
 
@@ -784,15 +789,18 @@ fun CustomSearchAppBar(
                         color = colorScheme.onPrimary.copy(alpha = 0.7f)
                     )
                 },
-                modifier = Modifier1
+                modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = Dimensions.spacingSmall)
-                    .height(Dimensions.buttonHeight - Dimensions.spacingMedium)
-                    .clip(CircleShape)
+                    // Rimuoviamo l'altezza fissa dal TextField.
+                    // La sua altezza sarà determinata intrinsecamente dal testo e dal padding interno di TextField,
+                    // e sarà centrata verticalmente dalla Row.
+                    // Per assicurare che non sia troppo "schiacciato" se la Row è molto bassa:
+                    .defaultMinSize(minHeight = Dimensions.buttonHeight - Dimensions.spacingMedium) // Es. 40dp altezza minima desiderata per il TextField
+                    .clip(CircleShape) // O RoundedCornerShape(Dimensions.cornerRadiusLarge) per un aspetto più da "pillola"
                     .background(colorScheme.surface.copy(alpha = 0.15f))
                     .focusRequester(focusRequester)
                     .onFocusChanged { focusState -> onFocusChanged(focusState.isFocused) },
-                colors = TextFieldDefaults.colors( // TextFieldColors in M3
+                colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     disabledContainerColor = Color.Transparent,
@@ -810,8 +818,8 @@ fun CustomSearchAppBar(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = imeAction),
                 keyboardActions = KeyboardActions(
-                    onSearch = { onSearchKeyboardAction(searchQuery); defaultKeyboardAction(imeAction) }, // Chiamata corretta
-                    onDone = { onSearchKeyboardAction(searchQuery); defaultKeyboardAction(imeAction) } // Chiamata corretta
+                    onSearch = { onSearchKeyboardAction(searchQuery) },
+                    onDone = { onSearchKeyboardAction(searchQuery) }
                 ),
                 trailingIcon = {
                     if (searchQuery.isNotBlank()) {

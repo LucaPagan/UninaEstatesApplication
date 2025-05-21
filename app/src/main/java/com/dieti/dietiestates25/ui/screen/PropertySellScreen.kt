@@ -32,15 +32,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.foundation.layout.statusBarsPadding
 
 @Composable
 fun PropertySellScreen(navController: NavController, idUtente: String) {
-    DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
         val scrollState = rememberScrollState()
@@ -100,7 +97,9 @@ fun PropertySellScreen(navController: NavController, idUtente: String) {
                 }
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .systemBarsPadding()
             ) {
                 // Top Header
                 HeaderBar(
@@ -580,7 +579,6 @@ fun PropertySellScreen(navController: NavController, idUtente: String) {
                 }
             }
         }
-    }
 }
 
 @Composable

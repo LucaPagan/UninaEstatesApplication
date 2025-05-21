@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -40,7 +41,6 @@ private const val WelcomeImageAspectRatio = 1f / 0.8f
 
 @Composable
 fun WelcomeScreen(navController: NavController) {
-    DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
         val dimensions = Dimensions
@@ -63,6 +63,7 @@ fun WelcomeScreen(navController: NavController) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .systemBarsPadding()
                     .padding(top = dimensions.buttonHeight)
                     .padding(horizontal = dimensions.paddingLarge),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -139,7 +140,6 @@ fun WelcomeScreen(navController: NavController) {
                 }
             }
         }
-    }
 }
 
 @Preview(showBackground = true, device = "id:pixel_4")
