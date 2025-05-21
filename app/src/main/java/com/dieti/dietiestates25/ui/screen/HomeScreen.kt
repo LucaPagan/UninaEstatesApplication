@@ -1,16 +1,5 @@
 package com.dieti.dietiestates25.ui.screen
 
-import com.dieti.dietiestates25.R
-import com.dieti.dietiestates25.ui.components.AppIconDisplay
-import com.dieti.dietiestates25.ui.components.AppSecondaryButton
-import com.dieti.dietiestates25.ui.components.ClickableSearchBar
-import com.dieti.dietiestates25.ui.components.AppBottomNavigation
-import com.dieti.dietiestates25.ui.components.AppPropertyCard
-import com.dieti.dietiestates25.ui.components.PropertyShowcaseSection
-import com.dieti.dietiestates25.ui.navigation.Screen
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
-import com.dieti.dietiestates25.ui.theme.Dimensions
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -29,129 +18,134 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-
-data class Property(
-    val id: Int,
-    val price: String,
-    val type: String,
-    val imageRes: Int,
-    val location: String
-)
-
-val sampleProperties_Home = listOf(
-    Property(1, "400.000 €", "Appartamento", R.drawable.property1, "Napoli"),
-    Property(2, "320.000 €", "Villa", R.drawable.property2, "Roma"),
-    Property(3, "250.000 €", "Attico", R.drawable.property1, "Milano"),
-    Property(4, "180.000 €", "Bilocale", R.drawable.property2, "Torino")
-)
+import com.dieti.dietiestates25.ui.components.AppIconDisplay
+import com.dieti.dietiestates25.ui.components.AppSecondaryButton
+import com.dieti.dietiestates25.ui.components.ClickableSearchBar
+import com.dieti.dietiestates25.ui.components.AppBottomNavigation
+import com.dieti.dietiestates25.ui.components.AppPropertyCard
+import com.dieti.dietiestates25.ui.components.PropertyShowcaseSection
+import com.dieti.dietiestates25.ui.model.modelsource.sampleListingProperties
+import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @Composable
 fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
-    DietiEstatesTheme {
-        val colorScheme = MaterialTheme.colorScheme
-        val dimensions = Dimensions
-        val comune = "Napoli"
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val dimensions = Dimensions
+    val comuneDefaultPerRicerche = "Napoli"
 
-        val gradientColors = listOf(
-            colorScheme.primary.copy(alpha = 0.7f),
-            colorScheme.background,
-            colorScheme.background,
-            colorScheme.primary.copy(alpha = 0.6f)
-        )
+    val gradientColors = listOf(
+        colorScheme.primary.copy(alpha = 0.7f),
+        colorScheme.background,
+        colorScheme.background,
+        colorScheme.primary.copy(alpha = 0.6f)
+    )
 
-        Scaffold(
-            bottomBar = {
-                AppBottomNavigation(navController = navController, idUtente = idUtente)
-            }
-        ) { paddingValues ->
-            Box(
+    Scaffold(
+        bottomBar = {
+            AppBottomNavigation(navController = navController, idUtente = idUtente)
+        }
+    ) { paddingValuesScaffold -> // Questi paddingValues INCLUDONO già il padding per la status bar
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.verticalGradient(colors = gradientColors))
+                .padding(paddingValuesScaffold)
+        ) {
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Brush.verticalGradient(colors = gradientColors))
-                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    HomeScreenHeader(idUtente = idUtente)
-                    Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
+                HomeScreenHeader(
+                    idUtente = idUtente,
+                    dimensions = dimensions,
+                    typography = typography,
+                    colorScheme = colorScheme
+                )
+                Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
-                    ClickableSearchBar(
-                        placeholderText = "Cerca comune, zona...",
-                        onClick = { navController.navigate(Screen.SearchScreen.withArgs(idUtente)) }
-                    )
+                ClickableSearchBar(
+                    placeholderText = "Cerca comune, zona...",
+                    onClick = { navController.navigate(Screen.SearchScreen.withIdUtente(idUtente)) },
+                    modifier = Modifier.padding(horizontal = dimensions.paddingMedium)
+                )
 
-                    Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
+                Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
-                    PropertyShowcaseSection(
-                        title = "Ultime ricerche",
-                        items = sampleProperties_Home, // Passa la lista dei dati Property
-                        itemContent = { property -> // Per ogni 'property' nella lista...
-                            AppPropertyCard(
-                                // Mappa i dati della Property ai parametri della AppPropertyCard
-                                price = property.price,
-                                address = property.location,
-                                details = listOf(property.type),
-                                imageResId = property.imageRes,
-
-                                // Configura AppPropertyCard per il layout verticale con dimensione fissa
-                                horizontalMode = false, // Layout verticale
-                                modifier = Modifier.size(width = 260.dp, height = 200.dp), // Dimensione fissa
-
-                                // actionButton NON fornito, quindi l'onClick della card sarà attivo
-                                actionButton = null,
-
-                                onClick = {
-                                    // QUESTA AZIONE viene eseguita quando si clicca sulla card
-                                    navController.navigate(Screen.PropertyScreen.route)
-                                }
+                PropertyShowcaseSection(
+                    title = "Ultime ricerche",
+                    items = sampleListingProperties,
+                    itemContent = { property ->
+                        AppPropertyCard(
+                            price = property.price,
+                            address = property.location,
+                            details = listOf(property.type),
+                            imageResId = property.imageRes,
+                            horizontalMode = false,
+                            modifier = Modifier.size(width = 260.dp, height = 200.dp),
+                            actionButton = null,
+                            onClick = {
+                                navController.navigate(Screen.PropertyScreen.withId(property.id.toString()))
+                            }
+                        )
+                    },
+                    onSeeAllClick = {
+                        navController.navigate(
+                            Screen.ApartmentListingScreen.buildRoute(
+                                idUtentePath = idUtente,
+                                comunePath = comuneDefaultPerRicerche,
+                                ricercaPath = "" // Nessuna query di ricerca specifica per "vedi tutte"
                             )
-                        },
-                        onSeeAllClick = {
-                            navController.navigate(Screen.ApartmentListingScreen.withArgs(idUtente, comune))
-                        },
-                        modifier = Modifier.padding(vertical = Dimensions.paddingMedium)
-                    )
+                        )
+                    },
+                    listContentPadding = PaddingValues(horizontal = dimensions.paddingLarge)
+                )
 
-                    Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
+                Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
-                    HomeScreenPostAdSection(navController = navController, idUtente = idUtente)
-                    Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
-                }
+                HomeScreenPostAdSection(
+                    navController = navController,
+                    idUtente = idUtente,
+                    dimensions = dimensions,
+                    typography = typography,
+                    colorScheme = colorScheme
+                )
+                Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
             }
         }
     }
 }
 
 @Composable
-fun HomeScreenHeader(idUtente: String) {
-    val colorScheme = MaterialTheme.colorScheme
-    val typography = MaterialTheme.typography
-    val dimensions = Dimensions
-
+fun HomeScreenHeader(
+    idUtente: String,
+    dimensions: Dimensions,
+    typography: Typography,
+    colorScheme: ColorScheme
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(colorScheme.primary)
             .clip(RoundedCornerShape(bottomStart = dimensions.cornerRadiusLarge, bottomEnd = dimensions.cornerRadiusLarge))
             .padding(horizontal = dimensions.paddingLarge)
-            .padding(top = 25.dp, bottom = dimensions.paddingLarge), // Mantenuto il paddingTop specifico per allinearsi col design
+            // Il padding superiore qui è per il contenuto INTERNO dell'header,
+            // non per la status bar di sistema.
+            .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge),
         contentAlignment = Alignment.CenterStart
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
             AppIconDisplay(
                 size = 60.dp,
                 shapeRadius = dimensions.cornerRadiusMedium
             )
-
             Spacer(modifier = Modifier.width(dimensions.spacingMedium))
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Bentornato",
@@ -171,11 +165,13 @@ fun HomeScreenHeader(idUtente: String) {
 }
 
 @Composable
-fun HomeScreenPostAdSection(navController: NavController, idUtente: String) {
-    val typography = MaterialTheme.typography
-    val colorScheme = MaterialTheme.colorScheme
-    val dimensions = Dimensions
-
+fun HomeScreenPostAdSection(
+    navController: NavController,
+    idUtente: String,
+    dimensions: Dimensions,
+    typography: Typography,
+    colorScheme: ColorScheme
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -195,13 +191,14 @@ fun HomeScreenPostAdSection(navController: NavController, idUtente: String) {
             text = "Inserisci il tuo annuncio in pochi semplici passaggi.",
             color = colorScheme.onBackground.copy(alpha = 0.8f),
             style = typography.bodyMedium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = dimensions.paddingSmall)
         )
         Spacer(modifier = Modifier.height(dimensions.spacingLarge))
         AppSecondaryButton(
             text = "Pubblica annuncio",
             onClick = {
-                navController.navigate(Screen.PropertySellScreen.withArgs(idUtente))
+                navController.navigate(Screen.PropertySellScreen.withIdUtente(idUtente))
             },
             modifier = Modifier.fillMaxWidth()
         )

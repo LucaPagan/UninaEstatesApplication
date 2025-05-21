@@ -1,10 +1,7 @@
-@file:Suppress("DEPRECATION") // Valuta se puoi rimuovere questa soppressione aggiornando le API usate
+@file:Suppress("DEPRECATION")
 
 package com.dieti.dietiestates25.ui.screen
 
-import android.app.Activity
-import android.content.Context // Import per la funzione helper findActivity
-import android.content.ContextWrapper // Import per la funzione helper findActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -24,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
@@ -34,7 +32,7 @@ import com.dieti.dietiestates25.ui.components.RangeFilterInput
 import com.dieti.dietiestates25.ui.components.SelectableOptionButton
 import com.dieti.dietiestates25.ui.components.SingleChoiceToggleGroup
 import com.dieti.dietiestates25.ui.components.defaultOutlineTextFieldColors
-import com.dieti.dietiestates25.ui.model.FilterModel // Assicurati che sia il path corretto
+import com.dieti.dietiestates25.ui.model.FilterModel
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.utils.findActivity
@@ -43,32 +41,18 @@ import com.dieti.dietiestates25.ui.utils.findActivity
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchFilterScreen(
-    navController: NavController, // Usato principalmente per il default di onNavigateBack
-    idUtente: String,        // Parametro di contesto
-    comune: String,          // Parametro di contesto
-    ricercaQueryText: String,// Parametro di contesto
-    onNavigateBack: () -> Unit, // Azione per tornare indietro (chiude sheet o popBackStack)
-    onApplyFilters: (FilterModel) -> Unit, // Azione per applicare i filtri
-    isFullScreenContext: Boolean = true // True se schermata intera, False se in uno sheet
+    navController: NavController,
+    idUtente: String = "utente",
+    comune: String = "napoli",
+    ricercaQueryText: String,
+    onNavigateBack: () -> Unit = { navController.popBackStack() },
+    onApplyFilters: (FilterModel) -> Unit,
+    isFullScreenContext: Boolean = true
 ) {
-    DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
         val dimensions = Dimensions
 
-        // Gestione Status Bar solo se in contesto full-screen
-        val view = LocalView.current
-        if (isFullScreenContext && !view.isInEditMode) {
-            SideEffect {
-                val activity = view.context.findActivity()
-                activity?.window?.let { window ->
-                    window.statusBarColor = colorScheme.primary.toArgb()
-                    WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-                }
-            }
-        }
-
-        // --- Stati dei Filtri Interni ---
         var selectedPurchaseType by remember { mutableStateOf<String?>(null) }
         val purchaseOptions = listOf("Compra", "Affitta")
 
@@ -94,7 +78,7 @@ fun SearchFilterScreen(
         val conditionOptionsFirstRow = listOf("Nuovo", "Ottimo")
         val conditionOptionsSecondRow = listOf("Buono", "Da ristrutturare")
 
-        // --- Sincronizzazione UI per Prezzo e Superficie ---
+        // --- Sincronizzazione e Logica (invariate) ---
         LaunchedEffect(priceSliderPosition) {
             minPriceText = if (priceSliderPosition.start <= priceValueRange.start) "" else priceSliderPosition.start.toInt().toString()
             maxPriceText = if (priceSliderPosition.endInclusive >= priceValueRange.endInclusive) "" else priceSliderPosition.endInclusive.toInt().toString()
@@ -123,6 +107,7 @@ fun SearchFilterScreen(
                 PredefinedRange(">€500k", 500000f, priceValueRange.endInclusive)
             )
         }
+
         val predefinedSurfaceRanges = remember(surfaceValueRange.endInclusive) {
             listOf(
                 PredefinedRange("0-50mq", 0f, 50f),
@@ -131,7 +116,6 @@ fun SearchFilterScreen(
                 PredefinedRange(">150mq", 150f, surfaceValueRange.endInclusive)
             )
         }
-
         fun resetAllFilters() {
             selectedPurchaseType = null
             selectedBathrooms = null
@@ -145,6 +129,8 @@ fun SearchFilterScreen(
             minRooms = ""
             maxRooms = ""
         }
+
+
         Scaffold(
             modifier = if (isFullScreenContext) Modifier.statusBarsPadding() else Modifier,
             topBar = {
@@ -153,10 +139,8 @@ fun SearchFilterScreen(
                         Text(
                             "FILTRI RICERCA",
                             style = typography.titleMedium.copy(letterSpacing = 0.5.sp),
-                            color = if (isFullScreenContext) colorScheme.onPrimary else colorScheme.primary,
-                            modifier = if(isFullScreenContext) Modifier
-                                .fillMaxWidth().wrapContentHeight() else
-                                Modifier.fillMaxWidth(),
+                            color = if (isFullScreenContext) colorScheme.onPrimary else colorScheme.onSurface,
+                            modifier = Modifier.fillMaxWidth(), // Semplificato
                             textAlign = TextAlign.Center
                         )
                     },
@@ -164,7 +148,7 @@ fun SearchFilterScreen(
                         IconButton(
                             onClick = onNavigateBack,
                             modifier = Modifier.size(dimensions.iconSizeLarge + dimensions.spacingSmall)
-                                .padding(start = if (isFullScreenContext) dimensions.spacingExtraSmall else dimensions.spacingNone)
+                            // Rimosso padding condizionale qui, TopAppBar dovrebbe allineare bene
                         ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack, "Indietro",
@@ -185,13 +169,20 @@ fun SearchFilterScreen(
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = if (isFullScreenContext) colorScheme.primary else colorScheme.surface
                     ),
-                    scrollBehavior = if (isFullScreenContext) TopAppBarDefaults.pinnedScrollBehavior() else null
+                    scrollBehavior = if (isFullScreenContext) TopAppBarDefaults.pinnedScrollBehavior() else null,
+                    // ---- MODIFICA CHIAVE QUI ----
+                    windowInsets = if (isFullScreenContext) {
+                        TopAppBarDefaults.windowInsets // Inset di default per full screen (rispetta status bar)
+                    } else {
+                        WindowInsets(0.dp) // Nessun inset aggiuntivo quando è in uno sheet
+                    }
                 )
             },
             bottomBar = {
+                // ... (BottomBar come prima, la logica di popolamento FilterModel è cruciale)
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shadowElevation = if (isFullScreenContext) dimensions.elevationMedium else dimensions.spacingNone, // Nessuna ombra se in sheet
+                    shadowElevation = if (isFullScreenContext) dimensions.elevationMedium else 0.dp, // Rimosso dimensions.spacingNone
                     color = colorScheme.surface
                 ) {
                     Button(
@@ -249,6 +240,7 @@ fun SearchFilterScreen(
                 }
             }
         ) { paddingValues ->
+            // ... (Contenuto della Column scrollabile con FilterSection, RangeFilterInput, ecc. INVARIATO)
             Column(
                 modifier = Modifier
                     .padding(paddingValues)
@@ -373,7 +365,7 @@ fun SearchFilterScreen(
                         }
                         SelectableOptionButton(
                             text = ">3",
-                            isSelected = selectedBathrooms == 4, // 4 rappresenta ">3"
+                            isSelected = selectedBathrooms == 4,
                             onClick = { selectedBathrooms = if (selectedBathrooms == 4) null else 4 },
                             modifier = Modifier.weight(1f),
                             dimensions = dimensions,
@@ -427,11 +419,11 @@ fun SearchFilterScreen(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(dimensions.paddingLarge)) // Aggiunto padding maggiore alla fine
+                Spacer(modifier = Modifier.height(dimensions.paddingLarge))
             }
         }
-    }
 }
+
 
 @Preview(showBackground = true, device = "spec:width=411dp,height=891dp,dpi=420")
 @Composable

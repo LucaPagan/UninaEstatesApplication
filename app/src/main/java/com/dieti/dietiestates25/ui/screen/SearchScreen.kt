@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,7 +51,6 @@ import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @Composable
 fun SearchScreen(navController: NavController, idUtente: String) {
-    DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
         val dimensions = Dimensions // Usato Dimensions invece di dp singoli
@@ -83,10 +83,9 @@ fun SearchScreen(navController: NavController, idUtente: String) {
             )
         }
 
-        // Richiede il focus sulla barra di ricerca all'avvio della schermata
         LaunchedEffect(Unit) {
             focusRequester.requestFocus()
-            keyboardController?.show() // Opzionale: forza la visualizzazione della tastiera
+            keyboardController?.show()
         }
 
         Box(
@@ -101,7 +100,7 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                     keyboardController?.hide()
                 }
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
                 CustomSearchAppBar(
                     searchQuery = searchQuery,
                     onSearchQueryChange = { query -> searchQuery = query },
@@ -110,14 +109,13 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                             searchQuery = ""
                         } else if (searchBarHasFocus) {
                             focusManager.clearFocus()
-                            // keyboardController?.hide() // Nascondere la tastiera è gestito da clearFocus indirettamente
                         } else {
                             navController.popBackStack()
                         }
                     },
                     onClearSearch = {
                         searchQuery = ""
-                        focusRequester.requestFocus() // Mantiene il focus
+                        focusRequester.requestFocus()
                         keyboardController?.show()
                     },
                     placeholderText = "Cerca comune, zona...",
@@ -132,7 +130,6 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                     }
                 )
 
-                // Contenuto dinamico basato sullo stato della ricerca
                 val showResults = searchQuery.isNotBlank()
                 val showPrompt = searchBarHasFocus && !showResults
                 val showOptions = !showResults && !showPrompt
@@ -145,22 +142,22 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                             searchQuery = searchQuery,
                             colorScheme = colorScheme,
                             typography = typography,
-                            dimensions = dimensions, // Passa dimensions se SearchResultsList lo usa
+                            dimensions = dimensions,
                             idUtente = idUtente,
                             onItemClick = {
                                 focusManager.clearFocus()
                                 keyboardController?.hide()
-                                searchQuery = "" // Resetta per tornare allo stato iniziale dopo la navigazione
+                                searchQuery = ""
                             }
                         )
                     }
                     showPrompt -> {
                         Box(
                             modifier = Modifier
-                                .weight(1f) // Occupa lo spazio rimanente
+                                .weight(1f)
                                 .fillMaxWidth()
                                 .padding(dimensions.paddingLarge),
-                            contentAlignment = Alignment.TopCenter // Allineato in alto per più visibilità
+                            contentAlignment = Alignment.TopCenter
                         ) {
                             Text(
                                 text = "Inizia a digitare per cercare un comune o una zona.",
@@ -174,10 +171,10 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                     showOptions -> {
                         Column(
                             modifier = Modifier
-                                .weight(1f) // Occupa lo spazio rimanente
+                                .weight(1f)
                                 .fillMaxWidth()
                                 .padding(horizontal = dimensions.paddingLarge)
-                                .padding(top = dimensions.paddingLarge), // Spazio sotto la search bar
+                                .padding(top = dimensions.paddingLarge),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Spacer(modifier = Modifier.height(dimensions.spacingLarge))
@@ -185,30 +182,29 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                                 text = "Cerca su mappa",
                                 onClick = {
                                     // TODO: Implementa navigazione a MapScreen
-                                    // navController.navigate(Screen.MapScreen.route) // Esempio
+                                    // navController.navigate(Screen.MapScreen.route)
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 icon = Icons.Default.Map,
                                 iconContentDescription = "Cerca su mappa"
                             )
-                            Spacer(modifier = Modifier.height(dimensions.spacingMedium)) // Spazio ridotto tra i due bottoni
+                            Spacer(modifier = Modifier.height(dimensions.spacingMedium))
                             AppSecondaryButton(
-                                text = "Cerca per comune/zona", // Testo più esplicito
+                                text = "Cerca per comune/zona",
                                 onClick = {
                                     focusRequester.requestFocus()
                                     keyboardController?.show()
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                icon = Icons.Default.Train, // Icona esempio, potresti usare Icons.Default.LocationCity
+                                icon = Icons.Default.Train,
                                 iconContentDescription = "Cerca per comune o zona"
                             )
-                            Spacer(modifier = Modifier.weight(1f)) // Spinge i bottoni in alto se c'è più spazio
+                            Spacer(modifier = Modifier.weight(1f))
                         }
                     }
                 }
             }
         }
-    }
 }
 
 @Composable

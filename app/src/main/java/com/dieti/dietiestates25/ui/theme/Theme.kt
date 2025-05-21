@@ -133,7 +133,8 @@ val typography = Typography(
         lineHeight = 16.sp
     )
 )
-// Funzione helper per trovare l'Activity dal Context
+
+
 private fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
@@ -147,7 +148,7 @@ fun DietiEstatesTheme(
     content: @Composable () -> Unit
 ) {
     val selectedColorScheme = when {
-        dynamicColor -> {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
@@ -158,25 +159,33 @@ fun DietiEstatesTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            // Ottieni l'Activity in modo sicuro
             val activity = view.context.findActivity()
-            if (activity != null) {
-                val window = activity.window
-
-                // Configurazione per un'esperienza Edge-to-Edge
-                // Questa riga è cruciale e IDEALMENTE andrebbe chiamata una volta
-                // nell'onCreate dell'Activity. Se la lasci qui, assicurati che sia l'effetto desiderato.
+            activity?.window?.let { window ->
                 WindowCompat.setDecorFitsSystemWindows(window, false)
 
-                // Rendi trasparenti le barre di sistema
-                window.statusBarColor = Color.Transparent.toArgb()
-                window.navigationBarColor = Color.Transparent.toArgb() // O un colore semi-trasparente
+                // 2. Imposta il colore desiderato per la Status Bar
+                val statusBarSystemColor = TealDeep.toArgb()
+                window.statusBarColor = statusBarSystemColor
 
-                // Imposta il colore delle icone delle barre di sistema
+                // 3. Scegli un colore per la Navigation Bar
+                // Opzione C: Trasparente (se il contenuto deve disegnarvisi dietro)
+                val navigationBarSystemColor = Color.Transparent.toArgb()
+                window.navigationBarColor = navigationBarSystemColor
+
+
                 val insetsController = WindowCompat.getInsetsController(window, view)
-                val useLightIcons = !darkTheme // Tema chiaro -> icone scure; Tema scuro -> icone chiare
-                insetsController.isAppearanceLightStatusBars = useLightIcons
-                insetsController.isAppearanceLightNavigationBars = useLightIcons
+
+                insetsController.isAppearanceLightStatusBars = false
+
+                // Per la Navigation Bar
+                // Se usi TealDeep (scuro) -> icone chiare (false)
+                // Se usi surface (chiaro in light-theme, scuro in dark-theme) -> !darkTheme
+                // Se usi trasparente -> !darkTheme (dipende dal contenuto dell'app dietro)
+                if (navigationBarSystemColor == TealDeep.toArgb()) {
+                    insetsController.isAppearanceLightNavigationBars = false // Icone chiare su TealDeep
+                } else {
+                    insetsController.isAppearanceLightNavigationBars = !darkTheme
+                }
             }
         }
     }
