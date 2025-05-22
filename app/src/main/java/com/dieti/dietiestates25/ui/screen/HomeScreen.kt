@@ -34,7 +34,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
-    val comuneDefaultPerRicerche = "Napoli"
+    val comune = "Napoli"
 
     val gradientColors = listOf(
         colorScheme.primary.copy(alpha = 0.7f),
@@ -80,24 +80,28 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                     items = sampleListingProperties,
                     itemContent = { property ->
                         AppPropertyCard(
+                            modifier = Modifier
+                                .width(240.dp)
+                                .height(210.dp),
                             price = property.price,
+                            imageResId = property.imageRes,
                             address = property.location,
                             details = listOf(property.type),
-                            imageResId = property.imageRes,
-                            horizontalMode = false,
-                            modifier = Modifier.size(width = 260.dp, height = 200.dp),
-                            actionButton = null,
                             onClick = {
-                                navController.navigate(Screen.PropertyScreen.withId(property.id.toString()))
-                            }
+                                navController.navigate(Screen.PropertyScreen.route)
+                            },
+                            actionButton = null,      // NESSUN bottone azione, l'intera card è cliccabile
+                            horizontalMode = false,   // <<-- IMPOSTA A FALSE per layout verticale
+                            imageHeightVerticalRatio = 0.6f, // Immagine occupa il 60% dell'altezza
+                            elevationDp = Dimensions.elevationSmall
                         )
                     },
                     onSeeAllClick = {
                         navController.navigate(
                             Screen.ApartmentListingScreen.buildRoute(
                                 idUtentePath = idUtente,
-                                comunePath = comuneDefaultPerRicerche,
-                                ricercaPath = "" // Nessuna query di ricerca specifica per "vedi tutte"
+                                comunePath = comune,
+                                ricercaPath = ""
                             )
                         )
                     },
