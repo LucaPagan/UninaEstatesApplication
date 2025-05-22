@@ -3,11 +3,10 @@ package com.dieti.dietiestates25.ui.screen
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 import com.dieti.dietiestates25.ui.components.AppIconDisplay
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.ui.model.ProfileData // Importa dal tuo package model
+import com.dieti.dietiestates25.ui.model.ProfileData
 import com.dieti.dietiestates25.ui.model.ProfileViewModel
 import com.dieti.dietiestates25.ui.components.UnsavedChangesAlertDialog
 import com.dieti.dietiestates25.ui.components.LogoutConfirmAlertDialog
@@ -65,97 +64,98 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.theme.typography
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
     viewModel: ProfileViewModel = viewModel()
 ) {
-    DietiEstatesTheme {
-        val colorScheme = MaterialTheme.colorScheme
-        val typography = MaterialTheme.typography
-        val focusManager = LocalFocusManager.current
-        val dimensions = Dimensions
 
-        val profileData by viewModel.currentProfileData.collectAsState()
-        val isEditMode by viewModel.isEditMode.collectAsState()
-        val hasUnsavedChanges by viewModel.hasUnsavedChanges.collectAsState()
-        val canSaveChanges by viewModel.canSaveChanges.collectAsState()
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val focusManager = LocalFocusManager.current
+    val dimensions = Dimensions
 
-        val showExitEditModeDialog by viewModel.showExitEditModeConfirmDialog.collectAsState()
-        val showLogoutDialog by viewModel.showLogoutConfirmDialog.collectAsState()
+    val profileData by viewModel.currentProfileData.collectAsState()
+    val isEditMode by viewModel.isEditMode.collectAsState()
+    val hasUnsavedChanges by viewModel.hasUnsavedChanges.collectAsState()
+    val canSaveChanges by viewModel.canSaveChanges.collectAsState()
 
-        Scaffold(
-            topBar = {
-                ProfileScreenHeader(
-                    isEditMode = isEditMode,
-                    hasUnsavedChanges = hasUnsavedChanges,
-                    onToggleEditMode = viewModel::attemptToggleEditMode,
-                    colorScheme = colorScheme,
-                    typography = typography,
-                    dimensions = dimensions
-                )
-            },
-            bottomBar = {
-                AppBottomNavigation(navController = navController, idUtente = profileData.email)
-            }
-        ) { scaffoldPaddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(scaffoldPaddingValues)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { focusManager.clearFocus() }
-                    )
-                    .verticalScroll(rememberScrollState())
-            ) {
-                ProfileContent(
-                    profileData = profileData,
-                    isEditMode = isEditMode,
-                    canSaveChanges = canSaveChanges,
-                    availablePhonePrefixes = viewModel.availablePhonePrefixes,
-                    onNameChange = viewModel::onNameChange,
-                    onEmailChange = viewModel::onEmailChange,
-                    onPhonePrefixChange = viewModel::onPhonePrefixChange,
-                    onPhoneNumberWithoutPrefixChange = viewModel::onPhoneNumberWithoutPrefixChange,
-                    onSaveChanges = viewModel::saveChanges,
-                    onLogout = viewModel::triggerLogoutDialog,
-                    onDeleteProfile = viewModel::deleteProfile,
-                    typography = typography,
-                    colorScheme = colorScheme,
-                    navController = navController,
-                    dimensions = dimensions
-                )
-            }
-        }
+    val showExitEditModeDialog by viewModel.showExitEditModeConfirmDialog.collectAsState()
+    val showLogoutDialog by viewModel.showLogoutConfirmDialog.collectAsState()
 
-        if (showExitEditModeDialog) {
-            UnsavedChangesAlertDialog( // Chiamata al componente importato
-                onDismissRequest = viewModel::closeExitEditModeConfirmDialog,
-                onSave = {
-                    if (canSaveChanges) viewModel.confirmExitEditModeAndSave()
-                },
-                onDontSave = viewModel::confirmExitEditModeWithoutSaving,
-                canSave = canSaveChanges,
-                colorScheme = colorScheme
-            )
-        }
-
-        if (showLogoutDialog) {
-            LogoutConfirmAlertDialog( // Chiamata al componente importato
-                onDismissRequest = viewModel::cancelLogoutDialog,
-                onLogoutConfirm = { save -> viewModel.confirmLogout(save) },
+    Scaffold(
+        topBar = {
+            ProfileScreenHeader(
                 isEditMode = isEditMode,
                 hasUnsavedChanges = hasUnsavedChanges,
-                canSaveChanges = canSaveChanges,
+                onToggleEditMode = viewModel::attemptToggleEditMode,
                 colorScheme = colorScheme,
-                dimensions = dimensions // Passa dimensions se il componente lo usa (es. per Arrangement.spacedBy)
+                typography = typography,
+                dimensions = dimensions
+            )
+        },
+        bottomBar = {
+            AppBottomNavigation(navController = navController, idUtente = profileData.email)
+        }
+    ) { scaffoldPaddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(scaffoldPaddingValues)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { focusManager.clearFocus() }
+                )
+                .verticalScroll(rememberScrollState())
+        ) {
+            ProfileContent(
+                profileData = profileData,
+                isEditMode = isEditMode,
+                canSaveChanges = canSaveChanges,
+                availablePhonePrefixes = viewModel.availablePhonePrefixes,
+                onNameChange = viewModel::onNameChange,
+                onEmailChange = viewModel::onEmailChange,
+                onPhonePrefixChange = viewModel::onPhonePrefixChange,
+                onPhoneNumberWithoutPrefixChange = viewModel::onPhoneNumberWithoutPrefixChange,
+                onSaveChanges = viewModel::saveChanges,
+                onLogout = viewModel::triggerLogoutDialog,
+                onDeleteProfile = viewModel::deleteProfile,
+                typography = typography,
+                colorScheme = colorScheme,
+                navController = navController,
+                dimensions = dimensions
             )
         }
     }
+
+    if (showExitEditModeDialog) {
+        UnsavedChangesAlertDialog(
+            onDismissRequest = viewModel::closeExitEditModeConfirmDialog,
+            onSave = {
+                if (canSaveChanges) viewModel.confirmExitEditModeAndSave()
+            },
+            onDontSave = viewModel::confirmExitEditModeWithoutSaving,
+            canSave = canSaveChanges,
+            colorScheme = colorScheme
+        )
+    }
+
+    if (showLogoutDialog) {
+        LogoutConfirmAlertDialog(
+            onDismissRequest = viewModel::cancelLogoutDialog,
+            onLogoutConfirm = { save -> viewModel.confirmLogout(save) },
+            isEditMode = isEditMode,
+            hasUnsavedChanges = hasUnsavedChanges,
+            canSaveChanges = canSaveChanges,
+            colorScheme = colorScheme,
+            dimensions = dimensions
+        )
+    }
 }
+
 
 @Composable
 private fun ProfileScreenHeader(
@@ -174,7 +174,7 @@ private fun ProfileScreenHeader(
             .clip(RoundedCornerShape(bottomStart = dimensions.cornerRadiusLarge, bottomEnd = dimensions.cornerRadiusLarge))
             .padding(horizontal = dimensions.paddingLarge)
             .padding(
-                top = 25.dp, // Valore specifico, come da codice precedente
+                top = 25.dp,
                 bottom = dimensions.paddingLarge
             ),
         contentAlignment = Alignment.CenterStart
@@ -189,7 +189,7 @@ private fun ProfileScreenHeader(
                 modifier = Modifier.weight(1f)
             ) {
                 AppIconDisplay(
-                    size = 60.dp, // Valore specifico
+                    size = 60.dp,
                     shapeRadius = dimensions.cornerRadiusMedium
                 )
                 Spacer(modifier = Modifier.width(dimensions.spacingMedium))
@@ -302,39 +302,33 @@ private fun ProfileDataFields(
 
     val commonTextFieldModifier = Modifier
         .fillMaxWidth()
-        .padding(bottom = 12.dp) // Lasciato 12.dp perché non in Dimensions
+        .padding(bottom = 12.dp)
 
     val nameIsError = isEditMode && profileData.name.isBlank()
     val emailIsError = isEditMode && profileData.email.isBlank()
     val phoneIsError = isEditMode && profileData.phoneNumberWithoutPrefix.isBlank()
 
     val textFieldErrorColors = OutlinedTextFieldDefaults.colors(
-        // Colori per lo stato normale (quando non in errore e abilitato)
         focusedBorderColor = colorScheme.primary,
         unfocusedBorderColor = colorScheme.outline,
         focusedLabelColor = colorScheme.primary,
         unfocusedLabelColor = colorScheme.onSurfaceVariant,
         cursorColor = colorScheme.primary,
 
-        // Colori per lo stato disabilitato
         disabledTextColor = colorScheme.onSurface.copy(alpha = 0.7f),
         disabledBorderColor = colorScheme.outline.copy(alpha = 0.5f),
         disabledLabelColor = colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
 
-        // Colori per lo stato di errore (usati quando isError = true nel TextField)
         errorBorderColor = colorScheme.error,
         errorLabelColor = colorScheme.error,
         errorCursorColor = colorScheme.error,
-        errorSupportingTextColor = colorScheme.error // Se usi testo di supporto per errori
-        // Puoi anche specificare errorFocusedBorderColor, errorUnfocusedBorderColor se necessario
+        errorSupportingTextColor = colorScheme.error
     )
 
-    // Colori specifici per il dropdown del prefisso (che non ha uno stato di errore gestito qui)
     val prefixTextFieldColors = OutlinedTextFieldDefaults.colors(
         disabledTextColor = colorScheme.onSurface.copy(alpha = 0.7f),
         disabledBorderColor = colorScheme.outline.copy(alpha = 0.5f),
         disabledLabelColor = colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-        // Colori normali per quando è abilitato
         focusedBorderColor = colorScheme.primary,
         unfocusedBorderColor = colorScheme.outline,
         focusedLabelColor = colorScheme.primary,
@@ -349,8 +343,8 @@ private fun ProfileDataFields(
         enabled = isEditMode,
         modifier = commonTextFieldModifier,
         singleLine = true,
-        isError = nameIsError, // Questo attiva i colori di errore definiti sotto
-        colors = textFieldErrorColors, // Usa i colori definiti, inclusi quelli per errore
+        isError = nameIsError,
+        colors = textFieldErrorColors,
         textStyle = typography.bodyLarge
     )
 
@@ -361,9 +355,9 @@ private fun ProfileDataFields(
         enabled = isEditMode,
         modifier = commonTextFieldModifier,
         singleLine = true,
-        isError = emailIsError, // Questo attiva i colori di errore
+        isError = emailIsError,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-        colors = textFieldErrorColors, // Usa i colori definiti, inclusi quelli per errore
+        colors = textFieldErrorColors,
         textStyle = typography.bodyLarge
     )
 
@@ -383,7 +377,7 @@ private fun ProfileDataFields(
                     .menuAnchor()
                     .width(140.dp),
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = prefixDropdownExpanded && isEditMode) },
-                colors = prefixTextFieldColors, // Colori specifici per questo campo (senza gestione errore isError)
+                colors = prefixTextFieldColors,
                 textStyle = typography.bodyLarge
             )
             ExposedDropdownMenu(
@@ -405,7 +399,6 @@ private fun ProfileDataFields(
         OutlinedTextField(
             value = profileData.phoneNumberWithoutPrefix,
             onValueChange = { newValue ->
-                // Log.d("DEBUG_PROFILE", "Phone newValue: '$newValue'") // Per debug
                 if (newValue.all { it.isDigit() } && newValue.length <= 10) {
                     onPhoneNumberWithoutPrefixChange(newValue)
                 }
@@ -414,9 +407,9 @@ private fun ProfileDataFields(
             enabled = isEditMode,
             modifier = Modifier.weight(1f),
             singleLine = true,
-            isError = phoneIsError, // Questo attiva i colori di errore
+            isError = phoneIsError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            colors = textFieldErrorColors, // Usa i colori definiti, inclusi quelli per errore
+            colors = textFieldErrorColors,
             textStyle = typography.bodyLarge
         )
     }

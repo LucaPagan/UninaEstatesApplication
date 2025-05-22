@@ -1,6 +1,5 @@
 package com.dieti.dietiestates25.ui.screen
 
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 import com.dieti.dietiestates25.ui.theme.Dimensions
@@ -79,113 +78,112 @@ import androidx.navigation.compose.rememberNavController
 fun PriceProposalScreen(
     navController: NavController
 ) {
-    DietiEstatesTheme {
-        val colorScheme = MaterialTheme.colorScheme
-        val typography = MaterialTheme.typography
-        val dimensions = Dimensions
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val dimensions = Dimensions
 
-        var proposedPrice by remember { mutableStateOf("") }
-        var isPriceFieldFocused by remember { mutableStateOf(false) }
-        val placeholder = "110.000"
-        val startingPrice = 129500.0
+    var proposedPrice by remember { mutableStateOf("") }
+    var isPriceFieldFocused by remember { mutableStateOf(false) }
+    val placeholder = "110.000"
+    val startingPrice = 129500.0
 
-        val keyboardController = LocalSoftwareKeyboardController.current
-        val focusManager = LocalFocusManager.current
-        val haptic = LocalHapticFeedback.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+    val haptic = LocalHapticFeedback.current
 
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                PriceProposalTopAppBar(
-                    navController = navController,
-                    haptic = haptic,
-                    colorScheme = colorScheme,
-                    typography = typography
-                )
-            },
-            bottomBar = {
-                PriceProposalBottomBar(
-                    proposedPrice = proposedPrice,
-                    placeholder = placeholder,
-                    haptic = haptic,
-                    colorScheme = colorScheme,
-                    onProposeClick = { price ->
-                        println("Prezzo proposto: $price")
-                    },
-                    dimensions = dimensions
-                )
-            }
-        ) { paddingValues ->
-            Box(
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            PriceProposalTopAppBar(
+                navController = navController,
+                haptic = haptic,
+                colorScheme = colorScheme,
+                typography = typography
+            )
+        },
+        bottomBar = {
+            PriceProposalBottomBar(
+                proposedPrice = proposedPrice,
+                placeholder = placeholder,
+                haptic = haptic,
+                colorScheme = colorScheme,
+                onProposeClick = { price ->
+                    println("Prezzo proposto: $price")
+                },
+                dimensions = dimensions
+            )
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colorScheme.surface)
+                .padding(paddingValues)
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        focusManager.clearFocus()
+                    })
+                }
+        ) {
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(colorScheme.surface)
-                    .padding(paddingValues)
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = {
-                            focusManager.clearFocus()
-                        })
-                    }
+                    .imePadding()
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .imePadding()
-                ) {
-                    HorizontalDivider(
-                        color = colorScheme.onBackground,
-                        thickness = 1.dp
-                    )
+                HorizontalDivider(
+                    color = colorScheme.onBackground,
+                    thickness = 1.dp
+                )
 
-                    InformationCard(
-                        text = "Proponi un nuovo prezzo all'inserzionista, senza impegno, adatto al tuo budget",
-                        colorScheme = colorScheme,
-                        typography = typography,
-                        dimensions = dimensions
-                    )
+                InformationCard(
+                    text = "Proponi un nuovo prezzo all'inserzionista, senza impegno, adatto al tuo budget",
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
 
-                    StartingPriceRow(
-                        startingPrice = startingPrice,
-                        colorScheme = colorScheme,
-                        typography = typography,
-                        dimensions = dimensions
-                    )
+                StartingPriceRow(
+                    startingPrice = startingPrice,
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
 
-                    YourProposalRow(
-                        proposedPrice = proposedPrice,
-                        onProposedPriceChange = { proposedPrice = it },
-                        placeholder = placeholder,
-                        isPriceFieldFocused = isPriceFieldFocused,
-                        onFocusChanged = { isPriceFieldFocused = it },
-                        keyboardController = keyboardController,
-                        focusManager = focusManager,
-                        haptic = haptic,
-                        colorScheme = colorScheme,
-                        typography = typography,
-                        dimensions = dimensions
-                    )
+                YourProposalRow(
+                    proposedPrice = proposedPrice,
+                    onProposedPriceChange = { proposedPrice = it },
+                    placeholder = placeholder,
+                    isPriceFieldFocused = isPriceFieldFocused,
+                    onFocusChanged = { isPriceFieldFocused = it },
+                    keyboardController = keyboardController,
+                    focusManager = focusManager,
+                    haptic = haptic,
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
 
-                    PriceDifferenceRow(
-                        proposedPrice = proposedPrice,
-                        startingPrice = startingPrice,
-                        colorScheme = colorScheme,
-                        typography = typography,
-                        dimensions = dimensions
-                    )
+                PriceDifferenceRow(
+                    proposedPrice = proposedPrice,
+                    startingPrice = startingPrice,
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
 
-                    Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.weight(1f))
 
-                    InformationNoteCard(
-                        text = "Il prezzo è stato elaborato da un professionista immobiliare. Per mantenere coerenza con il mercato, puoi fare un'offerta con una variazione massima del 15%",
-                        colorScheme = colorScheme,
-                        typography = typography,
-                        dimensions = dimensions
-                    )
-                }
+                InformationNoteCard(
+                    text = "Il prezzo è stato elaborato da un professionista immobiliare. Per mantenere coerenza con il mercato, puoi fare un'offerta con una variazione massima del 15%",
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
             }
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

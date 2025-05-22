@@ -2,7 +2,6 @@ package com.dieti.dietiestates25.ui.screen
 
 import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.navigation.Screen
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppSecondaryButton
@@ -55,105 +54,104 @@ import androidx.core.net.toUri
 fun PropertyScreen(
     navController: NavController
 ) {
-    DietiEstatesTheme {
-        val colorScheme = MaterialTheme.colorScheme
-        val typography = MaterialTheme.typography
-        val context = LocalContext.current
-        val dimensions = Dimensions // Istanza locale per un accesso più breve
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val context = LocalContext.current
+    val dimensions = Dimensions
 
-        val coroutineScope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
 
-        val propertyImages = listOf(
-            R.drawable.property1,
-            R.drawable.property2,
-        )
+    val propertyImages = listOf(
+        R.drawable.property1,
+        R.drawable.property2,
+    )
 
-        val totalImages = propertyImages.size
-        val pagerState = rememberPagerState(initialPage = 0) { totalImages }
+    val totalImages = propertyImages.size
+    val pagerState = rememberPagerState(initialPage = 0) { totalImages }
 
-        Scaffold(
-            topBar = {
-                Box {
-                    // Empty box
-                }
+    Scaffold(
+        topBar = {
+            Box {
+
             }
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier.fillMaxSize()
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
             ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                ) {
-                    item {
-                        PropertyImagePager(
-                            pagerState,
-                            propertyImages,
-                            coroutineScope,
-                            colorScheme,
-                            typography,
-                            dimensions
-                        )
-                    }
-                    item {
-                        PropertyPriceAndLocation(
-                            "€129.500",
-                            "Appartamento Napoli, Via Francesco Girardi 90",
-                            colorScheme,
-                            typography,
-                            dimensions
-                        )
-                    }
-                    item {
-                        PropertyFeaturesRow(colorScheme, typography)
-                    }
-                    item {
-                        PropertyCharacteristicsSection(
-                            listOf(
-                                "115 m²",
-                                "2 Camere da letto",
-                                "1 Bagno",
-                                "3 Locali"
-                            ), colorScheme, typography, dimensions
-                        )
-                    }
-                    item {
-                        PropertyDescriptionSection(
-                            "Scopri questo accogliente appartamento situato nel cuore di Napoli, ideale per chi cerca comfort e comodità. L'immobile è situato al terzo piano di un edificio con ascensore, è perfetto per famiglie o coppie alla ricerca di uno spazio ben organizzato e luminoso.",
-                            colorScheme,
-                            typography,
-                            dimensions
-                        )
-                    }
-                    item {
-                        AgentInfoSection(
-                            "Agenzia Gianfranco Lombardi",
-                            "081 192 6079",
-                            "VIA G. PORZIO ISOLA Es 3, Napoli (NA), Campania, 80143",
-                            colorScheme,
-                            typography,
-                            dimensions
-                        )
-                    }
-                    item {
-                        ActionButtonsSection(navController, "081 192 6079", typography, context, dimensions)
-                    }
-                    item {
-                        ReportAdSection(colorScheme, typography, dimensions)
-                    }
-                    item {
-                        SimilarListingsSection(navController, colorScheme, typography, dimensions)
-                    }
-                    item {
-                        Spacer(modifier = Modifier.height(dimensions.paddingExtraLarge * 2 + dimensions.paddingMedium)) // Es. 80.dp
-                    }
+                item {
+                    PropertyImagePager(
+                        pagerState,
+                        propertyImages,
+                        coroutineScope,
+                        colorScheme,
+                        typography,
+                        dimensions
+                    )
                 }
-                PropertyTopAppBar(colorScheme, navController, dimensions)
+                item {
+                    PropertyPriceAndLocation(
+                        "€129.500",
+                        "Appartamento Napoli, Via Francesco Girardi 90",
+                        colorScheme,
+                        typography,
+                        dimensions
+                    )
+                }
+                item {
+                    PropertyFeaturesRow(colorScheme, typography)
+                }
+                item {
+                    PropertyCharacteristicsSection(
+                        listOf(
+                            "115 m²",
+                            "2 Camere da letto",
+                            "1 Bagno",
+                            "3 Locali"
+                        ), colorScheme, typography, dimensions
+                    )
+                }
+                item {
+                    PropertyDescriptionSection(
+                        "Scopri questo accogliente appartamento situato nel cuore di Napoli, ideale per chi cerca comfort e comodità. L'immobile è situato al terzo piano di un edificio con ascensore, è perfetto per famiglie o coppie alla ricerca di uno spazio ben organizzato e luminoso.",
+                        colorScheme,
+                        typography,
+                        dimensions
+                    )
+                }
+                item {
+                    AgentInfoSection(
+                        "Agenzia Gianfranco Lombardi",
+                        "081 192 6079",
+                        "VIA G. PORZIO ISOLA Es 3, Napoli (NA), Campania, 80143",
+                        colorScheme,
+                        typography,
+                        dimensions
+                    )
+                }
+                item {
+                    ActionButtonsSection(navController, "081 192 6079", typography, context, dimensions)
+                }
+                item {
+                    ReportAdSection(colorScheme, typography, dimensions)
+                }
+                item {
+                    SimilarListingsSection(navController, colorScheme, typography, dimensions)
+                }
+                item {
+                    Spacer(modifier = Modifier.height(dimensions.paddingExtraLarge * 2 + dimensions.paddingMedium)) // Es. 80.dp
+                }
             }
+            PropertyTopAppBar(colorScheme, navController, dimensions)
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -191,8 +189,7 @@ fun PropertyTopAppBar(
             )
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = colorScheme.surface.copy(alpha = 0.0f) // Trasparente se il contenuto scorre dietro
-            // O colorScheme.surfaceDim se deve avere un colore
+            containerColor = colorScheme.surface.copy(alpha = 0.0f)
         )
     )
 }
@@ -228,7 +225,7 @@ fun PropertyImagePager(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .padding(dimensions.paddingMedium), // SOSTITUITO 16.dp
+                .padding(dimensions.paddingMedium),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -248,8 +245,8 @@ fun PropertyImagePager(
             )
             Box(
                 modifier = Modifier
-                    .background(colorScheme.onBackground.copy(alpha = 0.6f), RoundedCornerShape(dimensions.cornerRadiusMedium)) // SOSTITUITO 12.dp
-                    .padding(horizontal = 12.dp, vertical = dimensions.paddingExtraSmall), // 12.dp non in Dimensions, SOSTITUITO 4.dp
+                    .background(colorScheme.onBackground.copy(alpha = 0.6f), RoundedCornerShape(dimensions.cornerRadiusMedium))
+                    .padding(horizontal = 12.dp, vertical = dimensions.paddingExtraSmall),
             ) {
                 Text(
                     text = "${pagerState.currentPage + 1}/$totalImages",
@@ -286,15 +283,15 @@ fun PropertyPriceAndLocation(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(dimensions.paddingMedium) // SOSTITUITO 16.dp
+            .padding(dimensions.paddingMedium)
     ) {
         Text(text = price, style = typography.displayLarge, color = colorScheme.onBackground)
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = dimensions.paddingExtraSmall) // SOSTITUITO 4.dp
+            modifier = Modifier.padding(top = dimensions.paddingExtraSmall)
         ) {
-            Icon(Icons.Default.LocationOn, "Location", tint = colorScheme.onBackground, modifier = Modifier.size(dimensions.iconSizeSmall)) // SOSTITUITO 16.dp
-            Text(location, style = typography.bodyMedium, color = colorScheme.onBackground, modifier = Modifier.padding(start = dimensions.paddingExtraSmall)) // SOSTITUITO 4.dp
+            Icon(Icons.Default.LocationOn, "Location", tint = colorScheme.onBackground, modifier = Modifier.size(dimensions.iconSizeSmall))
+            Text(location, style = typography.bodyMedium, color = colorScheme.onBackground, modifier = Modifier.padding(start = dimensions.paddingExtraSmall))
         }
     }
 }
@@ -304,7 +301,7 @@ fun PropertyFeaturesRow(colorScheme: ColorScheme, typography: Typography, dimens
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = dimensions.paddingMedium), // SOSTITUITO 16.dp
+            .padding(horizontal = dimensions.paddingMedium),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         PropertyFeature(Icons.Default.Hotel, "2 Letti", colorScheme, typography)
@@ -331,9 +328,9 @@ fun PropertyCharacteristicsSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(dimensions.paddingMedium) // SOSTITUITO 16.dp
+            .padding(dimensions.paddingMedium)
     ) {
-        Text("Caratteristiche", style = typography.titleMedium, color = colorScheme.onBackground, modifier = Modifier.padding(bottom = dimensions.paddingSmall)) // SOSTITUITO 8.dp
+        Text("Caratteristiche", style = typography.titleMedium, color = colorScheme.onBackground, modifier = Modifier.padding(bottom = dimensions.paddingSmall))
         characteristics.forEach { characteristic ->
             PropertyCharacteristic(characteristic, colorScheme, typography, dimensions)
         }
@@ -341,13 +338,13 @@ fun PropertyCharacteristicsSection(
 }
 
 @Composable
-fun PropertyCharacteristic(text: String, colorScheme: ColorScheme, typography: Typography, dimensions: Dimensions) { // Aggiunto dimensions
+fun PropertyCharacteristic(text: String, colorScheme: ColorScheme, typography: Typography, dimensions: Dimensions) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = dimensions.paddingExtraSmall) // SOSTITUITO 4.dp
+        modifier = Modifier.padding(vertical = dimensions.paddingExtraSmall)
     ) {
-        Box(modifier = Modifier.size(6.dp).background(colorScheme.primary, CircleShape)) // 6.dp non in Dimensions
-        Text(text, style = typography.labelLarge, color = colorScheme.onBackground, modifier = Modifier.padding(start = dimensions.paddingSmall)) // SOSTITUITO 8.dp
+        Box(modifier = Modifier.size(6.dp).background(colorScheme.primary, CircleShape))
+        Text(text, style = typography.labelLarge, color = colorScheme.onBackground, modifier = Modifier.padding(start = dimensions.paddingSmall))
     }
 }
 
@@ -361,9 +358,9 @@ fun PropertyDescriptionSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(dimensions.paddingMedium) // SOSTITUITO 16.dp
+            .padding(dimensions.paddingMedium)
     ) {
-        Text("Descrizione", style = typography.titleMedium, color = colorScheme.onBackground, modifier = Modifier.padding(bottom = dimensions.paddingSmall)) // SOSTITUITO 8.dp
+        Text("Descrizione", style = typography.titleMedium, color = colorScheme.onBackground, modifier = Modifier.padding(bottom = dimensions.paddingSmall))
         Text(description, style = typography.labelLarge, color = colorScheme.onBackground)
     }
 }
@@ -375,16 +372,16 @@ fun AgentInfoSection(
     address: String,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(dimensions.paddingMedium) // SOSTITUITO 16.dp
+            .padding(dimensions.paddingMedium)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Home, "Agency", tint = colorScheme.primary, modifier = Modifier.size(dimensions.iconSizeMedium)) // SOSTITUITO 24.dp
-            Column(modifier = Modifier.padding(start = dimensions.paddingSmall)) { // SOSTITUITO 8.dp
+            Icon(Icons.Default.Home, "Agency", tint = colorScheme.primary, modifier = Modifier.size(dimensions.iconSizeMedium))
+            Column(modifier = Modifier.padding(start = dimensions.paddingSmall)) {
                 Text("Agenzia: $agencyName", style = typography.bodyLarge, color = colorScheme.onBackground)
                 Text("Telefono: $phoneNumber", style = typography.labelLarge, color = colorScheme.onBackground)
                 Text(address, style = typography.labelMedium, color = colorScheme.onBackground.copy(alpha = 0.7f))
@@ -397,14 +394,14 @@ fun AgentInfoSection(
 fun ActionButtonsSection(
     navController: NavController,
     phoneNumber: String,
-    typography: Typography, // Typography passata
+    typography: Typography,
     context: android.content.Context,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(dimensions.paddingMedium) // SOSTITUITO 16.dp
+            .padding(dimensions.paddingMedium)
     ) {
         AppPrimaryButton(
             onClick = {
@@ -414,13 +411,13 @@ fun ActionButtonsSection(
             text = "Chiama ora", textStyle = typography.labelLarge, icon = Icons.Default.Phone, iconContentDescription = "Call",
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(dimensions.spacingSmall)) // SOSTITUITO 8.dp
+        Spacer(modifier = Modifier.height(dimensions.spacingSmall))
         AppSecondaryButton(
             onClick = { navController.navigate(Screen.AppointmentBookingScreen.route) },
             text = "Visita", icon = Icons.Default.DateRange, iconContentDescription = "Visit",
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(dimensions.spacingSmall)) // SOSTITUITO 8.dp
+        Spacer(modifier = Modifier.height(dimensions.spacingSmall))
         AppSecondaryButton(
             onClick = { navController.navigate(Screen.PriceProposalScreen.route) },
             text = "Proponi prezzo", icon = Icons.Default.Euro, iconContentDescription = "Propose price",
@@ -430,11 +427,11 @@ fun ActionButtonsSection(
 }
 
 @Composable
-fun ReportAdSection(colorScheme: ColorScheme, typography: Typography, dimensions: Dimensions) { // Aggiunto dimensions
+fun ReportAdSection(colorScheme: ColorScheme, typography: Typography, dimensions: Dimensions) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingMedium), // SOSTITUITO 16.dp per entrambi
+            .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingMedium),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         DecorativeLine(colorScheme = colorScheme, isTop = true, dimensions = dimensions) // Passa dimensions
