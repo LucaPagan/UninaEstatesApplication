@@ -1,6 +1,5 @@
 package com.dieti.dietiestates25.ui.screen
 
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.components.CalendarView
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
@@ -40,52 +39,50 @@ import androidx.navigation.compose.rememberNavController
 fun AppointmentBookingScreen(
     navController: NavController
 ) {
-    DietiEstatesTheme {
-        val colorScheme = MaterialTheme.colorScheme
-        val typography = MaterialTheme.typography
-        val dimensions = Dimensions // Istanza locale per un accesso più breve
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val dimensions = Dimensions
 
-        var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-        var selectedTimeSlot by remember { mutableStateOf<Int?>(0) }
-        val scrollState = rememberScrollState()
-        val haptic = LocalHapticFeedback.current
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedTimeSlot by remember { mutableStateOf<Int?>(0) }
+    val scrollState = rememberScrollState()
+    val haptic = LocalHapticFeedback.current
 
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                AppointmentBookingTopAppBar(
-                    navController = navController,
-                    haptic = haptic,
-                    colorScheme = colorScheme,
-                    typography = typography
-                    // dimensions = dimensions // Passa dimensions se necessario direttamente qui
-                )
-            },
-            bottomBar = {
-                AppointmentBookingBottomBar(
-                    haptic = haptic,
-                    colorScheme = colorScheme,
-                    onProceedClick = {
-                        println("Data selezionata: $selectedDate, Fascia oraria: ${selectedTimeSlot?.let { it + 1 }}")
-                    },
-                    dimensions = dimensions
-                )
-            }
-        ) { paddingValues ->
-            AppointmentBookingContent(
-                paddingValues = paddingValues,
-                scrollState = scrollState,
-                selectedDate = selectedDate,
-                onDateSelected = { newDate -> selectedDate = newDate },
-                selectedTimeSlot = selectedTimeSlot,
-                onTimeSlotSelected = { newTimeSlot -> selectedTimeSlot = newTimeSlot },
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            AppointmentBookingTopAppBar(
+                navController = navController,
+                haptic = haptic,
                 colorScheme = colorScheme,
-                typography = typography,
+                typography = typography
+            )
+        },
+        bottomBar = {
+            AppointmentBookingBottomBar(
+                haptic = haptic,
+                colorScheme = colorScheme,
+                onProceedClick = {
+                    println("Data selezionata: $selectedDate, Fascia oraria: ${selectedTimeSlot?.let { it + 1 }}")
+                },
                 dimensions = dimensions
             )
         }
+    ) { paddingValues ->
+        AppointmentBookingContent(
+            paddingValues = paddingValues,
+            scrollState = scrollState,
+            selectedDate = selectedDate,
+            onDateSelected = { newDate -> selectedDate = newDate },
+            selectedTimeSlot = selectedTimeSlot,
+            onTimeSlotSelected = { newTimeSlot -> selectedTimeSlot = newTimeSlot },
+            colorScheme = colorScheme,
+            typography = typography,
+            dimensions = dimensions
+        )
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

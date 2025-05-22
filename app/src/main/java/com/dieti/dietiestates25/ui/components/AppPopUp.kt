@@ -27,12 +27,14 @@ fun UnsavedChangesAlertDialog( // Rinominato per chiarezza e convenzione
         confirmButton = {
             AppPrimaryButton(
                 onClick = onSave,
-                text = "Salva Modifiche",
-                enabled = canSave
+                text = "Salva",
+                enabled = canSave,
             )
         },
         dismissButton = {
-            AppRedButton(onClick = onDontSave, text = "Non Salvare")
+            AppRedButton(
+                onClick = onDontSave,
+                text = "Non Salvare")
         },
         containerColor = colorScheme.surfaceVariant,
         titleContentColor = colorScheme.onSurfaceVariant,
@@ -69,12 +71,14 @@ fun LogoutConfirmAlertDialog( // Rinominato per chiarezza e convenzione
                     AppPrimaryButton(
                         onClick = { onLogoutConfirm(true) },
                         text = "Salva ed Esci",
+                        textStyle = MaterialTheme.typography.bodySmall,
                         enabled = canSaveChanges,
                         modifier = Modifier.weight(1f)
                     )
                     AppRedButton(
                         onClick = { onLogoutConfirm(false) },
                         text = "Esci Senza Salvare",
+                        textStyle = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f)
                     )
                 }

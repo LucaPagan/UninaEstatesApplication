@@ -3,13 +3,8 @@ package com.dieti.dietiestates25.ui.screen
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
-import com.dieti.dietiestates25.ui.theme.Dimensions
-
-import java.text.NumberFormat
-import java.util.Locale
-
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import com.dieti.dietiestates25.ui.theme.Dimensions // Importa il tuo oggetto
+import com.dieti.dietiestates25.ui.model.NotificationDetailViewModel
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,7 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Phone // o altra icona rilevante
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,75 +23,31 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp // Mantieni per valori hardcoded non in Dimensions
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavController
-
-// ViewModel for Notification Details (invariato)
-class NotificationDetailViewModel : ViewModel() {
-    data class NotificationDetail(
-        val id: Int,
-        val senderType: String,
-        val senderName: String,
-        val message: String,
-        val propertyAddress: String,
-        val propertyPrice: Double,
-        val offerAmount: Double? = null
-    )
-
-    private val _currentNotification = MutableStateFlow(
-        NotificationDetail(
-            id = 1,
-            senderType = "Compratore",
-            senderName = "Mario Rossi",
-            message = "Il %SENDER_TYPE% %SENDER_NAME% ha fatto un'offerta di %OFFER_AMOUNT% per l'immobile da lei messo in vendita situato in %PROPERTY_ADDRESS%. L'immobile era stato inizialmente listato a %PROPERTY_PRICE%. Valuti attentamente la proposta e decida se accettare o rifiutare. Può contattare direttamente il proponente per ulteriori chiarimenti o negoziazioni. Questa è una fase cruciale della transazione, quindi prenda il tempo necessario per una decisione informata.",
-            propertyAddress = "Via Ripuaria 48, Pozzuoli (NA)",
-            propertyPrice = 150000.0,
-            offerAmount = 120000.0
-        )
-    )
-    val currentNotification = _currentNotification.asStateFlow()
-
-    fun getFormattedMessage(detail: NotificationDetail): String {
-        val currencyFormat = NumberFormat.getCurrencyInstance(Locale.ITALY)
-        return detail.message
-            .replace("%SENDER_TYPE%", detail.senderType)
-            .replace("%SENDER_NAME%", detail.senderName)
-            .replace("%PROPERTY_ADDRESS%", detail.propertyAddress)
-            .replace("%PROPERTY_PRICE%", currencyFormat.format(detail.propertyPrice))
-            .replace("%OFFER_AMOUNT%", detail.offerAmount?.let { currencyFormat.format(it) } ?: "N/A")
-    }
-
-    fun acceptProposal() {
-        println("Proposta accettata")
-    }
-
-    fun rejectProposal() {
-        println("Proposta rifiutata")
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationDetailScreen(
     navController: NavController,
-    viewModel: NotificationDetailViewModel = viewModel()
+    viewModel: NotificationDetailViewModel = viewModel() // viewModel ora importato da ui.model
 ) {
-    DietiEstatesTheme {
+    DietiEstatesTheme { // DietiEstatesTheme applica già MaterialTheme internamente
         val notificationDetail by viewModel.currentNotification.collectAsState()
         val formattedMessage = remember(notificationDetail) {
             viewModel.getFormattedMessage(notificationDetail)
         }
-        val dimensions = Dimensions // Istanza locale per accesso breve
+        val dimensions = Dimensions
+        val colorScheme = MaterialTheme.colorScheme // Prendi da MaterialTheme applicato da DietiEstatesTheme
+        val typography = MaterialTheme.typography   // Prendi da MaterialTheme applicato da DietiEstatesTheme
 
         Scaffold(
             topBar = {
                 NotificationDetailTopAppBar(
                     navController = navController,
-                    colorScheme = MaterialTheme.colorScheme,
-                    typography = MaterialTheme.typography
-                    // dimensions non serve qui perché TopAppBar gestisce i suoi padding interni
+                    colorScheme = colorScheme,
+                    typography = typography
                 )
             }
         ) { paddingValues ->
@@ -106,13 +57,14 @@ fun NotificationDetailScreen(
                 formattedMessage = formattedMessage,
                 onAccept = viewModel::acceptProposal,
                 onReject = viewModel::rejectProposal,
-                colorScheme = MaterialTheme.colorScheme,
-                typography = MaterialTheme.typography,
-                dimensions = dimensions // Passa dimensions
+                colorScheme = colorScheme,
+                typography = typography,
+                dimensions = dimensions
             )
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -150,32 +102,32 @@ private fun NotificationDetailTopAppBar(
             navigationIconContentColor = colorScheme.onPrimary,
             actionIconContentColor = colorScheme.onPrimary
         )
-        // Non ha padding hardcoded da sostituire direttamente qui
     )
 }
 
 @Composable
 private fun NotificationDetailContent(
     modifier: Modifier = Modifier,
+    // Usa il tipo completo se NotificationDetail è inner class, o solo NotificationDetail se importata
     notificationDetail: NotificationDetailViewModel.NotificationDetail,
     formattedMessage: String,
     onAccept: () -> Unit,
     onReject: () -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(colorScheme.primary)
+            .background(colorScheme.primary) // Sfondo primario per l'effetto "notch" superiore
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)) // 20.dp non in Dimensions, lasciato invariato
+                .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)) // 20.dp non in Dimensions
                 .background(colorScheme.background)
-                .padding(dimensions.paddingMedium), // SOSTITUITO 16.dp
+                .padding(dimensions.paddingMedium),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -184,21 +136,21 @@ private fun NotificationDetailContent(
                     senderName = notificationDetail.senderName,
                     colorScheme = colorScheme,
                     typography = typography,
-                    dimensions = dimensions // Passa dimensions
+                    dimensions = dimensions
                 )
-                Spacer(modifier = Modifier.height(dimensions.spacingMedium)) // SOSTITUITO 16.dp
+                Spacer(modifier = Modifier.height(dimensions.spacingMedium))
                 ProposalDetailsCard(
                     message = formattedMessage,
                     colorScheme = colorScheme,
                     typography = typography,
-                    dimensions = dimensions // Passa dimensions
+                    dimensions = dimensions
                 )
             }
             ActionButtonsSection(
                 onAccept = onAccept,
                 onReject = onReject,
-                modifier = Modifier.padding(top = dimensions.paddingMedium), // SOSTITUITO 16.dp
-                dimensions = dimensions // Passa dimensions
+                modifier = Modifier.padding(top = dimensions.paddingMedium),
+                dimensions = dimensions
             )
         }
     }
@@ -210,31 +162,31 @@ private fun NotificationHeaderCard(
     senderName: String,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(dimensions.cornerRadiusMedium)) // SOSTITUITO 12.dp
+            .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
             .background(colorScheme.surfaceVariant)
-            .padding(dimensions.paddingMedium), // SOSTITUITO 16.dp
+            .padding(dimensions.paddingMedium),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(dimensions.bottomNavHeight) // SOSTITUITO 64.dp
-                .clip(RoundedCornerShape(10.dp)) // 10.dp non in Dimensions, lasciato invariato
+                .size(dimensions.bottomNavHeight) // 64.dp
+                .clip(RoundedCornerShape(10.dp)) // 10.dp non in Dimensions
                 .background(colorScheme.primaryContainer),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Phone,
                 contentDescription = "Icona Notifica",
-                modifier = Modifier.size(dimensions.iconSizeLarge), // SOSTITUITO 32.dp con 36.dp (più vicino e da Dimensions)
+                modifier = Modifier.size(dimensions.iconSizeLarge), // 36.dp
                 tint = colorScheme.onPrimaryContainer
             )
         }
-        Spacer(modifier = Modifier.width(dimensions.spacingMedium)) // SOSTITUITO 16.dp
+        Spacer(modifier = Modifier.width(dimensions.spacingMedium))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = senderType,
@@ -255,17 +207,17 @@ private fun ProposalDetailsCard(
     message: String,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     val scrollState = rememberScrollState()
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(dimensions.cornerRadiusMedium)) // SOSTITUITO 12.dp
+            .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
             .background(colorScheme.surfaceVariant.copy(alpha = 0.5f))
             .padding(
-                horizontal = dimensions.paddingMedium, // SOSTITUITO 16.dp
-                vertical = 12.dp // 12.dp non in Dimensions, lasciato invariato
+                horizontal = dimensions.paddingMedium,
+                vertical = 12.dp // 12.dp non in Dimensions
             )
     ) {
         Text(
@@ -273,7 +225,7 @@ private fun ProposalDetailsCard(
             style = typography.bodyLarge,
             color = colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxSize() // Riempe il Box
                 .verticalScroll(scrollState)
         )
     }
@@ -284,11 +236,11 @@ private fun ActionButtonsSection(
     onAccept: () -> Unit,
     onReject: () -> Unit,
     modifier: Modifier = Modifier,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium) // SOSTITUITO 12.dp con 16.dp
+        verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
     ) {
         AppPrimaryButton(
             onClick = onAccept,
