@@ -128,12 +128,10 @@ fun Navigation() {
         // PropertyScreen (verifica se la rotta definita qui corrisponde all'helper in Screen.kt)
         // Se Screen.PropertyScreen.withId("id") produce "property_screen/id", allora:
         composable(
-            route = Screen.PropertyScreen.route + "/{propertyId}",
-            arguments = listOf(navArgument("propertyId") { type = NavType.StringType })
-        ) { entry ->
+            route = Screen.PropertyScreen.route
+        ) {
             PropertyScreen(
                 navController = navController
-                // propertyId = entry.arguments?.getString("propertyId") // Dovrai passare propertyId a PropertyScreen
             )
         }
         // Se PropertyScreen non prende argomenti nel path, allora era corretto:

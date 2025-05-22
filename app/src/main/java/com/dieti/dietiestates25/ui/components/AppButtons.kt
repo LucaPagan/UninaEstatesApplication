@@ -1,43 +1,27 @@
 package com.dieti.dietiestates25.ui.components
 
-// Common Imports
-import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.dieti.dietiestates25.R
@@ -176,7 +160,6 @@ fun AppRedButton(
     }
 }
 
-// --- ALTRI COMPONENTI UI ---
 @Composable
 fun AppIconDisplay(
     modifier: Modifier = Modifier,
@@ -209,135 +192,6 @@ fun AppIconDisplay(
                 contentScale = ContentScale.Fit
             )
         }
-    }
-}
-@Composable
-fun AppPropertyCard(
-    price: String,
-    imageResId: Int = R.drawable.property1,
-    onClick: () -> Unit,
-    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier1,
-    address: String? = null,
-    details: List<String> = emptyList(),
-    actionButton: @Composable (() -> Unit)? = null,
-    cardHeight: Dp = 210.dp,
-    imageHeight: Dp = 120.dp,
-    elevation: Dp = Dimensions.cardDefaultElevation,
-    horizontalMode: Boolean = false,
-    cardWidthHorizontal: Dp = 280.dp,
-    imageWidthHorizontal: Dp = 110.dp
-) {
-    val colorScheme = MaterialTheme.colorScheme
-    val typography = MaterialTheme.typography
-
-    val cardModifierCombined = if (horizontalMode) {
-        modifier.width(cardWidthHorizontal).heightIn(min = Dimensions.buttonHeight * 2)
-    } else {
-        modifier.height(cardHeight)
-    }
-
-    Card(
-        modifier = cardModifierCombined,
-        shape = RoundedCornerShape(Dimensions.cornerRadiusMedium),
-        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
-        colors = CardDefaults.cardColors(
-            containerColor = colorScheme.surface
-        )
-    ) {
-        val contentModifier = if (actionButton == null) Modifier1.clickable(onClick = onClick) else Modifier1
-
-        if (horizontalMode) {
-            Row(modifier = Modifier1.fillMaxSize().then(contentModifier)) {
-                Image(
-                    painter = painterResource(id = imageResId),
-                    contentDescription = "Property Image: $price",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier1
-                        .width(imageWidthHorizontal)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(topStart = Dimensions.cornerRadiusMedium, bottomStart = Dimensions.cornerRadiusMedium))
-                )
-                Column(
-                    modifier = Modifier1.weight(1f).fillMaxHeight().padding(Dimensions.paddingSmall),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(text = price, style = typography.titleMedium, color = colorScheme.onSurface)
-                        address?.let { Text(it, style = typography.bodyMedium, color = colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                        if (details.isNotEmpty()) {
-                            Spacer(modifier = Modifier1.height(Dimensions.spacingExtraSmall))
-                            Text(details.joinToString(" • "), style = typography.bodySmall, color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        }
-                    }
-                    actionButton?.let { Box(modifier = Modifier1.align(Alignment.End).padding(top = Dimensions.spacingSmall)) { it() } }
-                }
-            }
-        } else { // Vertical Mode
-            Column(modifier = Modifier1.fillMaxSize().then(contentModifier)) {
-                Image(painter = painterResource(id = imageResId), contentDescription = "Property Image: $price", contentScale = ContentScale.Crop, modifier = Modifier1.fillMaxWidth().height(imageHeight))
-                Column(modifier = Modifier1.fillMaxWidth().padding(Dimensions.paddingSmall), verticalArrangement = Arrangement.SpaceBetween) {
-                    Row(modifier = Modifier1.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                        Text(text = price, style = typography.titleMedium, color = colorScheme.onSurface)
-                        actionButton?.invoke()
-                    }
-                    address?.let { Text(it, style = typography.bodyMedium, color = colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier1.padding(top = Dimensions.spacingExtraSmall)) }
-                    if (details.isNotEmpty()) {
-                        Spacer(modifier = Modifier1.height(Dimensions.spacingExtraSmall))
-                        Text(details.joinToString(" • "), style = typography.bodySmall, color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun AppPropertyViewButton(
-    text: String = "Visualizza",
-    onClick: () -> Unit,
-    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier1
-) {
-    val colorScheme = MaterialTheme.colorScheme
-    val typography = MaterialTheme.typography
-    Button(
-        onClick = onClick,
-        shape = CircleShape,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = colorScheme.secondaryContainer,
-            contentColor = colorScheme.onSecondaryContainer
-        ),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = Dimensions.elevationSmall,
-            pressedElevation = Dimensions.elevationSmall / 2
-        ),
-        contentPadding = PaddingValues(horizontal = Dimensions.paddingMedium, vertical = Dimensions.spacingExtraSmall),
-        modifier = modifier.height(Dimensions.iconSizeLarge)
-    ) {
-        Text(text = text, style = typography.labelMedium)
-    }
-}
-
-@Composable
-fun FilterSection(
-    title: String,
-    modifier: Modifier = Modifier,
-    dimensions: Dimensions,
-    typography: Typography,
-    colorScheme: ColorScheme,
-    content: @Composable () -> Unit
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = dimensions.cornerRadiusMedium)
-    ) {
-        Text(
-            text = title,
-            style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-            color = colorScheme.onBackground,
-            modifier = Modifier.padding(bottom = dimensions.paddingSmall)
-        )
-        content()
     }
 }
 
@@ -597,250 +451,28 @@ internal fun defaultOutlineTextFieldColors(colorScheme: ColorScheme, typography:
     )
 
 @Composable
-fun ClickableSearchBar(
-    placeholderText: String = "Search...",
+fun AppPropertyViewButton(
+    text: String = "Visualizza",
     onClick: () -> Unit,
-    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
+    modifier: Modifier = Modifier
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = Dimensions.paddingLarge)
-            .height(Dimensions.searchBarHeight),
-        shape = CircleShape,
-        color = colorScheme.primaryContainer.copy(alpha = 0.8f),
-        shadowElevation = Dimensions.elevationSmall,
-        onClick = onClick
+    Button( // Potrebbe essere un TextButton o OutlinedButton per meno enfasi
+        onClick = onClick,
+        shape = CircleShape, // Forma a pillola
+        colors = ButtonDefaults.buttonColors(
+            containerColor = colorScheme.secondaryContainer,
+            contentColor = colorScheme.onSecondaryContainer
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = Dimensions.elevationSmall,
+            pressedElevation = Dimensions.elevationSmall / 2 // Meno ombra alla pressione
+        ),
+        contentPadding = PaddingValues(horizontal = Dimensions.paddingMedium, vertical = Dimensions.spacingExtraSmall),
+        modifier = modifier.heightIn(min = Dimensions.iconSizeLarge) // Altezza minima basata su icona/testo
     ) {
-        Row(
-            modifier = Modifier1
-                .fillMaxSize()
-                .padding(horizontal = Dimensions.paddingMedium),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Dimensions.spacingSmall)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = placeholderText,
-                tint = colorScheme.onPrimaryContainer,
-            )
-            Text(
-                text = placeholderText,
-                color = colorScheme.onPrimaryContainer.copy(alpha = 0.9f),
-                style = typography.bodyLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
-fun <T> PropertyShowcaseSection(
-    title: String,
-    items: List<T>,
-    itemContent: @Composable (item: T) -> Unit,
-    modifier: Modifier = Modifier,
-    onSeeAllClick: (() -> Unit)? = null,
-    seeAllText: String = "Vedi tutte",
-    listContentPadding: PaddingValues = PaddingValues(horizontal = Dimensions.paddingLarge),
-    listHorizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(Dimensions.spacingMedium),
-    keyProvider: ((item: T) -> Any)? = null
-) {
-    val typography = MaterialTheme.typography
-    val colorScheme = MaterialTheme.colorScheme
-
-    TitledSection(
-        title = title,
-        modifier = modifier,
-        onSeeAllClick = onSeeAllClick,
-        seeAllText = seeAllText,
-        contentPadding = PaddingValues(0.dp)
-    ) {
-        if (items.isNotEmpty()) {
-            LazyRow(
-                contentPadding = listContentPadding,
-                horizontalArrangement = listHorizontalArrangement
-            ) {
-                items(
-                    items = items,
-                    key = keyProvider ?: { item -> item.hashCode() } // Fallback a hashCode se keyProvider è null
-                ) { item ->
-                    itemContent(item)
-                }
-            }
-        } else {
-            Box(
-                modifier = Modifier1
-                    .fillMaxWidth()
-                    .padding(listContentPadding)
-                    .padding(vertical = Dimensions.paddingLarge),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "Nessun elemento da mostrare.",
-                    style = typography.bodyMedium,
-                    color = colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun TitledSection(
-    title: String,
-    modifier: Modifier = Modifier,
-    onSeeAllClick: (() -> Unit)? = null,
-    seeAllText: String = "See all",
-    titleStyle: TextStyle = MaterialTheme.typography.titleMedium,
-    seeAllTextStyle: TextStyle = MaterialTheme.typography.labelLarge,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-    content: @Composable () -> Unit
-) {
-    val colorScheme = MaterialTheme.colorScheme
-
-    Column(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier1
-                .padding(horizontal = Dimensions.paddingLarge)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = title,
-                color = colorScheme.onBackground,
-                style = titleStyle,
-                fontWeight = FontWeight.SemiBold
-            )
-            onSeeAllClick?.let { onClick ->
-                TextButton(
-                    onClick = onClick,
-                    colors = ButtonDefaults.textButtonColors(contentColor = colorScheme.primary)
-                ) {
-                    Text(seeAllText, style = seeAllTextStyle)
-                }
-            }
-        }
-        Spacer(modifier = Modifier1.height(Dimensions.cornerRadiusMedium))
-        Box(modifier = Modifier1.padding(contentPadding)) {
-            content()
-        }
-    }
-}
-
-@Composable
-fun CustomSearchAppBar(
-    searchQuery: String,
-    onSearchQueryChange: (String) -> Unit,
-    onBackPressed: () -> Unit,
-    onClearSearch: () -> Unit,
-    placeholderText: String,
-    modifier: Modifier = Modifier,
-    focusRequester: FocusRequester = remember { FocusRequester() },
-    imeAction: ImeAction = ImeAction.Search,
-    onSearchKeyboardAction: (String) -> Unit = {},
-    onFocusChanged: (hasFocus: Boolean) -> Unit = {}
-) {
-    val colorScheme = MaterialTheme.colorScheme
-    val typography = MaterialTheme.typography
-
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = colorScheme.primary,
-        shadowElevation = Dimensions.elevationMedium
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                // Aggiungi padding verticale all'intera Row. Questo ingrandirà la barra.
-                .padding(
-                    horizontal = Dimensions.spacingSmall, // Padding ai lati della barra
-                    vertical = Dimensions.spacingSmall    // Padding sopra e sotto il contenuto (es. 8dp + 8dp)
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-            // Spazio tra IconButton e TextField gestito da Arrangement.spacedBy
-            horizontalArrangement = Arrangement.spacedBy(Dimensions.spacingSmall)
-        ) {
-            IconButton(
-                onClick = onBackPressed,
-                modifier = Modifier // Rimosso padding orizzontale specifico, gestito da Row
-                    .size(Dimensions.iconSizeLarge + Dimensions.spacingSmall) // Es. 44dp
-                    .background(colorScheme.primaryContainer.copy(alpha = 0.3f), CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Indietro",
-                    tint = colorScheme.onPrimary,
-                    modifier = Modifier.size(Dimensions.iconSizeMedium)
-                )
-            }
-
-            TextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                placeholder = {
-                    Text(
-                        text = placeholderText,
-                        style = typography.bodyLarge,
-                        color = colorScheme.onPrimary.copy(alpha = 0.7f)
-                    )
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    // Rimuoviamo l'altezza fissa dal TextField.
-                    // La sua altezza sarà determinata intrinsecamente dal testo e dal padding interno di TextField,
-                    // e sarà centrata verticalmente dalla Row.
-                    // Per assicurare che non sia troppo "schiacciato" se la Row è molto bassa:
-                    .defaultMinSize(minHeight = Dimensions.buttonHeight - Dimensions.spacingMedium) // Es. 40dp altezza minima desiderata per il TextField
-                    .clip(CircleShape) // O RoundedCornerShape(Dimensions.cornerRadiusLarge) per un aspetto più da "pillola"
-                    .background(colorScheme.surface.copy(alpha = 0.15f))
-                    .focusRequester(focusRequester)
-                    .onFocusChanged { focusState -> onFocusChanged(focusState.isFocused) },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    cursorColor = colorScheme.onPrimary,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                    errorIndicatorColor = Color.Transparent,
-                    focusedTextColor = colorScheme.onPrimary,
-                    unfocusedTextColor = colorScheme.onPrimary,
-                    disabledTextColor = colorScheme.onPrimary.copy(alpha = 0.38f),
-                    focusedPlaceholderColor = colorScheme.onPrimary.copy(alpha = 0.7f),
-                    unfocusedPlaceholderColor = colorScheme.onPrimary.copy(alpha = 0.7f)
-                ),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = imeAction),
-                keyboardActions = KeyboardActions(
-                    onSearch = { onSearchKeyboardAction(searchQuery) },
-                    onDone = { onSearchKeyboardAction(searchQuery) }
-                ),
-                trailingIcon = {
-                    if (searchQuery.isNotBlank()) {
-                        IconButton(onClick = onClearSearch) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Cancella",
-                                tint = colorScheme.onPrimary.copy(alpha = 0.7f)
-                            )
-                        }
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Cerca",
-                            tint = colorScheme.onPrimary.copy(alpha = 0.7f)
-                        )
-                    }
-                },
-                textStyle = typography.bodyLarge.copy(color = colorScheme.onPrimary)
-            )
-        }
+        Text(text = text, style = typography.labelMedium) // Testo più piccolo per un bottone compatto
     }
 }
 

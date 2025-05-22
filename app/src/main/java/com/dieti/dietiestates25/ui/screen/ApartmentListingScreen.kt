@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -138,26 +139,42 @@ fun ApartmentListingScreen(
                     ) {
                         item {
                             Text(
-                                text = "Annunci immobiliari a $comune",
+                                text = "Annunci immobiliari a $comune", // Titolo più contestualizzato
                                 style = typography.titleLarge,
                                 color = colorScheme.onBackground,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(bottom = dimensions.paddingSmall)
                             )
+
                         }
                         items(items = filteredProperties, key = { it.id }) { property ->
                             AppPropertyCard(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(250.dp),
                                 price = property.price,
-                                address = property.location,
-                                details = listOf(property.type),
                                 imageResId = property.imageRes,
-                                onClick = { navController.navigate(Screen.PropertyScreen.route) },
+                                address = property.location,
+                                details = listOfNotNull(
+                                    property.type,
+                                    property.areaMq?.let { "$it mq" },
+                                    property.bathrooms?.let { numBagni ->
+                                        if (numBagni == 1) "$numBagni bagno" else "$numBagni bagni"
+                                    }
+                                    // property.numeroLocali?.let { if (it == 1) "$it locale" else "$it locali" }
+                                ).filter { it.isNotBlank() },
+                                onClick = { },
                                 actionButton = {
                                     AppPropertyViewButton(
-                                        onClick = { navController.navigate(Screen.PropertyScreen.route) }
+                                        onClick = {
+                                            navController.navigate(Screen.PropertyScreen.route)
+                                        }
                                     )
                                 },
-                                modifier = Modifier.fillMaxWidth()
+                                horizontalMode = false, // Layout verticale
+                                imageHeightVerticalRatio = 0.50f, // Immagine 50%, dettagli + bottone 50%
+                                // Questo dà più spazio ai dettagli
+                                elevationDp = Dimensions.elevationSmall
                             )
                         }
                     }
