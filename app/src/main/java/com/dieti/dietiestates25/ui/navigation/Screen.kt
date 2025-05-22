@@ -41,10 +41,6 @@ sealed class Screen(val route: String) {
             }
 
             val queryParams = mutableListOf<String>()
-            // Per i query parameters, URLEncoder è ancora una scelta valida,
-            // ma Uri.encode può essere usato anche qui per coerenza se i valori sono semplici.
-            // Uri.encode non codifica '=', '&', quindi è più per i singoli valori.
-            // Se i valori dei filtri stessi potessero contenere '&' o '=', URLEncoder sarebbe più sicuro per i valori.
             filters.purchaseType?.let { queryParams.add("purchaseType=${Uri.encode(it)}") }
             filters.minPrice?.let { queryParams.add("minPrice=$it") }
             filters.maxPrice?.let { queryParams.add("maxPrice=$it") }

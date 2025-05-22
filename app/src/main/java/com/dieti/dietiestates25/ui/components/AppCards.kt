@@ -1,5 +1,7 @@
 package com.dieti.dietiestates25.ui.components
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,7 +30,11 @@ import com.dieti.dietiestates25.ui.screen.AppointmentIconType // Assicurati che 
 import androidx.compose.material.icons.filled.Event // Esempio di icona per appuntamenti
 import androidx.compose.material.icons.filled.BusinessCenter // Esempio
 import androidx.compose.material.icons.filled.Build // Esempio
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @Composable
 fun NotificationCard(
@@ -279,5 +285,135 @@ private fun AppointmentCardIcon(
             modifier = Modifier.size(24.dp),
             tint = colorScheme.onPrimaryContainer
         )
+    }
+}
+
+@Composable
+fun AppPropertyCard(
+    price: String,
+    @DrawableRes imageResId: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    address: String? = null,
+    details: List<String> = emptyList(),
+    actionButton: @Composable (() -> Unit)? = null,
+    elevationDp: Dp = Dimensions.cardDefaultElevation,
+    horizontalMode: Boolean = false,
+    imageHeightVerticalRatio: Float = 0.55f,
+    imageWidthHorizontalRatio: Float = 0.4f
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+
+    val cardClickModifier = if (actionButton == null) {
+        Modifier.clickable(onClick = onClick)
+    } else {
+        Modifier
+    }
+
+    Card(
+        modifier = modifier.then(cardClickModifier),
+        shape = RoundedCornerShape(Dimensions.cornerRadiusMedium),
+        elevation = CardDefaults.cardElevation(defaultElevation = elevationDp),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
+    ) {
+        if (horizontalMode) {
+            Row(modifier = Modifier.fillMaxSize()) {
+                Image(
+                    painter = painterResource(id = imageResId),
+                    contentDescription = "Immagine proprietà: $price",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(imageWidthHorizontalRatio)
+                        .clip(RoundedCornerShape(topStart = Dimensions.cornerRadiusMedium, bottomStart = Dimensions.cornerRadiusMedium))
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(Dimensions.paddingSmall),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(text = price, style = typography.titleMedium, color = colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    address?.let {
+                        Text(
+                            text = it, style = typography.bodySmall,
+                            color = colorScheme.onSurfaceVariant, maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = Dimensions.spacingExtraSmall)
+                        )
+                    }
+                    if (details.isNotEmpty()) {
+                        Text(
+                            text = details.joinToString(" • "), style = typography.labelSmall,
+                            color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = Dimensions.spacingExtraSmall)
+                        )
+                    }
+                }
+            }
+        } else {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Image(
+                    painter = painterResource(id = imageResId),
+                    contentDescription = "Immagine proprietà: $price",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(imageHeightVerticalRatio)
+                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = Dimensions.paddingMedium, vertical = Dimensions.paddingSmall)
+                ) {
+                    // Riga 1: Prezzo e Pulsante Azione
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text(
+                            text = price,
+                            style = typography.titleLarge,
+                            color = colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .padding(end = Dimensions.spacingSmall)
+                        )
+                        actionButton?.invoke()
+                    }
+
+                    // Riga 2: Indirizzo (se presente)
+                    address?.let {
+                        Text(
+                            text = it,
+                            style = typography.bodyMedium,
+                            color = colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = Dimensions.spacingSmall)
+                        )
+                    }
+
+                    // Riga 3: Altri dettagli (tipo, mq, bagni)
+                    if (details.isNotEmpty()) {
+                        Text(
+                            text = details.joinToString("  •  "),
+                            style = typography.bodySmall,
+                            color = colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = Dimensions.spacingExtraSmall)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
