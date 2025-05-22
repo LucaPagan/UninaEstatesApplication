@@ -6,12 +6,8 @@ import com.dieti.dietiestates25.ui.model.Notification
 import com.dieti.dietiestates25.ui.model.NotificationIconType
 import com.dieti.dietiestates25.ui.model.Appointment
 import com.dieti.dietiestates25.ui.model.AppointmentIconType
-import com.dieti.dietiestates25.ui.theme.Dimensions // Importa il tuo oggetto Dimensions
-
-
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -33,16 +29,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp // Mantieni per valori hardcoded non in Dimensions
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.BusinessCenter
 import androidx.compose.material.icons.filled.Build
-
-import com.dieti.dietiestates25.ui.screen.Appointment // Assicurati che il percorso sia corretto
-import com.dieti.dietiestates25.ui.screen.AppointmentIconType // Assicurati che il percorso sia corretto
-import androidx.compose.material.icons.filled.Event // Esempio di icona per appuntamenti
-import androidx.compose.material.icons.filled.BusinessCenter // Esempio
-import androidx.compose.material.icons.filled.Build // Esempio
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 
@@ -212,7 +201,7 @@ fun AppointmentCard(
     modifier: Modifier = Modifier,
     colorScheme: ColorScheme = MaterialTheme.colorScheme, // Default aggiunto
     typography: Typography = MaterialTheme.typography,   // Default aggiunto
-    dimensions: Dimensions = Dimensions // Aggiunto per usare i valori di Dimensions
+    dimensions: Dimensions = Dimensions
 ) {
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd/MM/yy", Locale.ITALIAN) }
 

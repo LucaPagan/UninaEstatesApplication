@@ -58,13 +58,6 @@ fun NotificationScreen(
     val isShowingAppointments by viewModel.isShowingAppointments.collectAsState()
     val appointments by viewModel.appointments.collectAsState()
 
-    val gradientColors = listOf(
-        colorScheme.primary.copy(alpha = 0.7f),
-        colorScheme.background,
-        colorScheme.background,
-        colorScheme.background
-    )
-
     Scaffold(
         topBar = {
             NotificationScreenHeader(
@@ -82,7 +75,6 @@ fun NotificationScreen(
         Box (
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(colors = gradientColors))
                 .padding(paddingValues)
         ) {
             if (isShowingAppointments) {

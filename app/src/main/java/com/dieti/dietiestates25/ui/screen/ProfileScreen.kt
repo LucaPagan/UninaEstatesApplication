@@ -71,7 +71,6 @@ fun ProfileScreen(
     navController: NavController,
     viewModel: ProfileViewModel = viewModel()
 ) {
-
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val focusManager = LocalFocusManager.current

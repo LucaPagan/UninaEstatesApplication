@@ -92,7 +92,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                             },
                             actionButton = null,      // NESSUN bottone azione, l'intera card è cliccabile
                             horizontalMode = false,   // <<-- IMPOSTA A FALSE per layout verticale
-                            imageHeightVerticalRatio = 0.6f, // Immagine occupa il 60% dell'altezza
+                            imageHeightVerticalRatio = 0.55f, // Immagine occupa il 60% dell'altezza
                             elevationDp = Dimensions.elevationSmall
                         )
                     },
