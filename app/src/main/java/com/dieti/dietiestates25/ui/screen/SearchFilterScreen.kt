@@ -3,6 +3,7 @@
 package com.dieti.dietiestates25.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -23,7 +26,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.FilterSection
@@ -52,6 +54,8 @@ fun SearchFilterScreen(
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
         val dimensions = Dimensions
+
+    val focusManager = LocalFocusManager.current
 
         var selectedPurchaseType by remember { mutableStateOf<String?>(null) }
         val purchaseOptions = listOf("Compra", "Affitta")
@@ -132,7 +136,18 @@ fun SearchFilterScreen(
 
 
         Scaffold(
-            modifier = if (isFullScreenContext) Modifier.statusBarsPadding() else Modifier,
+            modifier =
+                if (isFullScreenContext) Modifier
+                .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            } else Modifier
+                .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            },
             topBar = {
                 TopAppBar(
                     title = {
@@ -148,7 +163,6 @@ fun SearchFilterScreen(
                         IconButton(
                             onClick = onNavigateBack,
                             modifier = Modifier.size(dimensions.iconSizeLarge + dimensions.spacingSmall)
-                            // Rimosso padding condizionale qui, TopAppBar dovrebbe allineare bene
                         ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack, "Indietro",
@@ -170,19 +184,18 @@ fun SearchFilterScreen(
                         containerColor = if (isFullScreenContext) colorScheme.primary else colorScheme.surface
                     ),
                     scrollBehavior = if (isFullScreenContext) TopAppBarDefaults.pinnedScrollBehavior() else null,
-                    // ---- MODIFICA CHIAVE QUI ----
+
                     windowInsets = if (isFullScreenContext) {
-                        TopAppBarDefaults.windowInsets // Inset di default per full screen (rispetta status bar)
+                        TopAppBarDefaults.windowInsets
                     } else {
-                        WindowInsets(0.dp) // Nessun inset aggiuntivo quando è in uno sheet
+                        WindowInsets(0.dp)
                     }
                 )
             },
             bottomBar = {
-                // ... (BottomBar come prima, la logica di popolamento FilterModel è cruciale)
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shadowElevation = if (isFullScreenContext) dimensions.elevationMedium else 0.dp, // Rimosso dimensions.spacingNone
+                    shadowElevation = if (isFullScreenContext) dimensions.elevationMedium else 0.dp,
                     color = colorScheme.surface
                 ) {
                     Button(
@@ -240,7 +253,6 @@ fun SearchFilterScreen(
                 }
             }
         ) { paddingValues ->
-            // ... (Contenuto della Column scrollabile con FilterSection, RangeFilterInput, ecc. INVARIATO)
             Column(
                 modifier = Modifier
                     .padding(paddingValues)

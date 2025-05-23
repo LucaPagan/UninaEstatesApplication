@@ -136,8 +136,6 @@ fun HomeScreenHeader(
             .background(colorScheme.primary)
             .clip(RoundedCornerShape(bottomStart = dimensions.cornerRadiusLarge, bottomEnd = dimensions.cornerRadiusLarge))
             .padding(horizontal = dimensions.paddingLarge)
-            // Il padding superiore qui è per il contenuto INTERNO dell'header,
-            // non per la status bar di sistema.
             .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge),
         contentAlignment = Alignment.CenterStart
     ) {

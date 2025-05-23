@@ -1,6 +1,6 @@
 package com.dieti.dietiestates25.ui.components
 
-import android.annotation.SuppressLint
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -35,48 +35,52 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
-    @Composable
-    fun ClickableSearchBar(
-        placeholderText: String = "Search...",
-        onClick: () -> Unit,
-        @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
+@Composable
+fun ClickableSearchBar(
+    placeholderText: String = "Cerca...",
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val dimensions = Dimensions
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimensions.paddingLarge)
+            .height(Dimensions.searchBarHeight),
+        shape = CircleShape,
+        color = colorScheme.surface,
+        shadowElevation = Dimensions.elevationSmall,
+        border = BorderStroke(1.dp, colorScheme.outline.copy(alpha = 0.3f)),
+        onClick = onClick
     ) {
-        val colorScheme = MaterialTheme.colorScheme
-        val typography = MaterialTheme.typography
-        Surface(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = Dimensions.paddingLarge)
-                .height(Dimensions.searchBarHeight),
-            shape = CircleShape,
-            color = colorScheme.primaryContainer.copy(alpha = 0.8f),
-            shadowElevation = Dimensions.elevationSmall,
-            onClick = onClick
+        Row(
+            modifier = Modifier
+                .fillMaxSize() // Riempie la Surface
+                .padding(horizontal = Dimensions.paddingMedium), // Padding interno per icona e testo
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimensions.spacingSmall) // Spazio tra icona e testo
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = Dimensions.paddingMedium),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Dimensions.spacingSmall)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = placeholderText,
-                    tint = colorScheme.onPrimaryContainer,
-                )
-                Text(
-                    text = placeholderText,
-                    color = colorScheme.onPrimaryContainer.copy(alpha = 0.9f),
-                    style = typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Icona di ricerca", // Descrizione più generica per l'icona
+                tint = colorScheme.onSurfaceVariant, // Colore per icone/testo placeholder
+            )
+            Text(
+                text = placeholderText,
+                color = colorScheme.onSurfaceVariant, // Colore standard per placeholder
+                style = typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
+}
 
     @Composable
     fun CustomSearchAppBar(

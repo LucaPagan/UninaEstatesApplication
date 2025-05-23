@@ -79,7 +79,7 @@ fun ApartmentListingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Brush.verticalGradient(colorStops = gradientColors))
-                .statusBarsPadding()
+                .systemBarsPadding()
         ) {
             Column(modifier = Modifier
                 .fillMaxSize()
