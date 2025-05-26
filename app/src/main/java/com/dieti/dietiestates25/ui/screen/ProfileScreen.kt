@@ -10,6 +10,7 @@ import com.dieti.dietiestates25.ui.model.ProfileData
 import com.dieti.dietiestates25.ui.model.ProfileViewModel
 import com.dieti.dietiestates25.ui.components.UnsavedChangesAlertDialog
 import com.dieti.dietiestates25.ui.components.LogoutConfirmAlertDialog
+import com.dieti.dietiestates25.ui.components.DeleteConfirmAlertDialog
 import com.dieti.dietiestates25.ui.model.modelsource.PhonePrefix
 
 import androidx.compose.foundation.background
@@ -64,13 +65,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.ui.theme.typography
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
     viewModel: ProfileViewModel = viewModel()
 ) {
+
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val focusManager = LocalFocusManager.current
@@ -83,6 +84,7 @@ fun ProfileScreen(
 
     val showExitEditModeDialog by viewModel.showExitEditModeConfirmDialog.collectAsState()
     val showLogoutDialog by viewModel.showLogoutConfirmDialog.collectAsState()
+    val showDeleteDialog by viewModel.showDeleteConfirmDialog.collectAsState()
 
     Scaffold(
         topBar = {
@@ -121,7 +123,7 @@ fun ProfileScreen(
                 onPhoneNumberWithoutPrefixChange = viewModel::onPhoneNumberWithoutPrefixChange,
                 onSaveChanges = viewModel::saveChanges,
                 onLogout = viewModel::triggerLogoutDialog,
-                onDeleteProfile = viewModel::deleteProfile,
+                onDeleteProfile = viewModel::triggerDeleteProfileDialog,
                 typography = typography,
                 colorScheme = colorScheme,
                 navController = navController,
@@ -153,7 +155,18 @@ fun ProfileScreen(
             dimensions = dimensions
         )
     }
+
+    if (showDeleteDialog) {
+        DeleteConfirmAlertDialog(
+            onDismissRequest = viewModel::cancelDeleteProfileDialog,
+            onConfirmDelete = {
+                viewModel.deleteProfile()
+            },
+            colorScheme = colorScheme
+        )
+    }
 }
+
 
 
 @Composable
@@ -170,7 +183,12 @@ private fun ProfileScreenHeader(
             .fillMaxWidth()
             .statusBarsPadding()
             .background(colorScheme.primary)
-            .clip(RoundedCornerShape(bottomStart = dimensions.cornerRadiusLarge, bottomEnd = dimensions.cornerRadiusLarge))
+            .clip(
+                RoundedCornerShape(
+                    bottomStart = dimensions.cornerRadiusLarge,
+                    bottomEnd = dimensions.cornerRadiusLarge
+                )
+            )
             .padding(horizontal = dimensions.paddingLarge)
             .padding(
                 top = 25.dp,
@@ -477,7 +495,7 @@ private fun ProfileActionButtons(
     canSaveChanges: Boolean,
     onSaveClick: () -> Unit,
     onLogoutClick: () -> Unit,
-    onDeleteProfileClick: () -> Unit,
+    onDeleteProfileClick: () -> Unit, // Questa ora chiamerà triggerDeleteProfileDialog
     dimensions: Dimensions
 ) {
     if (isEditMode) {
@@ -496,7 +514,7 @@ private fun ProfileActionButtons(
     )
     Spacer(modifier = Modifier.height(dimensions.spacingMedium))
     AppRedButton(
-        onClick = onDeleteProfileClick,
+        onClick = onDeleteProfileClick, // Questa azione ora triggera il dialogo
         text = "Elimina Profilo",
         enabled = !isEditMode,
         modifier = Modifier.fillMaxWidth()

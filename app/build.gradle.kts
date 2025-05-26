@@ -94,4 +94,5 @@ dependencies {
     implementation(libs.androidx.compose.material3.material3)
     implementation(libs.coil.compose)
     implementation(libs.androidx.core.ktx.v1100)
+    implementation(libs.androidx.activity.ktx)
 }
