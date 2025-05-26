@@ -42,15 +42,14 @@ fun WelcomeScreen(navController: NavController) {
         colorScheme.background,
         colorScheme.primary.copy(alpha = 0.6f)
     )
-
     val idUtente = "Danilo Scala"
 
-        Scaffold(topBar = {}) { paddingValuesScaffold ->
+        Scaffold(topBar = {}) { innerPadding ->
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Brush.verticalGradient(colors = gradientColors))
-                    .padding(paddingValuesScaffold),
+                    .padding(innerPadding),
             ) {
                 Column(
                     modifier = Modifier
@@ -62,7 +61,7 @@ fun WelcomeScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge)) // Es. 32dp o più, regola a piacere
 
                     AppIconDisplay(
-                        size = 100.dp, // Dimensione come l'avevi prima
+                        size = 100.dp,
                         shapeRadius = dimensions.cornerRadiusLarge,
                         internalPadding = dimensions.paddingExtraSmall,
                         imageClipRadius = dimensions.cornerRadiusMedium

@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("kotlin-parcelize")
+    id ("org.jetbrains.kotlin.plugin.serialization") version ("1.9.23") // Usa la tua versione di Kotlin
+
 }
 
 android {
@@ -41,6 +43,14 @@ android {
 
 dependencies {
 
+    // MapLibre SDK (controlla l'ultima versione)
+    // MapLibre Annotation Plugin (per i marker più facilmente)
+    implementation ("org.maplibre.gl:android-sdk:10.0.2") // O l'ultima versione STABILE
+
+    // Per chiamate API (esempio con Ktor - più leggero per iniziare)
+    implementation (libs.ktor.client.android) // Controlla ultima versione
+    implementation (libs.ktor.client.content.negotiation)
+    implementation (libs.ktor.serialization.kotlinx.json)
     // Core Android
     implementation(libs.androidx.core.ktx.v1160)
     implementation(libs.androidx.lifecycle.runtime.ktx.v287)
