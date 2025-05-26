@@ -4,27 +4,26 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.SharingStarted
+import com.dieti.dietiestates25.ui.model.modelsource.PhonePrefix
 import com.dieti.dietiestates25.ui.model.modelsource.CommonPhonePrefixes
 import com.dieti.dietiestates25.ui.model.modelsource.DefaultPhonePrefix
-import com.dieti.dietiestates25.ui.model.modelsource.PhonePrefix
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
+
 
 data class ProfileData(
     val name: String = "Lorenzo",
     val email: String = "LorenzoTrignano@gmail.com",
-    val selectedPrefix: PhonePrefix = DefaultPhonePrefix, // Prefisso selezionato
-    val phoneNumberWithoutPrefix: String = "123456789" // Numero senza prefisso
+    val selectedPrefix: PhonePrefix = DefaultPhonePrefix,
+    val phoneNumberWithoutPrefix: String = "123456789"
 ) {
     val fullPhoneNumber: String
         get() = "${selectedPrefix.prefix}${phoneNumberWithoutPrefix}"
 }
 
 class ProfileViewModel : ViewModel() {
-    // Dati iniziali come erano al momento dell'ingresso in modalità modifica o al caricamento
     private var _initialProfileDataOnEdit: ProfileData = ProfileData()
 
     private val _currentProfileData = MutableStateFlow(ProfileData())
@@ -41,21 +40,23 @@ class ProfileViewModel : ViewModel() {
     private val _showLogoutConfirmDialog = MutableStateFlow(false)
     val showLogoutConfirmDialog: StateFlow<Boolean> = _showLogoutConfirmDialog.asStateFlow()
 
+    // *** NUOVO STATO PER IL DIALOGO DI CONFERMA ELIMINAZIONE ***
+    private val _showDeleteConfirmDialog = MutableStateFlow(false)
+    val showDeleteConfirmDialog: StateFlow<Boolean> = _showDeleteConfirmDialog.asStateFlow()
+
     val hasUnsavedChanges: StateFlow<Boolean> =
         isEditMode.combine(_currentProfileData) { editMode, currentData ->
             editMode && (currentData != _initialProfileDataOnEdit)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    // Stato per validazione campi
     val canSaveChanges: StateFlow<Boolean> =
         isEditMode.combine(_currentProfileData) { editMode, data ->
             editMode && data.name.isNotBlank() && data.email.isNotBlank() && data.phoneNumberWithoutPrefix.isNotBlank()
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-
     init {
-        val loadedData = ProfileData() // In un'app reale, caricheresti da db/rete
-        _initialProfileDataOnEdit = loadedData // Inizializza anche questo
+        val loadedData = ProfileData()
+        _initialProfileDataOnEdit = loadedData
         _currentProfileData.value = loadedData
     }
 
@@ -105,7 +106,7 @@ class ProfileViewModel : ViewModel() {
     }
 
     fun confirmExitEditModeAndSave() {
-        if (canSaveChanges.value) { // Controlla se si può salvare
+        if (canSaveChanges.value) {
             saveChanges()
         }
         closeExitEditModeConfirmDialog()
@@ -122,8 +123,7 @@ class ProfileViewModel : ViewModel() {
     }
 
     fun saveChanges() {
-        if (!canSaveChanges.value) return // Non salvare se i campi non sono validi
-
+        if (!canSaveChanges.value) return
         println("Salvataggio modifiche: ${_currentProfileData.value.name}, ${_currentProfileData.value.email}, ${_currentProfileData.value.fullPhoneNumber}")
         _initialProfileDataOnEdit = _currentProfileData.value
         exitEditModeGracefully()
@@ -141,18 +141,12 @@ class ProfileViewModel : ViewModel() {
         if (saveFirst && hasUnsavedChanges.value) {
             if (canSaveChanges.value) {
                 saveChanges()
-            } else {
-                // Potresti voler mostrare un messaggio che non è possibile salvare e uscire
-                // Per ora, non salviamo se i campi non sono validi e si è scelto di salvare.
-                // O, alternativamente, impedire il logout se il salvataggio fallisce.
-                // Semplifichiamo: se canSaveChanges è false, saveChanges non farà nulla.
-                saveChanges() // Tenterà di salvare, ma non lo farà se i campi sono invalidi
             }
         } else if (!saveFirst && hasUnsavedChanges.value) {
             revertChanges()
         }
         println("Logout eseguito")
-        // closeLogoutConfirmDialog()
+        //closeLogoutConfirmDialog()
         exitEditModeGracefully()
     }
 
@@ -160,7 +154,21 @@ class ProfileViewModel : ViewModel() {
         _showLogoutConfirmDialog.value = false
     }
 
-    fun deleteProfile() {
-        println("Profilo eliminato")
+    fun triggerDeleteProfileDialog() {
+        _showDeleteConfirmDialog.value = true
+    }
+
+    fun cancelDeleteProfileDialog() {
+        _showDeleteConfirmDialog.value = false
+    }
+
+    fun deleteProfile() { // Questa funzione ora sarà chiamata DOPO la conferma
+        println("Profilo eliminato definitivamente: ID Utente (es. ${_currentProfileData.value.email})")
+        // Qui dovresti implementare la logica di eliminazione effettiva
+        // (chiamata API, pulizia dati locali, navigazione alla schermata di login, ecc.)
+        cancelDeleteProfileDialog() // Chiudi il dialogo dopo l'azione
+        // Potrebbe essere necessario anche uscire dalla modalità modifica e resettare lo stato
+        exitEditModeGracefully()
+        // TODO: Eseguire il logout effettivo o navigare via
     }
 }
