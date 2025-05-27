@@ -2,10 +2,16 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("kotlin-parcelize")
     id ("org.jetbrains.kotlin.plugin.serialization") version ("1.9.23") // Usa la tua versione di Kotlin
-
 }
+
+secrets {
+    propertiesFileName = "secrets.properties"
+    defaultPropertiesFileName = "local.defaults.properties" // <<-- Questa riga dice al plugin di cercare questo file
+}
+
 
 android {
     namespace = "com.dieti.dietiestates25"
@@ -38,19 +44,16 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
 
-    // MapLibre SDK (controlla l'ultima versione)
-    // MapLibre Annotation Plugin (per i marker più facilmente)
-    implementation ("org.maplibre.gl:android-sdk:10.0.2") // O l'ultima versione STABILE
-
-    // Per chiamate API (esempio con Ktor - più leggero per iniziare)
-    implementation (libs.ktor.client.android) // Controlla ultima versione
-    implementation (libs.ktor.client.content.negotiation)
-    implementation (libs.ktor.serialization.kotlinx.json)
+    //Google Maps
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    // Maps Compose Library
+    implementation("com.google.maps.android:maps-compose:4.3.3")
     // Core Android
     implementation(libs.androidx.core.ktx.v1160)
     implementation(libs.androidx.lifecycle.runtime.ktx.v287)

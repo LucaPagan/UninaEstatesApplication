@@ -76,6 +76,12 @@ sealed class Screen(val route: String) {
     data object NotificationDetailScreen : Screen("notification_detail_screen")
     data object ProfileScreen : Screen("profile_screen")
 
+    data object MapSearchScreen : Screen("map_search_screen") {
+        fun withIdUtente(idUtente: String): String {
+            return "$route/${Uri.encode(idUtente)}" // Usa Uri.encode per path params
+        }
+    }
+
     // Funzione generica withArgs modificata per usare Uri.encode
     fun withArgs(vararg args: String): String {
         return buildString {
