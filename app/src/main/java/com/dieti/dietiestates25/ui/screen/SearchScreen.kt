@@ -7,27 +7,33 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Train
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.History // Icona per ricerche recenti
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect // Importato per il focus iniziale
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf // Per lista osservabile di ricerche recenti
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,23 +43,25 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-// Rimosso import dp se non usato direttamente (Dimensions lo usa)
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.ui.components.AppSecondaryButton
 import com.dieti.dietiestates25.ui.components.CustomSearchAppBar
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
+const val MAX_RECENT_SEARCHES = 5 // Limita il numero di ricerche recenti
+
 @Composable
 fun SearchScreen(navController: NavController, idUtente: String) {
+    DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
-        val dimensions = Dimensions // Usato Dimensions invece di dp singoli
+        val dimensions = Dimensions
 
         val focusRequester = remember { FocusRequester() }
         val keyboardController = LocalSoftwareKeyboardController.current
@@ -63,7 +71,24 @@ fun SearchScreen(navController: NavController, idUtente: String) {
         var searchQuery by remember { mutableStateOf("") }
         var searchBarHasFocus by remember { mutableStateOf(false) }
 
-        // Dati di esempio per la ricerca (sostituire con dati reali o da ViewModel)
+        // Stato per le ricerche recenti (in memoria per questo esempio)
+        val recentSearches = remember { mutableStateListOf<String>() }
+
+        // Funzione per aggiungere una ricerca alle recenti
+        fun addSearchToRecents(query: String) {
+            if (query.isBlank()) return
+            recentSearches.remove(query) // Rimuove se già presente per metterla in cima
+            recentSearches.add(0, query) // Aggiunge in cima
+            if (recentSearches.size > MAX_RECENT_SEARCHES) {
+                recentSearches.removeAt(recentSearches.lastIndex) // Mantiene la lista alla dimensione massima
+            }
+        }
+
+        // Funzione per rimuovere una ricerca dalle recenti
+        fun removeSearchFromRecents(query: String) {
+            recentSearches.remove(query)
+        }
+
         val searchResults = remember {
             listOf("Napoli - Comune", "Roma - Comune", "Milano - Comune", "Torino - Comune", "Firenze - Comune", "Bologna - Comune", "Genova - Comune")
         }
@@ -75,7 +100,7 @@ fun SearchScreen(navController: NavController, idUtente: String) {
             }
         }
 
-        val gradientColors = remember(colorScheme) { // Ricorda i colori se colorScheme può cambiare
+        val gradientColors = remember(colorScheme) {
             listOf(
                 colorScheme.primary.copy(alpha = 0.7f),
                 colorScheme.background,
@@ -92,12 +117,11 @@ fun SearchScreen(navController: NavController, idUtente: String) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Brush.verticalGradient(colors = gradientColors))
-                .clickable( // Per chiudere la tastiera cliccando fuori
+                .clickable(
                     interactionSource = interactionSource,
-                    indication = null // Nessun effetto ripple
+                    indication = null
                 ) {
                     focusManager.clearFocus()
-                    keyboardController?.hide()
                 }
         ) {
             Column(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
@@ -122,17 +146,21 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                     focusRequester = focusRequester,
                     onFocusChanged = { hasFocus -> searchBarHasFocus = hasFocus },
                     imeAction = ImeAction.Search,
-                    onSearchKeyboardAction = {
-                        if (searchQuery.isNotBlank()) {
+                    onSearchKeyboardAction = { query ->
+                        if (query.isNotBlank()) {
+                            addSearchToRecents(query) // Aggiunge alla cronologia
                             keyboardController?.hide()
                             focusManager.clearFocus()
+                            // Qui potresti voler navigare direttamente ai risultati o aggiornare la UI
+                            // Per ora, l'aggiornamento di searchQuery e la perdita di focus mostreranno i risultati
                         }
                     }
                 )
 
                 val showResults = searchQuery.isNotBlank()
                 val showPrompt = searchBarHasFocus && !showResults
-                val showOptions = !showResults && !showPrompt
+                // Mostra le ricerche recenti se la query è vuota e la barra non ha il focus
+                val showRecentSearches = !showResults && !showPrompt
 
                 when {
                     showResults -> {
@@ -144,10 +172,12 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                             typography = typography,
                             dimensions = dimensions,
                             idUtente = idUtente,
-                            onItemClick = {
+                            onItemClick = { selectedComune -> // Modificato per ricevere il comune
+                                addSearchToRecents(selectedComune) // Aggiunge alla cronologia prima di navigare
                                 focusManager.clearFocus()
                                 keyboardController?.hide()
-                                searchQuery = ""
+                                searchQuery = "" // Resetta la barra di ricerca
+                                // Navigazione avviene in SearchResultItem
                             }
                         )
                     }
@@ -168,43 +198,128 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                             )
                         }
                     }
-                    showOptions -> {
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .padding(horizontal = dimensions.paddingLarge)
-                                .padding(top = dimensions.paddingLarge),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Spacer(modifier = Modifier.height(dimensions.spacingLarge))
-                            AppSecondaryButton(
-                                text = "Cerca su mappa",
-                                onClick = {
-                                    navController.navigate(Screen.MapSearchScreen.withIdUtente(idUtente))
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                icon = Icons.Default.Map,
-                                iconContentDescription = "Cerca su mappa"
-                            )
-                            Spacer(modifier = Modifier.height(dimensions.spacingMedium))
-                            AppSecondaryButton(
-                                text = "Cerca per comune/zona",
-                                onClick = {
-                                    focusRequester.requestFocus()
-                                    keyboardController?.show()
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                icon = Icons.Default.Train,
-                                iconContentDescription = "Cerca per comune o zona"
-                            )
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
+                    showRecentSearches -> {
+                        RecentSearchesView(
+                            recentSearches = recentSearches,
+                            onRecentSearchClicked = { recentQuery ->
+                                searchQuery = recentQuery // Popola la barra e mostra i risultati
+                                addSearchToRecents(recentQuery) // La sposta in cima
+                                focusManager.clearFocus() // Opzionale: togli focus per mostrare subito risultati
+                            },
+                            onClearRecentSearch = { queryToClear ->
+                                removeSearchFromRecents(queryToClear)
+                            },
+                            typography = typography,
+                            colorScheme = colorScheme,
+                            dimensions = dimensions
+                        )
                     }
                 }
             }
         }
+    }
 }
+
+@Composable
+fun RecentSearchesView(
+    recentSearches: List<String>,
+    onRecentSearchClicked: (String) -> Unit,
+    onClearRecentSearch: (String) -> Unit,
+    typography: Typography,
+    colorScheme: ColorScheme,
+    dimensions: Dimensions
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = dimensions.paddingLarge)
+    ) {
+        if (recentSearches.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(dimensions.paddingLarge),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Text(
+                    text = "Nessuna ricerca recente.",
+                    color = colorScheme.onBackground.copy(alpha = 0.7f),
+                    style = typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = dimensions.paddingLarge)
+                )
+            }
+        } else {
+            Text(
+                text = "Ricerche Recenti",
+                style = typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = colorScheme.onBackground,
+                modifier = Modifier.padding(horizontal = dimensions.paddingLarge, vertical = dimensions.spacingMedium)
+            )
+            LazyColumn(
+                contentPadding = PaddingValues(horizontal = dimensions.paddingLarge),
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
+            ) {
+                items(items = recentSearches, key = { it }) { query ->
+                    RecentSearchItem(
+                        query = query,
+                        onClick = { onRecentSearchClicked(query) },
+                        onClearClick = { onClearRecentSearch(query) },
+                        typography = typography,
+                        colorScheme = colorScheme,
+                        dimensions = dimensions
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RecentSearchItem(
+    query: String,
+    onClick: () -> Unit,
+    onClearClick: () -> Unit,
+    typography: Typography,
+    colorScheme: ColorScheme,
+    dimensions: Dimensions
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = dimensions.paddingSmall),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+            Icon(
+                imageVector = Icons.Default.History,
+                contentDescription = "Ricerca Recente",
+                tint = colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(dimensions.iconSizeMedium)
+            )
+            Spacer(modifier = Modifier.width(dimensions.spacingMedium))
+            Text(
+                text = query,
+                style = typography.bodyLarge,
+                color = colorScheme.onSurface,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+        }
+        IconButton(onClick = onClearClick, modifier = Modifier.size(dimensions.iconSizeMedium + dimensions.spacingSmall)) {
+            Icon(
+                imageVector = Icons.Default.Clear,
+                contentDescription = "Cancella ricerca recente",
+                tint = colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                modifier = Modifier.size(dimensions.iconSizeSmall)
+            )
+        }
+    }
+}
+
 
 @Composable
 fun SearchResultsList(
@@ -213,14 +328,14 @@ fun SearchResultsList(
     searchQuery: String,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions, // Aggiunto per coerenza se necessario
+    dimensions: Dimensions,
     idUtente: String,
-    onItemClick: () -> Unit
+    onItemClick: (String) -> Unit // Modificato per passare il comune selezionato
 ) {
     if (comuni.isEmpty() && searchQuery.isNotBlank()) {
         Box(
             modifier = Modifier
-                .fillMaxSize() // Occupa tutto lo spazio disponibile per centrare il messaggio
+                .fillMaxSize()
                 .padding(dimensions.paddingLarge),
             contentAlignment = Alignment.Center
         ) {
@@ -231,29 +346,28 @@ fun SearchResultsList(
                 textAlign = TextAlign.Center
             )
         }
-    } else if (comuni.isNotEmpty()) { // Mostra la lista solo se ci sono comuni da visualizzare
+    } else if (comuni.isNotEmpty()) {
         LazyColumn(
-            modifier = Modifier.fillMaxWidth(), // Non .fillMaxSize() per non coprire altri elementi se la lista è corta
+            modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(
                 horizontal = dimensions.paddingMedium,
                 vertical = dimensions.spacingSmall
             ),
-            verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall) // Spazio tra gli item
+            verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
         ) {
-            items(items = comuni, key = { it }) { comune -> // Usa il comune stesso come chiave se univoco
+            items(items = comuni, key = { it }) { comune ->
                 SearchResultItem(
                     navController = navController,
                     comune = comune,
                     colorScheme = colorScheme,
                     typography = typography,
-                    dimensions = dimensions, // Passa dimensions
+                    dimensions = dimensions,
                     idUtente = idUtente,
-                    onItemClick = onItemClick
+                    onItemClick = { onItemClick(comune) } // Passa il comune al callback
                 )
             }
         }
     }
-    // Se comuni è vuoto e searchQuery è vuota, non mostra nulla (corretto, lo stato è gestito sopra)
 }
 
 
@@ -263,24 +377,22 @@ fun SearchResultItem(
     comune: String,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions, // Aggiunto
+    dimensions: Dimensions,
     idUtente: String,
-    onItemClick: () -> Unit
+    onItemClick: () -> Unit // Questo onClick generale è per l'azione pre-navigazione
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            // Rimosso padding(vertical) qui, gestito da Arrangement.spacedBy in LazyColumn
             .clickable {
-                onItemClick()
-                // Passa il comune selezionato e una stringa vuota per la ricerca testuale specifica
-                // dentro SearchFilterScreen, che si concentrerà sui filtri per quel comune.
-                navController.navigate(Screen.SearchFilterScreen.withArgs(idUtente, comune, ""))
+                onItemClick() // Esegue azioni pre-navigazione (es. aggiunta a recenti, pulizia UI)
+                // La navigazione vera e propria
+                navController.navigate(Screen.SearchFilterScreen.withInitialArgs(idUtente, comune, ""))
             },
         colors = CardDefaults.cardColors(
-            containerColor = colorScheme.surfaceVariant // Leggermente diverso da surface per distinzione
+            containerColor = colorScheme.surfaceVariant
         ),
-        shape = RoundedCornerShape(dimensions.cornerRadiusMedium), // Più arrotondato
+        shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
         elevation = CardDefaults.cardElevation(
             defaultElevation = dimensions.elevationSmall
         )
@@ -290,9 +402,9 @@ fun SearchResultItem(
             color = colorScheme.onSurfaceVariant,
             style = typography.bodyLarge,
             modifier = Modifier
-                .padding(dimensions.paddingMedium) // Padding interno alla Card
-                .fillMaxWidth(), // Assicura che il testo usi tutta la larghezza per l'allineamento
-            textAlign = TextAlign.Start // Allineamento standard a sinistra
+                .padding(dimensions.paddingMedium)
+                .fillMaxWidth(),
+            textAlign = TextAlign.Start
         )
     }
 }

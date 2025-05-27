@@ -51,7 +51,7 @@ android {
 dependencies {
 
     //Google Maps
-    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
     // Maps Compose Library
     implementation("com.google.maps.android:maps-compose:4.3.3")
     // Core Android
