@@ -17,6 +17,7 @@ import com.dieti.dietiestates25.ui.screen.PropertySellScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.PropertyScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.PriceProposalScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.AppointmentBookingScreen // Import mancante
+import com.dieti.dietiestates25.ui.screen.MapSearchScreen
 import com.dieti.dietiestates25.ui.screen.NotificationScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.NotificationDetailScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.ProfileScreen // Import mancante
@@ -145,5 +146,10 @@ fun Navigation() {
         composable(route = Screen.NotificationScreen.route){ NotificationScreen(navController = navController) }
         composable(route = Screen.NotificationDetailScreen.route){ NotificationDetailScreen(navController = navController) }
         composable(route = Screen.ProfileScreen.route){ ProfileScreen(navController = navController) }
-    }
+        composable(
+            route = Screen.MapSearchScreen.route + "/{idUtente}",
+            arguments = listOf(navArgument("idUtente") { type = NavType.StringType; defaultValue = "utente" })
+        ) { entry ->
+            MapSearchScreen(navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente")
+        }    }
 }

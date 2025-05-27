@@ -181,8 +181,7 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                             AppSecondaryButton(
                                 text = "Cerca su mappa",
                                 onClick = {
-                                    // TODO: Implementa navigazione a MapScreen
-                                    // navController.navigate(Screen.MapScreen.route)
+                                    navController.navigate(Screen.MapSearchScreen.withIdUtente(idUtente))
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 icon = Icons.Default.Map,
