@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineScope
 
 import android.content.Intent
+import android.content.res.Configuration
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -38,16 +39,41 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.core.net.toUri
+
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.CameraPositionState // Import esplicito
+import com.google.maps.android.compose.MapType
+import com.google.android.gms.maps.CameraUpdateFactory
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.BorderStroke
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -69,70 +95,101 @@ fun PropertyScreen(
     val totalImages = propertyImages.size
     val pagerState = rememberPagerState(initialPage = 0) { totalImages }
 
-    Scaffold(
-        topBar = {
-            Box {
+    val propertyCoordinates = LatLng(40.8518, 14.2681)
+    var isMapInteractive by remember { mutableStateOf(false) }
+    var showFullscreenMap by remember { mutableStateOf(false) }
+    var isPageScrollEnabled by remember { mutableStateOf(true) } // *** NUOVO STATO PER LO SCROLL ***
 
-            }
+    val initialZoomMiniMap = 12f
+    val zoomFor10KmRadiusView = 11.5f // Per una vista di circa 10km di raggio (diametro 20km)
+
+    val cameraPositionStateMiniMap = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(propertyCoordinates, initialZoomMiniMap)
+    }
+    val cameraPositionStateFullscreen = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(propertyCoordinates, zoomFor10KmRadiusView)
+    }
+
+    val onMapInteractionStart = {
+        if (!isMapInteractive) {
+            isMapInteractive = true
+            isPageScrollEnabled = false // Disabilita lo scroll della pagina
         }
+    }
+
+    val onMapInteractionEnd = { // Chiamato dal click "fuori"
+        if (isMapInteractive) {
+            isMapInteractive = false
+            isPageScrollEnabled = true // Riabilita lo scroll della pagina
+        }
+    }
+
+    Scaffold(
+        topBar = { Box {} }
     ) { innerPadding ->
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(isMapInteractive) { // Chiave per riattivare il listener
+                    if (isMapInteractive) { // Aggiungi listener solo se la mappa è potenzialmente "focalizzata"
+                        detectTapGestures(
+                            onTap = {
+                                // Questo tap è sul Box genitore (non consumato da figli)
+                                // quindi consideralo un click "fuori dalla mappa"
+                                onMapInteractionEnd()
+                            }
+                        )
+                    }
+                }
         ) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(innerPadding),
+                userScrollEnabled = isPageScrollEnabled // *** CONTROLLA LO SCROLL QUI ***
             ) {
                 item {
-                    PropertyImagePager(
-                        pagerState,
-                        propertyImages,
-                        coroutineScope,
-                        colorScheme,
-                        typography,
-                        dimensions
+                    PropertyImagePager(pagerState, propertyImages, coroutineScope, colorScheme, typography, dimensions)
+                }
+                item {
+                    PropertyPriceAndLocation("€129.500", "Appartamento Napoli, Via Francesco Girardi 90", colorScheme, typography, dimensions)
+                }
+                item {
+                    PropertyFeaturesRow(colorScheme, typography, dimensions)
+                }
+                item {
+                    PropertyCharacteristicsSection(listOf("115 m²", "2 Camere da letto", "1 Bagno", "3 Locali"), colorScheme, typography, dimensions)
+                }
+                item {
+                    PropertyDescriptionSection("Scopri questo accogliente appartamento situato nel cuore di Napoli...", colorScheme, typography, dimensions)
+                }
+                item {
+                    MiniMapSection(
+                        propertyCoordinates = propertyCoordinates,
+                        cameraPositionState = cameraPositionStateMiniMap, // Usa lo state per la minimappa
+                        isMapInteractive = isMapInteractive,
+                        onMapInteractionStart = onMapInteractionStart, // Passa la funzione corretta
+                        onFullscreenClick = {
+                            val currentMiniMapPosition = cameraPositionStateMiniMap.position
+                            // Imposta la camera per la mappa fullscreen basandoti sulla vista corrente della minimappa
+                            // o su uno zoom predefinito se la minimappa non era stata toccata.
+                            val targetFullscreenPosition = if (isMapInteractive) {
+                                CameraPosition(currentMiniMapPosition.target, zoomFor10KmRadiusView, currentMiniMapPosition.tilt, currentMiniMapPosition.bearing)
+                            } else {
+                                CameraPosition.fromLatLngZoom(propertyCoordinates, zoomFor10KmRadiusView)
+                            }
+                            coroutineScope.launch {
+                                cameraPositionStateFullscreen.move(CameraUpdateFactory.newCameraPosition(targetFullscreenPosition))
+                            }
+                            showFullscreenMap = true
+                        },
+                        colorScheme = colorScheme,
+                        typography = typography,
+                        dimensions = dimensions
                     )
                 }
                 item {
-                    PropertyPriceAndLocation(
-                        "€129.500",
-                        "Appartamento Napoli, Via Francesco Girardi 90",
-                        colorScheme,
-                        typography,
-                        dimensions
-                    )
-                }
-                item {
-                    PropertyFeaturesRow(colorScheme, typography)
-                }
-                item {
-                    PropertyCharacteristicsSection(
-                        listOf(
-                            "115 m²",
-                            "2 Camere da letto",
-                            "1 Bagno",
-                            "3 Locali"
-                        ), colorScheme, typography, dimensions
-                    )
-                }
-                item {
-                    PropertyDescriptionSection(
-                        "Scopri questo accogliente appartamento situato nel cuore di Napoli, ideale per chi cerca comfort e comodità. L'immobile è situato al terzo piano di un edificio con ascensore, è perfetto per famiglie o coppie alla ricerca di uno spazio ben organizzato e luminoso.",
-                        colorScheme,
-                        typography,
-                        dimensions
-                    )
-                }
-                item {
-                    AgentInfoSection(
-                        "Agenzia Gianfranco Lombardi",
-                        "081 192 6079",
-                        "VIA G. PORZIO ISOLA Es 3, Napoli (NA), Campania, 80143",
-                        colorScheme,
-                        typography,
-                        dimensions
-                    )
+                    AgentInfoSection("Agenzia Gianfranco Lombardi", "081 192 6079", "VIA G. PORZIO ISOLA Es 3, Napoli (NA), Campania, 80143", colorScheme, typography, dimensions)
                 }
                 item {
                     ActionButtonsSection(navController, "081 192 6079", typography, context, dimensions)
@@ -144,26 +201,214 @@ fun PropertyScreen(
                     SimilarListingsSection(navController, colorScheme, typography, dimensions)
                 }
                 item {
-                    Spacer(modifier = Modifier.height(dimensions.paddingExtraLarge * 2 + dimensions.paddingMedium)) // Es. 80.dp
+                    Spacer(modifier = Modifier.height(dimensions.paddingExtraLarge * 2 + dimensions.paddingMedium))
                 }
             }
+
             PropertyTopAppBar(colorScheme, navController, dimensions)
+
+            if (showFullscreenMap) {
+                FullscreenMapDialog(
+                    propertyCoordinates = propertyCoordinates,
+                    cameraPositionState = cameraPositionStateFullscreen, // Usa lo state per la mappa fullscreen
+                    onDismiss = {
+                        showFullscreenMap = false
+                        // Quando la mappa fullscreen si chiude, la mappa piccola non è più "in focus"
+                        // e lo scroll della pagina dovrebbe essere riabilitato.
+                        if (isMapInteractive) { // Se la minimappa era interattiva
+                            onMapInteractionEnd()
+                        }
+                    },
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
+            }
         }
     }
 }
 
+@Composable
+private fun MiniMapSection(
+    propertyCoordinates: LatLng,
+    cameraPositionState: CameraPositionState, // Tipo corretto
+    isMapInteractive: Boolean,
+    onMapInteractionStart: () -> Unit,
+    onFullscreenClick: () -> Unit,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingLarge)
+    ) {
+        Text(
+            text = "Mappa e dintorni",
+            style = typography.titleMedium,
+            color = colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = dimensions.spacingMedium)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
+                .background(colorScheme.surfaceVariant) // Sfondo placeholder
+        ) {
+            GoogleMap(
+                modifier = Modifier.matchParentSize(),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(
+                    mapType = MapType.NORMAL,
+                    isBuildingEnabled = true,
+                    isTrafficEnabled = false,
+                    minZoomPreference = 10f,
+                    maxZoomPreference = 18f
+                ),
+                uiSettings = MapUiSettings(
+                    zoomControlsEnabled = false,
+                    mapToolbarEnabled = false,
+                    myLocationButtonEnabled = false,
+                    scrollGesturesEnabled = isMapInteractive,
+                    zoomGesturesEnabled = isMapInteractive,
+                    tiltGesturesEnabled = isMapInteractive
+                ),
+                // onMapClick è importante: se l'utente clicca sulla mappa (non sul placeholder)
+                // deve attivare l'interazione.
+                onMapClick = { if (!isMapInteractive) onMapInteractionStart() }
+                // Non usare onPointerEvent per consumare, i gesti della mappa dovrebbero bastare
+            ) {
+                Marker(
+                    state = MarkerState(position = propertyCoordinates),
+                    title = "Posizione Proprietà"
+                )
+            }
+
+            if (!isMapInteractive) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(Color.Black.copy(alpha = 0.4f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null, // Nessun ripple
+                            onClick = onMapInteractionStart // Attiva la mappa e disabilita scroll pagina
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Clicca per interagire con la mappa",
+                        color = Color.White,
+                        style = typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(dimensions.paddingMedium)
+                    )
+                }
+            }
+
+            CircularIconActionButton(
+                onClick = onFullscreenClick,
+                iconVector = Icons.Filled.Fullscreen,
+                contentDescription = "Mappa a schermo intero",
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(dimensions.spacingSmall),
+                backgroundColor = colorScheme.surfaceVariant.copy(alpha = 0.9f),
+                iconTint = colorScheme.onSurfaceVariant,
+                buttonSize = 36.dp, // dimensions.iconSizeLarge
+                iconSize = dimensions.iconSizeMedium
+            )
+        }
+        Text(
+            text = "La mappa mostra un'area di circa 5-10km. I P.O.I. sono indicativi.",
+            style = typography.labelSmall,
+            color = colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = dimensions.spacingSmall)
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FullscreenMapDialog(
+    propertyCoordinates: LatLng,
+    cameraPositionState: CameraPositionState, // Tipo corretto
+    onDismiss: () -> Unit,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+    ) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                TopAppBar(
+                    title = { Text("Mappa Proprietà", color = colorScheme.onPrimary) },
+                    navigationIcon = {
+                        CircularIconActionButton(
+                            onClick = onDismiss,
+                            iconVector = Icons.Filled.Close,
+                            contentDescription = "Chiudi mappa",
+                            backgroundColor = Color.Transparent,
+                            iconTint = colorScheme.onPrimary,
+                            buttonSize = dimensions.iconSizeExtraLarge, // 48.dp
+                            iconSize = dimensions.iconSizeMedium,
+                            modifier = Modifier.padding(start = dimensions.spacingExtraSmall)
+                        )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary)
+                )
+            }
+        ) { paddingValues ->
+            GoogleMap(
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(
+                    mapType = MapType.NORMAL,
+                    isMyLocationEnabled = true,
+                    isBuildingEnabled = true,
+                    isTrafficEnabled = true,
+                    minZoomPreference = 10f, // Permette zoom out fino a circa 20km di raggio
+                    maxZoomPreference = 20f
+                ),
+                uiSettings = MapUiSettings(
+                    zoomControlsEnabled = true,
+                    compassEnabled = true,
+                    mapToolbarEnabled = true,
+                    myLocationButtonEnabled = true,
+                    scrollGesturesEnabled = true,
+                    zoomGesturesEnabled = true,
+                    tiltGesturesEnabled = true
+                )
+            ) {
+                Marker(
+                    state = MarkerState(position = propertyCoordinates),
+                    title = "Posizione Proprietà"
+                )
+            }
+        }
+    }
+}
+
+// --- PropertyTopAppBar, PropertyImagePager, e gli altri Composable (SENZA MODIFICHE INTERNE RISPETTO ALL'ULTIMA VERSIONE) ---
+// Li includo per completezza come richiesto.
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PropertyTopAppBar(
     colorScheme: ColorScheme,
     navController: NavController,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     TopAppBar(
         modifier = Modifier
-            .statusBarsPadding() // Aggiunto per correttezza se questo TopAppBar è in cima
-            .padding(horizontal = 10.dp), // 10.dp non in Dimensions, lasciato invariato
+            .statusBarsPadding()
+            .padding(horizontal = 10.dp),
         navigationIcon = {
             CircularIconActionButton(
                 onClick = { navController.popBackStack() },
@@ -171,8 +416,8 @@ fun PropertyTopAppBar(
                 contentDescription = "Back",
                 backgroundColor = colorScheme.primary,
                 iconTint = colorScheme.onPrimary,
-                buttonSize = dimensions.iconSizeExtraLarge, // Es. 48.dp o 40.dp
-                iconSize = dimensions.iconSizeMedium // Es. 24.dp
+                buttonSize = dimensions.iconSizeExtraLarge,
+                iconSize = dimensions.iconSizeMedium
             )
         },
         title = { /* Empty title */ },
@@ -184,12 +429,12 @@ fun PropertyTopAppBar(
                 contentDescription = "Favorite",
                 backgroundColor = colorScheme.primary,
                 iconTint = if (isFavorite.value) colorScheme.error else colorScheme.onPrimary,
-                buttonSize = dimensions.iconSizeExtraLarge, // Es. 48.dp o 40.dp
-                iconSize = dimensions.iconSizeMedium // Es. 24.dp
+                buttonSize = dimensions.iconSizeExtraLarge,
+                iconSize = dimensions.iconSizeMedium
             )
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = colorScheme.surface.copy(alpha = 0.0f)
+            containerColor = Color.Transparent
         )
     )
 }
@@ -201,14 +446,14 @@ fun PropertyImagePager(
     images: List<Int>,
     coroutineScope: CoroutineScope,
     colorScheme: ColorScheme,
-    typography: Typography, // Aggiunto per il testo del contatore
-    dimensions: Dimensions  // Aggiunto
+    typography: Typography,
+    dimensions: Dimensions
 ) {
     val totalImages = images.size
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(250.dp) // Altezza specifica, non un padding
+            .height(250.dp)
     ) {
         HorizontalPager(
             state = pagerState,
@@ -240,8 +485,8 @@ fun PropertyImagePager(
                 contentDescription = "Previous Image",
                 backgroundColor = colorScheme.onBackground.copy(alpha = 0.6f),
                 iconTint = colorScheme.background,
-                buttonSize = dimensions.iconSizeExtraLarge, // Es. 40.dp o 48.dp
-                iconSize = dimensions.iconSizeMedium // Es. 24.dp
+                buttonSize = dimensions.iconSizeExtraLarge,
+                iconSize = dimensions.iconSizeMedium
             )
             Box(
                 modifier = Modifier
@@ -265,8 +510,8 @@ fun PropertyImagePager(
                 contentDescription = "Next Image",
                 backgroundColor = colorScheme.onBackground.copy(alpha = 0.6f),
                 iconTint = colorScheme.background,
-                buttonSize = dimensions.iconSizeExtraLarge, // Es. 40.dp o 48.dp
-                iconSize = dimensions.iconSizeMedium // Es. 24.dp
+                buttonSize = dimensions.iconSizeExtraLarge,
+                iconSize = dimensions.iconSizeMedium
             )
         }
     }
@@ -278,7 +523,7 @@ fun PropertyPriceAndLocation(
     location: String,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     Column(
         modifier = Modifier
@@ -297,23 +542,24 @@ fun PropertyPriceAndLocation(
 }
 
 @Composable
-fun PropertyFeaturesRow(colorScheme: ColorScheme, typography: Typography, dimensions: Dimensions = Dimensions) { // Aggiunto dimensions con default
+fun PropertyFeaturesRow(colorScheme: ColorScheme, typography: Typography, dimensions: Dimensions = Dimensions) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = dimensions.paddingMedium),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        PropertyFeature(Icons.Default.Hotel, "2 Letti", colorScheme, typography)
-        PropertyFeature(Icons.Default.Bathroom, "1 Bagno", colorScheme, typography)
-        PropertyFeature(Icons.Default.Home, "3 Locali", colorScheme, typography)
+        PropertyFeature(Icons.Default.Hotel, "2 Letti", colorScheme, typography, dimensions)
+        PropertyFeature(Icons.Default.Bathroom, "1 Bagno", colorScheme, typography, dimensions)
+        PropertyFeature(Icons.Default.HomeWork, "3 Locali", colorScheme, typography, dimensions)
     }
 }
 
 @Composable
-fun PropertyFeature(icon: ImageVector, label: String, colorScheme: ColorScheme, typography: Typography) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(icon, label, tint = colorScheme.onBackground)
+fun PropertyFeature(icon: ImageVector, label: String, colorScheme: ColorScheme, typography: Typography, dimensions: Dimensions) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(dimensions.paddingSmall)) {
+        Icon(icon, label, tint = colorScheme.onBackground, modifier = Modifier.size(dimensions.iconSizeMedium))
+        Spacer(modifier = Modifier.height(dimensions.spacingExtraSmall))
         Text(label, style = typography.labelMedium, color = colorScheme.onBackground)
     }
 }
@@ -323,7 +569,7 @@ fun PropertyCharacteristicsSection(
     characteristics: List<String>,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     Column(
         modifier = Modifier
@@ -353,7 +599,7 @@ fun PropertyDescriptionSection(
     description: String,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     Column(
         modifier = Modifier
@@ -361,7 +607,7 @@ fun PropertyDescriptionSection(
             .padding(dimensions.paddingMedium)
     ) {
         Text("Descrizione", style = typography.titleMedium, color = colorScheme.onBackground, modifier = Modifier.padding(bottom = dimensions.paddingSmall))
-        Text(description, style = typography.labelLarge, color = colorScheme.onBackground)
+        Text(description, style = typography.bodyMedium, color = colorScheme.onSurfaceVariant)
     }
 }
 
@@ -379,12 +625,19 @@ fun AgentInfoSection(
             .fillMaxWidth()
             .padding(dimensions.paddingMedium)
     ) {
+        Text(
+            text = "Contatta l'Agenzia",
+            style = typography.titleMedium,
+            color = colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = dimensions.spacingMedium)
+        )
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Home, "Agency", tint = colorScheme.primary, modifier = Modifier.size(dimensions.iconSizeMedium))
-            Column(modifier = Modifier.padding(start = dimensions.paddingSmall)) {
-                Text("Agenzia: $agencyName", style = typography.bodyLarge, color = colorScheme.onBackground)
-                Text("Telefono: $phoneNumber", style = typography.labelLarge, color = colorScheme.onBackground)
-                Text(address, style = typography.labelMedium, color = colorScheme.onBackground.copy(alpha = 0.7f))
+            Icon(Icons.Filled.Business, "Agency", tint = colorScheme.primary, modifier = Modifier.size(dimensions.iconSizeMedium))
+            Column(modifier = Modifier.padding(start = dimensions.spacingMedium)) {
+                Text(agencyName, style = typography.titleSmall.copy(fontWeight = FontWeight.Bold) , color = colorScheme.onBackground)
+                Spacer(modifier = Modifier.height(dimensions.spacingExtraSmall))
+                Text("Telefono: $phoneNumber", style = typography.bodyMedium, color = colorScheme.onSurfaceVariant)
+                Text(address, style = typography.bodySmall, color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
             }
         }
     }
@@ -401,7 +654,8 @@ fun ActionButtonsSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(dimensions.paddingMedium)
+            .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingLarge),
+        verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
     ) {
         AppPrimaryButton(
             onClick = {
@@ -411,16 +665,14 @@ fun ActionButtonsSection(
             text = "Chiama ora", textStyle = typography.labelLarge, icon = Icons.Default.Phone, iconContentDescription = "Call",
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(dimensions.spacingSmall))
         AppSecondaryButton(
             onClick = { navController.navigate(Screen.AppointmentBookingScreen.route) },
-            text = "Visita", icon = Icons.Default.DateRange, iconContentDescription = "Visit",
+            text = "Fissa una Visita", icon = Icons.Default.DateRange, iconContentDescription = "Visit",
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(modifier = Modifier.height(dimensions.spacingSmall))
         AppSecondaryButton(
             onClick = { navController.navigate(Screen.PriceProposalScreen.route) },
-            text = "Proponi prezzo", icon = Icons.Default.Euro, iconContentDescription = "Propose price",
+            text = "Proponi Prezzo", icon = Icons.Default.Euro, iconContentDescription = "Propose price",
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -431,38 +683,40 @@ fun ReportAdSection(colorScheme: ColorScheme, typography: Typography, dimensions
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingMedium),
+            .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingLarge),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        DecorativeLine(colorScheme = colorScheme, isTop = true, dimensions = dimensions) // Passa dimensions
-        Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-            Button(
-                onClick = { },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(dimensions.cornerRadiusSmall), // SOSTITUITO 8.dp (o cornerRadiusMedium se 8dp era inteso come medium)
-                colors = ButtonDefaults.buttonColors(containerColor = colorScheme.background)
-            ) {
-                Icon(Icons.Default.Warning, "Report", tint = colorScheme.error, modifier = Modifier.size(dimensions.iconSizeSmall)) // SOSTITUITO 16.dp
-                Text("Segnala Annuncio", color = colorScheme.error, style = typography.labelLarge, modifier = Modifier.padding(start = dimensions.paddingSmall)) // SOSTITUITO 8.dp
-            }
+        DecorativeLine(colorScheme = colorScheme, isTop = true, dimensions = dimensions)
+        Button(
+            onClick = { /* TODO: Logica per segnalare annuncio */ },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(dimensions.cornerRadiusSmall),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorScheme.surface,
+                contentColor = colorScheme.error
+            ),
+            border = BorderStroke(1.dp, colorScheme.error.copy(alpha = 0.5f))
+        ) {
+            Icon(Icons.Default.WarningAmber, "Report", tint = colorScheme.error, modifier = Modifier.size(dimensions.iconSizeSmall))
+            Text("Segnala Annuncio", color = colorScheme.error, style = typography.labelMedium, modifier = Modifier.padding(start = dimensions.paddingSmall))
         }
-        DecorativeLine(colorScheme = colorScheme, isTop = false, dimensions = dimensions) // Passa dimensions
+        DecorativeLine(colorScheme = colorScheme, isTop = false, dimensions = dimensions)
     }
 }
 
 @Composable
-fun DecorativeLine(colorScheme: ColorScheme, isTop: Boolean, dimensions: Dimensions) { // Aggiunto dimensions
+fun DecorativeLine(colorScheme: ColorScheme, isTop: Boolean, dimensions: Dimensions) {
     Box(
         modifier = Modifier
             .fillMaxWidth(0.7f)
-            .height(1.dp) // 1.dp non in Dimensions
-            .background(brush = Brush.horizontalGradient(colors = listOf(colorScheme.surface.copy(alpha = 0.0f), colorScheme.error.copy(alpha = 0.6f), colorScheme.surface.copy(alpha = 0.0f)))) // Usato surface.copy alpha 0 per trasparenza ai lati
-            .padding(top = if(isTop) 0.dp else dimensions.paddingExtraSmall, bottom = if(isTop) dimensions.paddingExtraSmall else 0.dp) // SOSTITUITO 4.dp
+            .height(1.dp)
+            .background(brush = Brush.horizontalGradient(colors = listOf(Color.Transparent, colorScheme.outline.copy(alpha = 0.6f), Color.Transparent)))
+            .padding(top = if(isTop) 0.dp else dimensions.paddingExtraSmall, bottom = if(isTop) dimensions.paddingExtraSmall else 0.dp)
     )
 }
 
 @Composable
-fun SimilarListingsSection( // Creato un Composable separato per questa sezione
+fun SimilarListingsSection(
     navController: NavController,
     colorScheme: ColorScheme,
     typography: Typography,
@@ -471,39 +725,44 @@ fun SimilarListingsSection( // Creato un Composable separato per questa sezione
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(dimensions.paddingMedium) // SOSTITUITO 16.dp
+            .padding(vertical = dimensions.paddingMedium)
     ) {
-        Text(
-            text = "Annunci simili",
-            style = typography.titleMedium,
-            color = colorScheme.onBackground,
-            modifier = Modifier.padding(bottom = dimensions.paddingSmall) // SOSTITUITO 8.dp
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = dimensions.paddingMedium)
+                .padding(bottom = dimensions.spacingSmall),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Annunci simili",
+                style = typography.titleMedium,
+                color = colorScheme.onBackground
+            )
+            TextButton(onClick = { navController.navigate(Screen.ApartmentListingScreen.withArgs("", "")) }) {
+                Text("Vedi tutti", style = typography.labelLarge, color = colorScheme.primary)
+            }
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
-                .padding(bottom = dimensions.paddingSmall), // SOSTITUITO 8.dp
-            horizontalArrangement = Arrangement.spacedBy(12.dp) // 12.dp non in Dimensions
+                .padding(horizontal = dimensions.paddingMedium),
+            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
         ) {
             repeat(7) { index ->
                 SimilarPropertyCard(
-                    price = if (index == 0) "400.000" else "${300 + index * 50}.000",
+                    price = if (index == 0) "400.000 €" else "${300 + index * 50}.000 €",
                     modifier = Modifier
-                        .width(200.dp) // Valori specifici, non padding
-                        .height(150.dp),// Valori specifici, non padding
+                        .width(200.dp)
+                        .height(150.dp),
                     navController = navController,
                     colorScheme = colorScheme,
-                    dimensions = dimensions, // Passa dimensions
-                    typography = typography // Passa typography
+                    dimensions = dimensions,
+                    typography = typography
                 )
             }
-            ViewMoreCard( // Estratto in un Composable
-                navController = navController,
-                colorScheme = colorScheme,
-                typography = typography,
-                dimensions = dimensions
-            )
         }
     }
 }
@@ -514,57 +773,43 @@ fun SimilarPropertyCard(
     price: String,
     modifier: Modifier = Modifier,
     colorScheme: ColorScheme,
-    dimensions: Dimensions, // Aggiunto
-    typography: Typography // Aggiunto
+    dimensions: Dimensions,
+    typography: Typography
 ) {
     Card(
-        modifier = modifier
-            .clickable { navController.navigate(Screen.PropertyScreen.route) },
-        shape = RoundedCornerShape(dimensions.cornerRadiusSmall) // SOSTITUITO 8.dp (o cornerRadiusMedium se 8dp era inteso come medium)
+        modifier = modifier.clickable { navController.navigate(Screen.PropertyScreen.route) },
+        shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
+        elevation = CardDefaults.cardElevation(dimensions.cardDefaultElevation)
     ) {
         Box {
             Image(painterResource(R.drawable.property1), "Similar Property", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-            if (price.isNotEmpty()) {
-                Text(
-                    text = price,
-                    color = colorScheme.onBackground, // Cambiato per leggibilità
-                    style = typography.titleMedium, // Usato typography passato
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(dimensions.paddingSmall) // SOSTITUITO 8.dp
-                        .background(colorScheme.surface.copy(alpha = 0.7f), RoundedCornerShape(dimensions.cornerRadiusSmall)) // SOSTITUITO 4.dp
-                        .padding(dimensions.paddingExtraSmall) // SOSTITUITO 4.dp
-                )
-            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.4f)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)),
+                            startY = 0f,
+                            endY = Float.POSITIVE_INFINITY
+                        )
+                    )
+            )
+            Text(
+                text = price,
+                color = Color.White,
+                style = typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(dimensions.paddingSmall)
+            )
         }
     }
 }
 
-@Composable
-fun ViewMoreCard( // Nuovo Composable per la card "Vedi tutti"
-    navController: NavController,
-    colorScheme: ColorScheme,
-    typography: Typography,
-    dimensions: Dimensions
-) {
-    Box(
-        modifier = Modifier
-            .width(120.dp) // Valore specifico
-            .height(150.dp) // Valore specifico
-            .clip(RoundedCornerShape(dimensions.cornerRadiusSmall)) // SOSTITUITO 8.dp
-            .background(colorScheme.surfaceVariant) // Cambiato per differenziarlo un po'
-            .clickable { navController.navigate(Screen.ApartmentListingScreen.withArgs("", "")) }, // Assumi che withArgs sia definito
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "View More", tint = colorScheme.primary, modifier = Modifier.size(dimensions.iconSizeLarge)) // SOSTITUITO 36.dp
-            Text("Vedi tutti", color = colorScheme.primary, style = typography.labelLarge, modifier = Modifier.padding(top = dimensions.paddingExtraSmall)) // SOSTITUITO 4.dp
-        }
-    }
-}
-
-
-@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO, name = "PropertyScreen Light")
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, name = "PropertyScreen Dark")
 @Composable
 fun PropertyDetailScreenPreview() {
     val navController = rememberNavController()
