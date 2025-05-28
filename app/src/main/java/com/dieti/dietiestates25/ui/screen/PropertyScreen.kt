@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 
 import android.content.Intent
 import android.content.res.Configuration
+import android.util.Log // Utile per il debug
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -45,6 +46,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,14 +68,18 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.CameraPositionState // Import esplicito
+import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MapType
 import com.google.android.gms.maps.CameraUpdateFactory
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.foundation.BorderStroke
+
+// ... (tutti gli import rimangono gli stessi, assicurati che Dialog e DialogProperties siano importati)
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.compose.foundation.BorderStroke
+// ... (altri import)
+import androidx.compose.material3.Surface // Aggiunto per il contenuto del Dialog
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -95,32 +101,31 @@ fun PropertyScreen(
     val totalImages = propertyImages.size
     val pagerState = rememberPagerState(initialPage = 0) { totalImages }
 
-    val propertyCoordinates = LatLng(40.8518, 14.2681)
+    val propertyCoordinates = LatLng(40.8518, 14.2681) // Esempio Napoli
     var isMapInteractive by remember { mutableStateOf(false) }
     var showFullscreenMap by remember { mutableStateOf(false) }
-    var isPageScrollEnabled by remember { mutableStateOf(true) } // *** NUOVO STATO PER LO SCROLL ***
+    var isPageScrollEnabled by remember { mutableStateOf(true) }
 
     val initialZoomMiniMap = 12f
-    val zoomFor10KmRadiusView = 11.5f // Per una vista di circa 10km di raggio (diametro 20km)
+    val zoomForFullscreenMap = 15f
 
     val cameraPositionStateMiniMap = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(propertyCoordinates, initialZoomMiniMap)
     }
-    val cameraPositionStateFullscreen = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(propertyCoordinates, zoomFor10KmRadiusView)
-    }
+    // NON creiamo più cameraPositionStateFullscreen qui se FullscreenMapDialog lo gestisce internamente.
+    // Se invece vuoi tenerlo per altri usi, va bene, ma non lo passeremo al Dialog.
 
     val onMapInteractionStart = {
         if (!isMapInteractive) {
             isMapInteractive = true
-            isPageScrollEnabled = false // Disabilita lo scroll della pagina
+            isPageScrollEnabled = false
         }
     }
 
-    val onMapInteractionEnd = { // Chiamato dal click "fuori"
+    val onMapInteractionEnd = {
         if (isMapInteractive) {
             isMapInteractive = false
-            isPageScrollEnabled = true // Riabilita lo scroll della pagina
+            isPageScrollEnabled = true
         }
     }
 
@@ -130,14 +135,10 @@ fun PropertyScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(isMapInteractive) { // Chiave per riattivare il listener
-                    if (isMapInteractive) { // Aggiungi listener solo se la mappa è potenzialmente "focalizzata"
+                .pointerInput(isMapInteractive) {
+                    if (isMapInteractive) {
                         detectTapGestures(
-                            onTap = {
-                                // Questo tap è sul Box genitore (non consumato da figli)
-                                // quindi consideralo un click "fuori dalla mappa"
-                                onMapInteractionEnd()
-                            }
+                            onTap = { onMapInteractionEnd() }
                         )
                     }
                 }
@@ -146,7 +147,7 @@ fun PropertyScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                userScrollEnabled = isPageScrollEnabled // *** CONTROLLA LO SCROLL QUI ***
+                userScrollEnabled = isPageScrollEnabled
             ) {
                 item {
                     PropertyImagePager(pagerState, propertyImages, coroutineScope, colorScheme, typography, dimensions)
@@ -166,21 +167,11 @@ fun PropertyScreen(
                 item {
                     MiniMapSection(
                         propertyCoordinates = propertyCoordinates,
-                        cameraPositionState = cameraPositionStateMiniMap, // Usa lo state per la minimappa
+                        cameraPositionState = cameraPositionStateMiniMap,
                         isMapInteractive = isMapInteractive,
-                        onMapInteractionStart = onMapInteractionStart, // Passa la funzione corretta
+                        onMapInteractionStart = onMapInteractionStart,
                         onFullscreenClick = {
-                            val currentMiniMapPosition = cameraPositionStateMiniMap.position
-                            // Imposta la camera per la mappa fullscreen basandoti sulla vista corrente della minimappa
-                            // o su uno zoom predefinito se la minimappa non era stata toccata.
-                            val targetFullscreenPosition = if (isMapInteractive) {
-                                CameraPosition(currentMiniMapPosition.target, zoomFor10KmRadiusView, currentMiniMapPosition.tilt, currentMiniMapPosition.bearing)
-                            } else {
-                                CameraPosition.fromLatLngZoom(propertyCoordinates, zoomFor10KmRadiusView)
-                            }
-                            coroutineScope.launch {
-                                cameraPositionStateFullscreen.move(CameraUpdateFactory.newCameraPosition(targetFullscreenPosition))
-                            }
+                            Log.d("PropertyScreen", "Fullscreen button clicked. Setting showFullscreenMap = true")
                             showFullscreenMap = true
                         },
                         colorScheme = colorScheme,
@@ -209,15 +200,17 @@ fun PropertyScreen(
 
             if (showFullscreenMap) {
                 FullscreenMapDialog(
-                    propertyCoordinates = propertyCoordinates,
-                    cameraPositionState = cameraPositionStateFullscreen, // Usa lo state per la mappa fullscreen
+                    initialPropertyCoordinates = propertyCoordinates,
+                    initialZoom = zoomForFullscreenMap,
+                    // NESSUN cameraPositionState esterno passato qui
                     onDismiss = {
                         showFullscreenMap = false
-                        // Quando la mappa fullscreen si chiude, la mappa piccola non è più "in focus"
-                        // e lo scroll della pagina dovrebbe essere riabilitato.
-                        if (isMapInteractive) { // Se la minimappa era interattiva
+                        if (isMapInteractive) {
                             onMapInteractionEnd()
+                        } else {
+                            isPageScrollEnabled = true
                         }
+                        Log.d("PropertyScreen", "FullscreenMapDialog dismissed.")
                     },
                     colorScheme = colorScheme,
                     typography = typography,
@@ -231,7 +224,7 @@ fun PropertyScreen(
 @Composable
 private fun MiniMapSection(
     propertyCoordinates: LatLng,
-    cameraPositionState: CameraPositionState, // Tipo corretto
+    cameraPositionState: CameraPositionState,
     isMapInteractive: Boolean,
     onMapInteractionStart: () -> Unit,
     onFullscreenClick: () -> Unit,
@@ -255,10 +248,9 @@ private fun MiniMapSection(
                 .fillMaxWidth()
                 .height(200.dp)
                 .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
-                .background(colorScheme.surfaceVariant) // Sfondo placeholder
         ) {
             GoogleMap(
-                modifier = Modifier.matchParentSize(),
+                modifier = Modifier.matchParentSize().background(colorScheme.surfaceVariant),
                 cameraPositionState = cameraPositionState,
                 properties = MapProperties(
                     mapType = MapType.NORMAL,
@@ -273,12 +265,14 @@ private fun MiniMapSection(
                     myLocationButtonEnabled = false,
                     scrollGesturesEnabled = isMapInteractive,
                     zoomGesturesEnabled = isMapInteractive,
-                    tiltGesturesEnabled = isMapInteractive
+                    tiltGesturesEnabled = isMapInteractive,
+                    rotationGesturesEnabled = isMapInteractive
                 ),
-                // onMapClick è importante: se l'utente clicca sulla mappa (non sul placeholder)
-                // deve attivare l'interazione.
-                onMapClick = { if (!isMapInteractive) onMapInteractionStart() }
-                // Non usare onPointerEvent per consumare, i gesti della mappa dovrebbero bastare
+                onMapClick = {
+                    if (!isMapInteractive) {
+                        onMapInteractionStart()
+                    }
+                },
             ) {
                 Marker(
                     state = MarkerState(position = propertyCoordinates),
@@ -290,12 +284,12 @@ private fun MiniMapSection(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .background(Color.Black.copy(alpha = 0.4f))
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = null, // Nessun ripple
-                            onClick = onMapInteractionStart // Attiva la mappa e disabilita scroll pagina
-                        ),
+                            indication = null,
+                            onClick = onMapInteractionStart
+                        )
+                        .background(Color.Black.copy(alpha = 0.4f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -307,7 +301,6 @@ private fun MiniMapSection(
                     )
                 }
             }
-
             CircularIconActionButton(
                 onClick = onFullscreenClick,
                 iconVector = Icons.Filled.Fullscreen,
@@ -315,9 +308,9 @@ private fun MiniMapSection(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(dimensions.spacingSmall),
-                backgroundColor = colorScheme.surfaceVariant.copy(alpha = 0.9f),
-                iconTint = colorScheme.onSurfaceVariant,
-                buttonSize = 36.dp, // dimensions.iconSizeLarge
+                backgroundColor = colorScheme.surface.copy(alpha = 0.8f),
+                iconTint = colorScheme.onSurface,
+                buttonSize = 36.dp,
                 iconSize = dimensions.iconSizeMedium
             )
         }
@@ -333,8 +326,9 @@ private fun MiniMapSection(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FullscreenMapDialog(
-    propertyCoordinates: LatLng,
-    cameraPositionState: CameraPositionState, // Tipo corretto
+    initialPropertyCoordinates: LatLng,
+    initialZoom: Float,
+    // cameraPositionState: CameraPositionState, // RIMOSSO DAI PARAMETRI
     onDismiss: () -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
@@ -342,61 +336,102 @@ private fun FullscreenMapDialog(
 ) {
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false
+        )
     ) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                TopAppBar(
-                    title = { Text("Mappa Proprietà", color = colorScheme.onPrimary) },
-                    navigationIcon = {
-                        CircularIconActionButton(
-                            onClick = onDismiss,
-                            iconVector = Icons.Filled.Close,
-                            contentDescription = "Chiudi mappa",
-                            backgroundColor = Color.Transparent,
-                            iconTint = colorScheme.onPrimary,
-                            buttonSize = dimensions.iconSizeExtraLarge, // 48.dp
-                            iconSize = dimensions.iconSizeMedium,
-                            modifier = Modifier.padding(start = dimensions.spacingExtraSmall)
-                        )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary)
-                )
+        // Crea e ricorda lo stato della camera INTERNAMENTE
+        val cameraPositionState = rememberCameraPositionState {
+            position = CameraPosition.fromLatLngZoom(initialPropertyCoordinates, initialZoom)
+        }
+        var isMapLoaded by remember { mutableStateOf(false) }
+
+        LaunchedEffect(isMapLoaded, initialPropertyCoordinates, initialZoom, cameraPositionState) {
+            // Questo `LaunchedEffect` ora si riferisce al `cameraPositionState` interno.
+            // Le chiavi initialPropertyCoordinates e initialZoom sono importanti se vuoi
+            // che la mappa si ri-centri se questi parametri dovessero cambiare mentre
+            // il dialogo è aperto (improbabile nel tuo scenario attuale, ma buona pratica).
+            if (isMapLoaded) {
+                // Se la posizione iniziale è già stata impostata da rememberCameraPositionState,
+                // questo LaunchedEffect potrebbe non aver bisogno di muovere la camera di nuovo,
+                // a meno che tu non voglia assicurarti che si resetti ogni volta o applicare un'animazione.
+                // Per sicurezza, o per un'animazione all'apertura:
+                val targetCameraPosition = CameraPosition.fromLatLngZoom(initialPropertyCoordinates, initialZoom)
+                Log.d("FullscreenMapDialog", "LaunchedEffect (map is loaded, internal state): Attempting to animate camera to $targetCameraPosition")
+                try {
+                    cameraPositionState.animate(CameraUpdateFactory.newCameraPosition(targetCameraPosition), 700)
+                    Log.d("FullscreenMapDialog", "LaunchedEffect (map is loaded, internal state): Camera animation initiated.")
+                } catch (e: Exception) {
+                    Log.e("FullscreenMapDialog", "LaunchedEffect (map is loaded, internal state): Error animating camera", e)
+                }
+            } else {
+                Log.d("FullscreenMapDialog", "LaunchedEffect (internal state): Waiting for onMapLoaded callback.")
             }
-        ) { paddingValues ->
-            GoogleMap(
-                modifier = Modifier.fillMaxSize().padding(paddingValues),
-                cameraPositionState = cameraPositionState,
-                properties = MapProperties(
-                    mapType = MapType.NORMAL,
-                    isMyLocationEnabled = true,
-                    isBuildingEnabled = true,
-                    isTrafficEnabled = true,
-                    minZoomPreference = 10f, // Permette zoom out fino a circa 20km di raggio
-                    maxZoomPreference = 20f
-                ),
-                uiSettings = MapUiSettings(
-                    zoomControlsEnabled = true,
-                    compassEnabled = true,
-                    mapToolbarEnabled = true,
-                    myLocationButtonEnabled = true,
-                    scrollGesturesEnabled = true,
-                    zoomGesturesEnabled = true,
-                    tiltGesturesEnabled = true
-                )
-            ) {
-                Marker(
-                    state = MarkerState(position = propertyCoordinates),
-                    title = "Posizione Proprietà"
-                )
+        }
+
+        Surface(modifier = Modifier.fillMaxSize()) {
+            Scaffold(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding(),
+                containerColor = colorScheme.background,
+                topBar = {
+                    TopAppBar(
+                        title = { Text("Mappa Proprietà", color = colorScheme.onPrimary) },
+                        navigationIcon = {
+                            CircularIconActionButton(
+                                onClick = onDismiss,
+                                iconVector = Icons.Filled.Close,
+                                contentDescription = "Chiudi mappa",
+                                backgroundColor = Color.Transparent,
+                                iconTint = colorScheme.onPrimary,
+                                buttonSize = dimensions.iconSizeExtraLarge,
+                                iconSize = dimensions.iconSizeMedium,
+                                modifier = Modifier.padding(start = dimensions.spacingExtraSmall)
+                            )
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary)
+                    )
+                }
+            ) { paddingValues ->
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    cameraPositionState = cameraPositionState, // Usa lo stato INTERNO
+                    properties = MapProperties(
+                        mapType = MapType.NORMAL,
+                        isMyLocationEnabled = true,
+                        isBuildingEnabled = true,
+                        isTrafficEnabled = true,
+                        minZoomPreference = 8f,
+                        maxZoomPreference = 20f
+                    ),
+                    uiSettings = MapUiSettings(
+                        zoomControlsEnabled = true,
+                        compassEnabled = true,
+                        mapToolbarEnabled = true,
+                        myLocationButtonEnabled = true,
+                        scrollGesturesEnabled = true,
+                        zoomGesturesEnabled = true,
+                        tiltGesturesEnabled = true,
+                        rotationGesturesEnabled = true
+                    ),
+                    onMapLoaded = {
+                        Log.d("FullscreenMapDialog", "GoogleMap (internal state): onMapLoaded triggered.")
+                        isMapLoaded = true
+                    }
+                ) {
+                    Marker(
+                        state = MarkerState(position = initialPropertyCoordinates),
+                        title = "Posizione Proprietà"
+                    )
+                }
             }
         }
     }
 }
-
-// --- PropertyTopAppBar, PropertyImagePager, e gli altri Composable (SENZA MODIFICHE INTERNE RISPETTO ALL'ULTIMA VERSIONE) ---
-// Li includo per completezza come richiesto.
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
