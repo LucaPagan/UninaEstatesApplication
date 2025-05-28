@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.components.AppSecondaryButton
 import com.dieti.dietiestates25.ui.components.FilterSection
 import com.dieti.dietiestates25.ui.components.PredefinedRange
 import com.dieti.dietiestates25.ui.components.RangeFilterInput
@@ -35,6 +36,7 @@ import com.dieti.dietiestates25.ui.components.SelectableOptionButton
 import com.dieti.dietiestates25.ui.components.SingleChoiceToggleGroup
 import com.dieti.dietiestates25.ui.components.defaultOutlineTextFieldColors
 import com.dieti.dietiestates25.ui.model.FilterModel
+import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.utils.findActivity
@@ -198,7 +200,8 @@ fun SearchFilterScreen(
                     shadowElevation = if (isFullScreenContext) dimensions.elevationMedium else 0.dp,
                     color = colorScheme.surface
                 ) {
-                    Button(
+                    AppSecondaryButton(
+                        text = "Mostra risultati",
                         onClick = {
                             val finalMinPrice = when {
                                 minPriceText.isNotBlank() -> minPriceText.toFloatOrNull()
@@ -233,23 +236,17 @@ fun SearchFilterScreen(
                                 condition = selectedCondition
                             )
                             onApplyFilters(appliedFilters)
+                            if (isFullScreenContext) {
+                                navController.navigate(Screen.SearchTypeSelectionScreen.buildRoute(idUtente, comune, ricercaQueryText, appliedFilters))
+                            } else {
+                                navController.navigate(Screen.ApartmentListingScreen.buildRoute(idUtente, comune, ricercaQueryText, appliedFilters))
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(dimensions.paddingMedium)
                             .height(dimensions.buttonHeight),
-                        shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colorScheme.primary,
-                            contentColor = colorScheme.onPrimary
-                        )
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                            Icon(Icons.Default.Search, "Cerca", tint = colorScheme.onPrimary)
-                            Spacer(modifier = Modifier.width(dimensions.spacingSmall))
-                            Text("MOSTRA RISULTATI", style = typography.labelLarge.copy(fontWeight = FontWeight.Medium))
-                        }
-                    }
+                    )
                 }
             }
         ) { paddingValues ->

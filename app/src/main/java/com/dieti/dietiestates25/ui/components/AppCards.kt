@@ -37,6 +37,7 @@ import androidx.compose.ui.res.painterResource
 
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import com.dieti.dietiestates25.ui.model.PropertyMarker
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
 
@@ -420,6 +421,63 @@ fun AppPropertyCard(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun PropertyPreviewInfoWindow(
+    property: PropertyMarker,
+    onClick: () -> Unit, // Azione quando la preview viene cliccata
+    dimensions: Dimensions,
+    typography: Typography,
+    colorScheme: ColorScheme
+) {
+    Card(
+        modifier = Modifier
+            .widthIn(max = 300.dp) // Limita la larghezza della info window
+            .clickable(onClick = onClick), // Rende l'intera card cliccabile
+        shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensions.elevationSmall),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
+    ) {
+        Row(
+            modifier = Modifier.padding(dimensions.paddingSmall),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Immagine Piccola (Opzionale ma carina per una preview)
+            Image(
+                painter = painterResource(id = property.imageRes),
+                contentDescription = "Immagine ${property.title}",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(60.dp) // Dimensione fissa per l'immagine nella preview
+                    .clip(RoundedCornerShape(dimensions.cornerRadiusSmall))
+            )
+            Spacer(modifier = Modifier.width(dimensions.spacingSmall))
+            Column {
+                Text(
+                    text = property.title,
+                    style = typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = property.price,
+                    style = typography.bodyMedium,
+                    color = colorScheme.primary,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = property.type,
+                    style = typography.bodySmall,
+                    color = colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }

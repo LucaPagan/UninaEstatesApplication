@@ -77,8 +77,66 @@ sealed class Screen(val route: String) {
     data object ProfileScreen : Screen("profile_screen")
 
     data object MapSearchScreen : Screen("map_search_screen") {
-        fun withIdUtente(idUtente: String): String {
-            return "$route/${Uri.encode(idUtente)}" // Usa Uri.encode per path params
+        fun buildRoute(
+            idUtentePath: String,
+            comunePath: String,
+            ricercaPath: String,
+            filters: FilterModel? = null
+        ): String {
+            val basePathWithArgs = "$route/${Uri.encode(idUtentePath)}/${Uri.encode(comunePath)}/${Uri.encode(ricercaPath)}"
+
+            if (filters == null) {
+                return basePathWithArgs
+            }
+
+            val queryParams = mutableListOf<String>()
+            filters.purchaseType?.let { queryParams.add("purchaseType=${Uri.encode(it)}") }
+            filters.minPrice?.let { queryParams.add("minPrice=$it") }
+            filters.maxPrice?.let { queryParams.add("maxPrice=$it") }
+            filters.minSurface?.let { queryParams.add("minSurface=$it") }
+            filters.maxSurface?.let { queryParams.add("maxSurface=$it") }
+            filters.minRooms?.let { queryParams.add("minRooms=$it") }
+            filters.maxRooms?.let { queryParams.add("maxRooms=$it") }
+            filters.bathrooms?.let { queryParams.add("bathrooms=$it") }
+            filters.condition?.let { queryParams.add("condition=${Uri.encode(it)}") }
+
+            return if (queryParams.isNotEmpty()) {
+                basePathWithArgs + "?" + queryParams.joinToString("&")
+            } else {
+                basePathWithArgs
+            }
+        }
+    }
+
+    data object SearchTypeSelectionScreen : Screen("search_type_selection_screen") {
+        fun buildRoute(
+            idUtentePath: String,
+            comunePath: String,
+            ricercaPath: String,
+            filters: FilterModel? = null
+        ): String {
+            val basePathWithArgs = "$route/${Uri.encode(idUtentePath)}/${Uri.encode(comunePath)}/${Uri.encode(ricercaPath)}"
+
+            if (filters == null) {
+                return basePathWithArgs
+            }
+
+            val queryParams = mutableListOf<String>()
+            filters.purchaseType?.let { queryParams.add("purchaseType=${Uri.encode(it)}") }
+            filters.minPrice?.let { queryParams.add("minPrice=$it") }
+            filters.maxPrice?.let { queryParams.add("maxPrice=$it") }
+            filters.minSurface?.let { queryParams.add("minSurface=$it") }
+            filters.maxSurface?.let { queryParams.add("maxSurface=$it") }
+            filters.minRooms?.let { queryParams.add("minRooms=$it") }
+            filters.maxRooms?.let { queryParams.add("maxRooms=$it") }
+            filters.bathrooms?.let { queryParams.add("bathrooms=$it") }
+            filters.condition?.let { queryParams.add("condition=${Uri.encode(it)}") }
+
+            return if (queryParams.isNotEmpty()) {
+                basePathWithArgs + "?" + queryParams.joinToString("&")
+            } else {
+                basePathWithArgs
+            }
         }
     }
 
