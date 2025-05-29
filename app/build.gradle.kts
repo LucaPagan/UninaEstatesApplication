@@ -9,7 +9,7 @@ plugins {
 
 secrets {
     propertiesFileName = "secrets.properties"
-    defaultPropertiesFileName = "local.defaults.properties" // <<-- Questa riga dice al plugin di cercare questo file
+    defaultPropertiesFileName = "local.defaults.properties"
 }
 
 
