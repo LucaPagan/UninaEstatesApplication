@@ -21,6 +21,7 @@ import com.dieti.dietiestates25.ui.screen.MapSearchScreen
 import com.dieti.dietiestates25.ui.screen.NotificationScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.NotificationDetailScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.ProfileScreen // Import mancante
+import com.dieti.dietiestates25.ui.screen.SearchTypeSelectionScreen
 
 
 @Composable
@@ -147,9 +148,71 @@ fun Navigation() {
         composable(route = Screen.NotificationDetailScreen.route){ NotificationDetailScreen(navController = navController) }
         composable(route = Screen.ProfileScreen.route){ ProfileScreen(navController = navController) }
         composable(
-            route = Screen.MapSearchScreen.route + "/{idUtente}",
-            arguments = listOf(navArgument("idUtente") { type = NavType.StringType; defaultValue = "utente" })
+            // La rotta di MapSearchScreen DEVE corrispondere a come viene costruita
+            // e i nomi dei path parameters qui ({idUtente}, {comune}, {ricerca})
+            // devono corrispondere a quelli usati in buildRoute per i path.
+            route = Screen.MapSearchScreen.route + "/{idUtente}/{comune}/{ricerca}" +
+                    "?purchaseType={purchaseType}&minPrice={minPrice}&maxPrice={maxPrice}" +
+                    "&minSurface={minSurface}&maxSurface={maxSurface}&minRooms={minRooms}" +
+                    "&maxRooms={maxRooms}&bathrooms={bathrooms}&condition={condition}",
+            arguments = listOf(
+                // Path arguments (DEVONO corrispondere ai nomi nella stringa route qui sopra)
+                navArgument("idUtente") { type = NavType.StringType }, // Rimosso defaultValue se sempre fornito
+                navArgument("comune") { type = NavType.StringType },
+                navArgument("ricerca") { type = NavType.StringType },
+                // Query arguments (opzionali)
+                navArgument("purchaseType") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("minPrice") { type = NavType.FloatType; defaultValue = -1f },
+                navArgument("maxPrice") { type = NavType.FloatType; defaultValue = -1f },
+                navArgument("minSurface") { type = NavType.FloatType; defaultValue = -1f },
+                navArgument("maxSurface") { type = NavType.FloatType; defaultValue = -1f },
+                navArgument("minRooms") { type = NavType.IntType; defaultValue = -1 },
+                navArgument("maxRooms") { type = NavType.IntType; defaultValue = -1 },
+                navArgument("bathrooms") { type = NavType.IntType; defaultValue = -1 },
+                navArgument("condition") { type = NavType.StringType; nullable = true; defaultValue = null }
+            )
         ) { entry ->
-            MapSearchScreen(navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente")
-        }    }
+            MapSearchScreen(
+                navController = navController,
+                idUtente = entry.arguments?.getString("idUtente") ?: "utente", // Fallback
+                comune = entry.arguments?.getString("comune") ?: "Napoli",     // Fallback
+                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"   // Fallback
+                // MapSearchScreen leggerà gli altri filtri da entry.arguments al suo interno
+            )
+        }
+
+        composable(
+            // La rotta di SearchTypeSelectionScreen DEVE corrispondere a come viene costruita
+            // e i nomi dei path parameters qui ({idUtente}, {comune}, {ricerca})
+            // devono corrispondere a quelli usati in buildRoute per i path.
+            route = Screen.SearchTypeSelectionScreen.route + "/{idUtente}/{comune}/{ricerca}" +
+                    "?purchaseType={purchaseType}&minPrice={minPrice}&maxPrice={maxPrice}" +
+                    "&minSurface={minSurface}&maxSurface={maxSurface}&minRooms={minRooms}" +
+                    "&maxRooms={maxRooms}&bathrooms={bathrooms}&condition={condition}",
+            arguments = listOf(
+                // Path arguments (DEVONO corrispondere ai nomi nella stringa route qui sopra)
+                navArgument("idUtente") { type = NavType.StringType }, // Rimosso defaultValue se sempre fornito
+                navArgument("comune") { type = NavType.StringType },
+                navArgument("ricerca") { type = NavType.StringType },
+                // Query arguments (opzionali)
+                navArgument("purchaseType") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("minPrice") { type = NavType.FloatType; defaultValue = -1f },
+                navArgument("maxPrice") { type = NavType.FloatType; defaultValue = -1f },
+                navArgument("minSurface") { type = NavType.FloatType; defaultValue = -1f },
+                navArgument("maxSurface") { type = NavType.FloatType; defaultValue = -1f },
+                navArgument("minRooms") { type = NavType.IntType; defaultValue = -1 },
+                navArgument("maxRooms") { type = NavType.IntType; defaultValue = -1 },
+                navArgument("bathrooms") { type = NavType.IntType; defaultValue = -1 },
+                navArgument("condition") { type = NavType.StringType; nullable = true; defaultValue = null }
+            )
+        ) { entry ->
+            SearchTypeSelectionScreen(
+                navController = navController,
+                idUtente = entry.arguments?.getString("idUtente") ?: "utente", // Fallback
+                comune = entry.arguments?.getString("comune") ?: "Napoli",     // Fallback
+                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"   // Fallback
+                // SearchTypeSelectionScreen leggerà gli altri filtri da entry.arguments al suo interno
+            )
+        }
+    }
 }

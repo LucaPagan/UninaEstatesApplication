@@ -47,7 +47,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
         bottomBar = {
             AppBottomNavigation(navController = navController, idUtente = idUtente)
         }
-    ) { paddingValuesScaffold -> // Questi paddingValues INCLUDONO già il padding per la status bar
+    ) { paddingValuesScaffold ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
