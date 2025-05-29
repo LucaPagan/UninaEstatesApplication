@@ -1,147 +1,108 @@
 package com.dieti.dietiestates25.ui.screen
 
-import android.app.Activity
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign // Importato se usato
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.ui.model.FilterModel // Assicurati che il path sia corretto
+import com.dieti.dietiestates25.R
+import com.dieti.dietiestates25.ui.components.PropertyPreviewInfoWindow
+import com.dieti.dietiestates25.ui.model.FilterModel
+import com.dieti.dietiestates25.ui.model.PropertyMarker
+import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.ui.theme.Typography // Assicurati che il path sia corretto
-import com.dieti.dietiestates25.ui.utils.findActivity // La tua funzione helper
-import com.google.android.gms.maps.CameraUpdateFactory // <<-- IMPORT AGGIUNTO
+import com.dieti.dietiestates25.ui.utils.capitalizeFirstLetter
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
-import kotlinx.coroutines.launch // <<-- IMPORT AGGIUNTO per launch
-
-// Data class per i marker delle proprietà (mantenuta per l'esempio)
-data class PropertyMarker(
-    val position: LatLng,
-    val title: String,
-    val price: String,
-    val type: String
-)
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapSearchScreen(
     navController: NavController,
-    idUtente: String
+    idUtente: String,
+    comune: String,
+    ricerca: String,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
+    val context = LocalContext.current
 
     // Stato per la mappa
-    val napoli = LatLng(40.8518, 14.2681)
+    val initialMapCenter = remember(comune) { LatLng(40.8518, 14.2681) } // Default: Napoli
+    val initialMapZoom = 12f
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(napoli, 12f)
+        position = CameraPosition.fromLatLngZoom(initialMapCenter, initialMapZoom)
     }
 
-    // Stati per la ricerca e i filtri
-    var searchQuery by remember { mutableStateOf("") }
+    // Stati per i filtri
     var showFilterSheet by remember { mutableStateOf(false) }
-    var appliedFilters by remember { mutableStateOf<FilterModel?>(null) } // Per il badge
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    var initialFiltersFromNav = remember(currentBackStackEntry) {
+        currentBackStackEntry?.arguments?.let { args ->
+            val pType = args.getString("purchaseType")
+            val mPrice = args.getFloat("minPrice").takeIf { it != -1f && it != 0f }
+            val mxPrice = args.getFloat("maxPrice").takeIf { it != -1f }
+            val mSurf = args.getFloat("minSurface").takeIf { it != -1f && it != 0f }
+            val mxSurf = args.getFloat("maxSurface").takeIf { it != -1f }
+            val mRooms = args.getInt("minRooms").takeIf { it != -1 }
+            val mxRooms = args.getInt("maxRooms").takeIf { it != -1 }
+            val baths = args.getInt("bathrooms").takeIf { it != -1 }
+            val cond = args.getString("condition")
 
-    val focusRequester = remember { FocusRequester() }
-    val focusManager = LocalFocusManager.current
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val coroutineScope = rememberCoroutineScope() // <<-- AGGIUNTO CoroutineScope
-
-    // Proprietà di esempio per i marker
-    val sampleProperties = remember {
-        listOf(
-            PropertyMarker(LatLng(40.8518, 14.2681), "Appartamento Centro", "€850/mese", "2 locali"),
-            PropertyMarker(LatLng(40.8400, 14.2500), "Monolocale Vomero", "€650/mese", "1 locale"),
-            PropertyMarker(LatLng(40.8600, 14.2800), "Trilocale Chiaia", "€1200/mese", "3 locali")
-        )
+            if (pType != null || mPrice != null || mxPrice != null || mSurf != null || mxSurf != null || mRooms != null || mxRooms != null || baths != null || cond != null) {
+                FilterModel(
+                    purchaseType = pType, minPrice = mPrice, maxPrice = mxPrice,
+                    minSurface = mSurf, maxSurface = mxSurf, minRooms = mRooms,
+                    maxRooms = mxRooms, bathrooms = baths, condition = cond
+                )
+            } else { null }
+        }
     }
 
-    // Gestione Status Bar
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            val activity = view.context.findActivity()
-            activity?.window?.let { window ->
-                window.statusBarColor = colorScheme.primary.toArgb() // Colore primario per la status bar
-                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false // Icone chiare
-            }
-        }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Lista delle proprietà da mostrare
+    val propertiesToDisplay = remember(comune, ricerca, initialFiltersFromNav) {
+        listOf(
+            PropertyMarker("1", LatLng(40.8518, 14.2681), "Appartamento Centro Storico", "€850/mese", "2 locali", R.drawable.ic_launcher_foreground),
+            PropertyMarker("2", LatLng(40.8400, 14.2500), "Monolocale Vomero", "€650/mese", "1 locale", R.drawable.ic_launcher_foreground),
+            PropertyMarker("3", LatLng(40.8600, 14.2800), "Trilocale Chiaia", "€1200/mese", "3 locali", R.drawable.ic_launcher_foreground)
+        ).filter { true }
     }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
 
     Scaffold(
-        modifier = Modifier.statusBarsPadding(), // Padding per la status bar
+        modifier = Modifier.statusBarsPadding(),
         topBar = {
             TopAppBar(
                 title = {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = { Text("Cerca indirizzo, città...") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(focusRequester)
-                            .height(dimensions.buttonHeight - dimensions.spacingMedium), // Altezza più contenuta
-                        shape = CircleShape,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = colorScheme.onPrimary,
-                            unfocusedTextColor = colorScheme.onPrimary.copy(alpha = 0.9f),
-                            cursorColor = colorScheme.onPrimary,
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent,
-                            focusedContainerColor = colorScheme.onPrimary.copy(alpha = 0.15f),
-                            unfocusedContainerColor = colorScheme.onPrimary.copy(alpha = 0.15f),
-                            focusedLeadingIconColor = colorScheme.onPrimary,
-                            unfocusedLeadingIconColor = colorScheme.onPrimary.copy(alpha = 0.7f),
-                            focusedPlaceholderColor = colorScheme.onPrimary.copy(alpha = 0.7f),
-                            unfocusedPlaceholderColor = colorScheme.onPrimary.copy(alpha = 0.7f)
-                        ),
-                        leadingIcon = {
-                            Icon(Icons.Default.Search, contentDescription = "Icona Cerca")
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(onSearch = {
-                            if (searchQuery.isNotBlank()) {
-                                keyboardController?.hide()
-                                focusManager.clearFocus()
-                                // TODO: Implementa la logica di ricerca sulla mappa (geocoding + fetch properties)
-                                println("Avvio ricerca mappa per: $searchQuery")
-                                // Esempio: muovi la camera (dovrai implementare geocoding)
-                                // coroutineScope.launch {
-                                // cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(LatLng(NEW_LAT, NEW_LON), 15f))
-                                // }
-                            }
-                        })
+                    Text(
+                        text = comune.capitalizeFirstLetter() +
+                                if (ricerca.isNotBlank() && ricerca.lowercase() != comune.lowercase()) {
+                                    " - ${ricerca.capitalizeFirstLetter()}"
+                                } else { "" },
+                        style = typography.titleMedium,
+                        color = colorScheme.onPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
                 navigationIcon = {
@@ -162,7 +123,7 @@ fun MapSearchScreen(
                                 tint = colorScheme.onPrimary
                             )
                         }
-                        if (appliedFilters != null) {
+                        if (initialFiltersFromNav != null) {
                             Badge(
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
@@ -173,14 +134,13 @@ fun MapSearchScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorScheme.primary,
+                    containerColor = colorScheme.primary
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    // TODO: Implementa la logica per ottenere la posizione corrente e centrare la mappa
                     println("FAB Posizione Corrente cliccato")
                 },
                 containerColor = colorScheme.secondaryContainer,
@@ -198,8 +158,8 @@ fun MapSearchScreen(
                 .fillMaxSize(),
             cameraPositionState = cameraPositionState,
             properties = MapProperties(
-                isMyLocationEnabled = false, // TODO: Gestisci permesso e abilita se concesso
-                mapType = MapType.NORMAL,
+                isMyLocationEnabled = false,
+                mapType = MapType.NORMAL
             ),
             uiSettings = MapUiSettings(
                 myLocationButtonEnabled = false,
@@ -208,36 +168,55 @@ fun MapSearchScreen(
                 compassEnabled = true
             ),
             onMapClick = { latLng ->
-                println("Mappa cliccata: $latLng")
-                // TODO: Potresti voler fare reverse geocoding o mostrare info
+                println("Mappa cliccata in posizione: $latLng")
             },
             onPOIClick = { poi ->
-                println("POI Cliccato: ${poi.name} at ${poi.latLng}")
+                println("POI Cliccato: ${poi.name} @ ${poi.latLng}")
             }
         ) {
-            sampleProperties.forEach { property ->
-                Marker(
+            propertiesToDisplay.forEach { property ->
+                MarkerInfoWindowContent(
                     state = MarkerState(position = property.position),
                     title = property.title,
                     snippet = "${property.price} - ${property.type}",
+                    onInfoWindowClick = {
+                        println("InfoWindow di default cliccata per: ${property.title}")
+                    },
                     onClick = { marker ->
-                        println("Marker cliccato: ${marker.title}")
-                        coroutineScope.launch { // <<-- CORREZIONE QUI
-                            cameraPositionState.animate(CameraUpdateFactory.newLatLng(marker.position), 500)
+                        println("Marker '${marker.title}' cliccato. Mostro InfoWindow custom.")
+                        coroutineScope.launch {
+                            cameraPositionState.animate(
+                                CameraUpdateFactory.newLatLngZoom(marker.position, 15f),
+                                700
+                            )
                         }
-                        true // Consuma l'evento di click
+                        false
                     }
-                )
+                ) { marker ->
+                    PropertyPreviewInfoWindow(
+                        property = property,
+                        onClick = {
+                            navController.navigate(Screen.PropertyScreen.withId(property.id))
+                        },
+                        dimensions = dimensions,
+                        typography = typography,
+                        colorScheme = colorScheme
+                    )
+                }
             }
         }
     }
 
+    // ModalBottomSheet per i Filtri
     if (showFilterSheet) {
         ModalBottomSheet(
             onDismissRequest = { showFilterSheet = false },
             sheetState = sheetState,
             containerColor = colorScheme.background,
-            shape = RoundedCornerShape(topStart = dimensions.cornerRadiusLarge, topEnd = dimensions.cornerRadiusLarge),
+            shape = RoundedCornerShape(
+                topStart = dimensions.cornerRadiusLarge,
+                topEnd = dimensions.cornerRadiusLarge
+            ),
             scrimColor = Color.Black.copy(alpha = 0.32f)
         ) {
             Box(
@@ -250,13 +229,13 @@ fun MapSearchScreen(
                 SearchFilterScreen(
                     navController = navController,
                     idUtente = idUtente,
-                    comune = "",
-                    ricercaQueryText = searchQuery,
+                    comune = comune,
+                    ricercaQueryText = ricerca,
                     onNavigateBack = { showFilterSheet = false },
                     onApplyFilters = { filterData ->
-                        appliedFilters = filterData
+                        initialFiltersFromNav = filterData
                         showFilterSheet = false
-                        println("Filtri da applicare dalla mappa: $filterData")
+                        println("MapSearchScreen - Filtri da applicare: $filterData")
                     },
                     isFullScreenContext = false
                 )
@@ -271,7 +250,9 @@ fun MapSearchScreenPreview() {
     DietiEstatesTheme {
         MapSearchScreen(
             navController = rememberNavController(),
-            idUtente = "previewUser"
+            idUtente = "previewUser",
+            comune = "Napoli",
+            ricerca = "Centro", // Nome parametro corretto
         )
     }
 }
