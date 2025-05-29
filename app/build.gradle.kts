@@ -108,4 +108,5 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.androidx.core.ktx.v1100)
     implementation(libs.androidx.activity.ktx)
+    implementation(libs.accompanist.permissions)
 }
