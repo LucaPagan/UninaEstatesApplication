@@ -1,12 +1,13 @@
 package com.dieti.dietiestates25.ui.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.dieti.dietiestates25.ui.model.FilterModel // Assicurati che il path sia corretto
 import com.dieti.dietiestates25.ui.screen.ApartmentListingScreen
 import com.dieti.dietiestates25.ui.screen.HomeScreen
 // ... (altri import delle tue schermate)
@@ -17,6 +18,7 @@ import com.dieti.dietiestates25.ui.screen.PropertySellScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.PropertyScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.PriceProposalScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.AppointmentBookingScreen // Import mancante
+import com.dieti.dietiestates25.ui.screen.FullScreenMapScreen
 import com.dieti.dietiestates25.ui.screen.MapSearchScreen
 import com.dieti.dietiestates25.ui.screen.NotificationScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.NotificationDetailScreen // Import mancante
@@ -151,5 +153,51 @@ fun Navigation() {
             arguments = listOf(navArgument("idUtente") { type = NavType.StringType; defaultValue = "utente" })
         ) { entry ->
             MapSearchScreen(navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente")
-        }    }
+        }
+
+        composable(
+            route = Screen.FullScreenMapScreen.route + "/{lat}" + "/{lng}" + "/{zoom}", // Es: "fullscreen_map_screen/{lat}/{lng}/{zoom}"
+            arguments = listOf(
+                navArgument("lat") { type = NavType.StringType },
+                navArgument("lng") { type = NavType.StringType },
+                navArgument("zoom") { type = NavType.StringType }
+            ),
+            enterTransition = {
+                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(700))
+            },
+            exitTransition = {
+                slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(700))
+            },
+            popEnterTransition = { // Animazione quando si torna indietro ALLA SCHERMATA PRECEDENTE (non a questa)
+                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(700))
+            },
+            popExitTransition = { // Animazione quando si esce da QUESTA schermata tornando indietro
+                slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(700))
+            }
+        ) { navBackStackEntry ->
+            val latitudeString = navBackStackEntry.arguments?.getString("lat")
+            val longitudeString = navBackStackEntry.arguments?.getString("lng")
+            val zoomString = navBackStackEntry.arguments?.getString("zoom")
+
+            if (latitudeString != null && longitudeString != null && zoomString != null) {
+                val latitude = latitudeString.toDoubleOrNull()
+                val longitude = longitudeString.toDoubleOrNull()
+                val zoom = zoomString.toFloatOrNull()
+
+                if (latitude != null && longitude != null && zoom != null) {
+                    FullScreenMapScreen(
+                        navController = navController,
+                        latitude = latitude,
+                        longitude = longitude,
+                        initialZoom = zoom
+                    )
+                } else {
+                    navController.popBackStack()
+                }
+            } else {
+                navController.popBackStack()
+            }
+        }
+    }
 }
+

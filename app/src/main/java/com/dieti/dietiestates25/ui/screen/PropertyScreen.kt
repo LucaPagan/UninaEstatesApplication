@@ -1,7 +1,7 @@
 package com.dieti.dietiestates25.ui.screen
 
 import com.dieti.dietiestates25.R
-import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.navigation.Screen // Assicurati che punti al tuo file Screen
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppSecondaryButton
@@ -12,7 +12,6 @@ import kotlinx.coroutines.CoroutineScope
 
 import android.content.Intent
 import android.content.res.Configuration
-import android.util.Log // Utile per il debug
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,10 +29,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -46,7 +42,6 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,16 +65,16 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MapType
-import com.google.android.gms.maps.CameraUpdateFactory
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.foundation.BorderStroke
+import com.dieti.dietiestates25.ui.components.AppPropertyCard
+import com.dieti.dietiestates25.ui.components.PropertyShowcaseSection
+import com.dieti.dietiestates25.ui.model.modelsource.sampleListingProperties
+import androidx.compose.ui.graphics.toArgb
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import android.graphics.Color as AndroidGraphicsColor // Alias per evitare conflitti
 
-// ... (tutti gli import rimangono gli stessi, assicurati che Dialog e DialogProperties siano importati)
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-// ... (altri import)
-import androidx.compose.material3.Surface // Aggiunto per il contenuto del Dialog
+
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -103,17 +98,14 @@ fun PropertyScreen(
 
     val propertyCoordinates = LatLng(40.8518, 14.2681) // Esempio Napoli
     var isMapInteractive by remember { mutableStateOf(false) }
-    var showFullscreenMap by remember { mutableStateOf(false) }
     var isPageScrollEnabled by remember { mutableStateOf(true) }
 
     val initialZoomMiniMap = 12f
-    val zoomForFullscreenMap = 15f
+    val zoomForFullscreenNavigation = 15f // Zoom da passare alla nuova schermata
 
     val cameraPositionStateMiniMap = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(propertyCoordinates, initialZoomMiniMap)
     }
-    // NON creiamo più cameraPositionStateFullscreen qui se FullscreenMapDialog lo gestisce internamente.
-    // Se invece vuoi tenerlo per altri usi, va bene, ma non lo passeremo al Dialog.
 
     val onMapInteractionStart = {
         if (!isMapInteractive) {
@@ -129,9 +121,7 @@ fun PropertyScreen(
         }
     }
 
-    Scaffold(
-        topBar = { Box {} }
-    ) { innerPadding ->
+    Scaffold { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -171,8 +161,13 @@ fun PropertyScreen(
                         isMapInteractive = isMapInteractive,
                         onMapInteractionStart = onMapInteractionStart,
                         onFullscreenClick = {
-                            Log.d("PropertyScreen", "Fullscreen button clicked. Setting showFullscreenMap = true")
-                            showFullscreenMap = true
+                            navController.navigate(
+                                Screen.FullScreenMapScreen.withPosition(
+                                    latitude = propertyCoordinates.latitude,
+                                    longitude = propertyCoordinates.longitude,
+                                    zoom = zoomForFullscreenNavigation
+                                )
+                            )
                         },
                         colorScheme = colorScheme,
                         typography = typography,
@@ -189,34 +184,42 @@ fun PropertyScreen(
                     ReportAdSection(colorScheme, typography, dimensions)
                 }
                 item {
-                    SimilarListingsSection(navController, colorScheme, typography, dimensions)
-                }
-                item {
-                    Spacer(modifier = Modifier.height(dimensions.paddingExtraLarge * 2 + dimensions.paddingMedium))
+                    PropertyShowcaseSection(
+                        title = "Appartamenti Simili",
+                        items = sampleListingProperties,
+                        itemContent = { property ->
+                            AppPropertyCard(
+                                modifier = Modifier
+                                    .width(240.dp)
+                                    .height(210.dp),
+                                price = property.price,
+                                imageResId = property.imageRes,
+                                address = property.location,
+                                details = listOf(property.type),
+                                onClick = {
+                                    navController.navigate(Screen.PropertyScreen.route)
+                                },
+                                actionButton = null,
+                                horizontalMode = false,
+                                imageHeightVerticalRatio = 0.55f,
+                                elevationDp = Dimensions.elevationSmall
+                            )
+                        },
+                        onSeeAllClick = {
+                            navController.navigate(
+                                Screen.ApartmentListingScreen.buildRoute(
+                                    idUtentePath = "",
+                                    comunePath = "",
+                                    ricercaPath = ""
+                                )
+                            )
+                        },
+                        listContentPadding = PaddingValues(horizontal = dimensions.paddingLarge)
+                    )
                 }
             }
 
             PropertyTopAppBar(colorScheme, navController, dimensions)
-
-            if (showFullscreenMap) {
-                FullscreenMapDialog(
-                    initialPropertyCoordinates = propertyCoordinates,
-                    initialZoom = zoomForFullscreenMap,
-                    // NESSUN cameraPositionState esterno passato qui
-                    onDismiss = {
-                        showFullscreenMap = false
-                        if (isMapInteractive) {
-                            onMapInteractionEnd()
-                        } else {
-                            isPageScrollEnabled = true
-                        }
-                        Log.d("PropertyScreen", "FullscreenMapDialog dismissed.")
-                    },
-                    colorScheme = colorScheme,
-                    typography = typography,
-                    dimensions = dimensions
-                )
-            }
         }
     }
 }
@@ -227,11 +230,22 @@ private fun MiniMapSection(
     cameraPositionState: CameraPositionState,
     isMapInteractive: Boolean,
     onMapInteractionStart: () -> Unit,
-    onFullscreenClick: () -> Unit,
+    onFullscreenClick: () -> Unit, // Questa ora scatena la navigazione
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions
 ) {
+    val primaryColor = colorScheme.primary
+    val markerHue = remember(primaryColor) {
+        val hsv = FloatArray(3)
+        // Usiamo AndroidGraphicsColor.colorToHSV perché lavora con int ARGB
+        AndroidGraphicsColor.colorToHSV(primaryColor.toArgb(), hsv)
+        hsv[0] // Estraiamo la tonalità (hue)
+    }
+    val customMarkerIcon = remember(markerHue) {
+        BitmapDescriptorFactory.defaultMarker(markerHue)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -302,7 +316,7 @@ private fun MiniMapSection(
                 }
             }
             CircularIconActionButton(
-                onClick = onFullscreenClick,
+                onClick = onFullscreenClick, // Questo ora naviga
                 iconVector = Icons.Filled.Fullscreen,
                 contentDescription = "Mappa a schermo intero",
                 modifier = Modifier
@@ -320,116 +334,6 @@ private fun MiniMapSection(
             color = colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = dimensions.spacingSmall)
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FullscreenMapDialog(
-    initialPropertyCoordinates: LatLng,
-    initialZoom: Float,
-    // cameraPositionState: CameraPositionState, // RIMOSSO DAI PARAMETRI
-    onDismiss: () -> Unit,
-    colorScheme: ColorScheme,
-    typography: Typography,
-    dimensions: Dimensions
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            dismissOnBackPress = true,
-            dismissOnClickOutside = false
-        )
-    ) {
-        // Crea e ricorda lo stato della camera INTERNAMENTE
-        val cameraPositionState = rememberCameraPositionState {
-            position = CameraPosition.fromLatLngZoom(initialPropertyCoordinates, initialZoom)
-        }
-        var isMapLoaded by remember { mutableStateOf(false) }
-
-        LaunchedEffect(isMapLoaded, initialPropertyCoordinates, initialZoom, cameraPositionState) {
-            // Questo `LaunchedEffect` ora si riferisce al `cameraPositionState` interno.
-            // Le chiavi initialPropertyCoordinates e initialZoom sono importanti se vuoi
-            // che la mappa si ri-centri se questi parametri dovessero cambiare mentre
-            // il dialogo è aperto (improbabile nel tuo scenario attuale, ma buona pratica).
-            if (isMapLoaded) {
-                // Se la posizione iniziale è già stata impostata da rememberCameraPositionState,
-                // questo LaunchedEffect potrebbe non aver bisogno di muovere la camera di nuovo,
-                // a meno che tu non voglia assicurarti che si resetti ogni volta o applicare un'animazione.
-                // Per sicurezza, o per un'animazione all'apertura:
-                val targetCameraPosition = CameraPosition.fromLatLngZoom(initialPropertyCoordinates, initialZoom)
-                Log.d("FullscreenMapDialog", "LaunchedEffect (map is loaded, internal state): Attempting to animate camera to $targetCameraPosition")
-                try {
-                    cameraPositionState.animate(CameraUpdateFactory.newCameraPosition(targetCameraPosition), 700)
-                    Log.d("FullscreenMapDialog", "LaunchedEffect (map is loaded, internal state): Camera animation initiated.")
-                } catch (e: Exception) {
-                    Log.e("FullscreenMapDialog", "LaunchedEffect (map is loaded, internal state): Error animating camera", e)
-                }
-            } else {
-                Log.d("FullscreenMapDialog", "LaunchedEffect (internal state): Waiting for onMapLoaded callback.")
-            }
-        }
-
-        Surface(modifier = Modifier.fillMaxSize()) {
-            Scaffold(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-                    .navigationBarsPadding(),
-                containerColor = colorScheme.background,
-                topBar = {
-                    TopAppBar(
-                        title = { Text("Mappa Proprietà", color = colorScheme.onPrimary) },
-                        navigationIcon = {
-                            CircularIconActionButton(
-                                onClick = onDismiss,
-                                iconVector = Icons.Filled.Close,
-                                contentDescription = "Chiudi mappa",
-                                backgroundColor = Color.Transparent,
-                                iconTint = colorScheme.onPrimary,
-                                buttonSize = dimensions.iconSizeExtraLarge,
-                                iconSize = dimensions.iconSizeMedium,
-                                modifier = Modifier.padding(start = dimensions.spacingExtraSmall)
-                            )
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary)
-                    )
-                }
-            ) { paddingValues ->
-                GoogleMap(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
-                    cameraPositionState = cameraPositionState, // Usa lo stato INTERNO
-                    properties = MapProperties(
-                        mapType = MapType.NORMAL,
-                        isMyLocationEnabled = true,
-                        isBuildingEnabled = true,
-                        isTrafficEnabled = true,
-                        minZoomPreference = 8f,
-                        maxZoomPreference = 20f
-                    ),
-                    uiSettings = MapUiSettings(
-                        zoomControlsEnabled = true,
-                        compassEnabled = true,
-                        mapToolbarEnabled = true,
-                        myLocationButtonEnabled = true,
-                        scrollGesturesEnabled = true,
-                        zoomGesturesEnabled = true,
-                        tiltGesturesEnabled = true,
-                        rotationGesturesEnabled = true
-                    ),
-                    onMapLoaded = {
-                        Log.d("FullscreenMapDialog", "GoogleMap (internal state): onMapLoaded triggered.")
-                        isMapLoaded = true
-                    }
-                ) {
-                    Marker(
-                        state = MarkerState(position = initialPropertyCoordinates),
-                        title = "Posizione Proprietà"
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -721,124 +625,24 @@ fun ReportAdSection(colorScheme: ColorScheme, typography: Typography, dimensions
             .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingLarge),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        DecorativeLine(colorScheme = colorScheme, isTop = true, dimensions = dimensions)
         Button(
             onClick = { /* TODO: Logica per segnalare annuncio */ },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .height(dimensions.buttonHeight)
+                .fillMaxWidth(),
             shape = RoundedCornerShape(dimensions.cornerRadiusSmall),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorScheme.surface,
                 contentColor = colorScheme.error
             ),
-            border = BorderStroke(1.dp, colorScheme.error.copy(alpha = 0.5f))
+            border = BorderStroke(1.dp, colorScheme.error.copy(alpha = 0.5f)),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = dimensions.elevationSmall,
+                pressedElevation = dimensions.elevationMedium
+            )
         ) {
             Icon(Icons.Default.WarningAmber, "Report", tint = colorScheme.error, modifier = Modifier.size(dimensions.iconSizeSmall))
             Text("Segnala Annuncio", color = colorScheme.error, style = typography.labelMedium, modifier = Modifier.padding(start = dimensions.paddingSmall))
-        }
-        DecorativeLine(colorScheme = colorScheme, isTop = false, dimensions = dimensions)
-    }
-}
-
-@Composable
-fun DecorativeLine(colorScheme: ColorScheme, isTop: Boolean, dimensions: Dimensions) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth(0.7f)
-            .height(1.dp)
-            .background(brush = Brush.horizontalGradient(colors = listOf(Color.Transparent, colorScheme.outline.copy(alpha = 0.6f), Color.Transparent)))
-            .padding(top = if(isTop) 0.dp else dimensions.paddingExtraSmall, bottom = if(isTop) dimensions.paddingExtraSmall else 0.dp)
-    )
-}
-
-@Composable
-fun SimilarListingsSection(
-    navController: NavController,
-    colorScheme: ColorScheme,
-    typography: Typography,
-    dimensions: Dimensions
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = dimensions.paddingMedium)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = dimensions.paddingMedium)
-                .padding(bottom = dimensions.spacingSmall),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Annunci simili",
-                style = typography.titleMedium,
-                color = colorScheme.onBackground
-            )
-            TextButton(onClick = { navController.navigate(Screen.ApartmentListingScreen.withArgs("", "")) }) {
-                Text("Vedi tutti", style = typography.labelLarge, color = colorScheme.primary)
-            }
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = dimensions.paddingMedium),
-            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
-        ) {
-            repeat(7) { index ->
-                SimilarPropertyCard(
-                    price = if (index == 0) "400.000 €" else "${300 + index * 50}.000 €",
-                    modifier = Modifier
-                        .width(200.dp)
-                        .height(150.dp),
-                    navController = navController,
-                    colorScheme = colorScheme,
-                    dimensions = dimensions,
-                    typography = typography
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun SimilarPropertyCard(
-    navController: NavController,
-    price: String,
-    modifier: Modifier = Modifier,
-    colorScheme: ColorScheme,
-    dimensions: Dimensions,
-    typography: Typography
-) {
-    Card(
-        modifier = modifier.clickable { navController.navigate(Screen.PropertyScreen.route) },
-        shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
-        elevation = CardDefaults.cardElevation(dimensions.cardDefaultElevation)
-    ) {
-        Box {
-            Image(painterResource(R.drawable.property1), "Similar Property", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.4f)
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)),
-                            startY = 0f,
-                            endY = Float.POSITIVE_INFINITY
-                        )
-                    )
-            )
-            Text(
-                text = price,
-                color = Color.White,
-                style = typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(dimensions.paddingSmall)
-            )
         }
     }
 }
