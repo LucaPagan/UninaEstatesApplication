@@ -19,6 +19,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.components.PropertyPreviewInfoWindow
+import com.dieti.dietiestates25.ui.components.CustomPriceMarker
 import com.dieti.dietiestates25.ui.model.FilterModel
 import com.dieti.dietiestates25.ui.model.PropertyMarker
 import com.dieti.dietiestates25.ui.navigation.Screen
@@ -78,12 +79,53 @@ fun MapSearchScreen(
 
     val coroutineScope = rememberCoroutineScope()
 
-    // Lista delle proprietà da mostrare
+    // Stato per gestire il marker selezionato e la sua preview
+    var selectedProperty by remember { mutableStateOf<PropertyMarker?>(null) }
+
+    // Stato per il livello di zoom corrente
+    val currentZoom by remember {
+        derivedStateOf { cameraPositionState.position.zoom }
+    }
+
+    // Lista delle proprietà da mostrare con dati più completi
     val propertiesToDisplay = remember(comune, ricerca, initialFiltersFromNav) {
         listOf(
-            PropertyMarker("1", LatLng(40.8518, 14.2681), "Appartamento Centro Storico", "€850/mese", "2 locali", R.drawable.ic_launcher_foreground),
-            PropertyMarker("2", LatLng(40.8400, 14.2500), "Monolocale Vomero", "€650/mese", "1 locale", R.drawable.ic_launcher_foreground),
-            PropertyMarker("3", LatLng(40.8600, 14.2800), "Trilocale Chiaia", "€1200/mese", "3 locali", R.drawable.ic_launcher_foreground)
+            PropertyMarker(
+                id = "1",
+                position = LatLng(40.8518, 14.2681),
+                title = "Appartamento Centro Storico",
+                price = "€850/mese",
+                type = "2 locali",
+                imageRes = PropertyMarker.getPropertyImage("1"), // property1
+                description = "Splendido appartamento nel cuore del centro storico di Napoli",
+                surface = "85 m²",
+                bathrooms = 1,
+                bedrooms = 2
+            ),
+            PropertyMarker(
+                id = "2",
+                position = LatLng(40.8400, 14.2500),
+                title = "Monolocale Vomero",
+                price = "€650/mese",
+                type = "1 locale",
+                imageRes = PropertyMarker.getPropertyImage("2"), // property2
+                description = "Accogliente monolocale nella zona residenziale del Vomero",
+                surface = "45 m²",
+                bathrooms = 1,
+                bedrooms = 1
+            ),
+            PropertyMarker(
+                id = "3",
+                position = LatLng(40.8600, 14.2800),
+                title = "Trilocale Chiaia",
+                price = "€1200/mese",
+                type = "3 locali",
+                imageRes = PropertyMarker.getPropertyImage("3"), // property1 come fallback
+                description = "Elegante trilocale nella prestigiosa zona di Chiaia",
+                surface = "120 m²",
+                bathrooms = 2,
+                bedrooms = 3
+            )
         ).filter { true }
     }
 
@@ -152,57 +194,84 @@ fun MapSearchScreen(
         },
         floatingActionButtonPosition = FabPosition.End
     ) { innerPadding ->
-        GoogleMap(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize(),
-            cameraPositionState = cameraPositionState,
-            properties = MapProperties(
-                isMyLocationEnabled = false,
-                mapType = MapType.NORMAL
-            ),
-            uiSettings = MapUiSettings(
-                myLocationButtonEnabled = false,
-                zoomControlsEnabled = true,
-                mapToolbarEnabled = false,
-                compassEnabled = true
-            ),
-            onMapClick = { latLng ->
-                println("Mappa cliccata in posizione: $latLng")
-            },
-            onPOIClick = { poi ->
-                println("POI Cliccato: ${poi.name} @ ${poi.latLng}")
-            }
-        ) {
-            propertiesToDisplay.forEach { property ->
-                MarkerInfoWindowContent(
-                    state = MarkerState(position = property.position),
-                    title = property.title,
-                    snippet = "${property.price} - ${property.type}",
-                    onInfoWindowClick = {
-                        println("InfoWindow di default cliccata per: ${property.title}")
-                    },
-                    onClick = { marker ->
-                        println("Marker '${marker.title}' cliccato. Mostro InfoWindow custom.")
-                        coroutineScope.launch {
-                            cameraPositionState.animate(
-                                CameraUpdateFactory.newLatLngZoom(marker.position, 15f),
-                                700
+        Box(modifier = Modifier.fillMaxSize()) {
+            GoogleMap(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(
+                    isMyLocationEnabled = false,
+                    mapType = MapType.NORMAL
+                ),
+                uiSettings = MapUiSettings(
+                    myLocationButtonEnabled = false,
+                    zoomControlsEnabled = true,
+                    mapToolbarEnabled = false,
+                    compassEnabled = true
+                ),
+                onMapClick = { latLng ->
+                    // Nasconde la preview quando si clicca sulla mappa
+                    selectedProperty = null
+                    println("Mappa cliccata in posizione: $latLng")
+                },
+                onPOIClick = { poi ->
+                    println("POI Cliccato: ${poi.name} @ ${poi.latLng}")
+                }
+            ) {
+                // Mostra i marker solo se il livello di zoom è appropriato
+                if (currentZoom >= 10f) {
+                    propertiesToDisplay.forEach { property ->
+                        MarkerComposable(
+                            state = MarkerState(position = property.position),
+                            onClick = { marker ->
+                                println("Marker personalizzato '${property.title}' cliccato")
+                                selectedProperty = property
+                                coroutineScope.launch {
+                                    cameraPositionState.animate(
+                                        CameraUpdateFactory.newLatLngZoom(marker.position, 15f),
+                                        700
+                                    )
+                                }
+                                true // Consume il click per evitare comportamenti di default
+                            }
+                        ) {
+                            CustomPriceMarker(
+                                price = property.price,
+                                isSelected = selectedProperty?.id == property.id,
+                                colorScheme = colorScheme,
+                                typography = typography,
+                                // Scala il marker in base al livello di zoom
+                                scale = when {
+                                    currentZoom >= 15f -> 1f
+                                    currentZoom >= 13f -> 0.9f
+                                    currentZoom >= 11f -> 0.8f
+                                    else -> 0.7f
+                                }
                             )
                         }
-                        false
                     }
-                ) { marker ->
-                    PropertyPreviewInfoWindow(
-                        property = property,
-                        onClick = {
-                            navController.navigate(Screen.PropertyScreen.withId(property.id))
-                        },
-                        dimensions = dimensions,
-                        typography = typography,
-                        colorScheme = colorScheme
-                    )
                 }
+            }
+
+            // Preview della proprietà selezionata
+            selectedProperty?.let { property ->
+                PropertyPreviewInfoWindow(
+                    property = property,
+                    onClick = {
+                        navController.navigate(Screen.PropertyScreen.route)
+                    },
+                    onClose = {
+                        selectedProperty = null
+                    },
+                    dimensions = dimensions,
+                    typography = typography,
+                    colorScheme = colorScheme,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(dimensions.spacingMedium)
+                        .padding(bottom = dimensions.spacingLarge * 2) // Spazio per il FAB
+                )
             }
         }
     }

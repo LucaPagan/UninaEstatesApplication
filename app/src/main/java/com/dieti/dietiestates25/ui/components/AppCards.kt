@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.More // Per BADGE notifica
+import androidx.compose.material.icons.filled.Bathtub
 import androidx.compose.material.icons.filled.Person // Per PERSON notifica
 import androidx.compose.material.icons.filled.Phone // Per PHONE notifica
 import androidx.compose.material.icons.filled.Star
@@ -32,13 +33,23 @@ import java.util.Locale
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.BusinessCenter
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.SquareFoot
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
 import com.dieti.dietiestates25.ui.model.PropertyMarker
+import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.google.android.gms.maps.model.LatLng
 
 
 @Composable
@@ -426,59 +437,218 @@ fun AppPropertyCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PropertyPreviewInfoWindow(
     property: PropertyMarker,
-    onClick: () -> Unit, // Azione quando la preview viene cliccata
+    onClick: () -> Unit,
+    onClose: () -> Unit,
     dimensions: Dimensions,
     typography: Typography,
-    colorScheme: ColorScheme
+    colorScheme: ColorScheme,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
-            .widthIn(max = 300.dp) // Limita la larghezza della info window
-            .clickable(onClick = onClick), // Rende l'intera card cliccabile
-        shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
-        elevation = CardDefaults.cardElevation(defaultElevation = dimensions.elevationSmall),
-        colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier.padding(dimensions.paddingSmall),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Immagine Piccola (Opzionale ma carina per una preview)
-            Image(
-                painter = painterResource(id = property.imageRes),
-                contentDescription = "Immagine ${property.title}",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(60.dp) // Dimensione fissa per l'immagine nella preview
-                    .clip(RoundedCornerShape(dimensions.cornerRadiusSmall))
+        modifier = modifier
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(16.dp),
+                ambientColor = Color.Black.copy(alpha = 0.15f),
+                spotColor = Color.Black.copy(alpha = 0.15f)
             )
-            Spacer(modifier = Modifier.width(dimensions.spacingSmall))
-            Column {
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column {
+            // Header con immagine e pulsante chiudi
+            Box {
+                Image(
+                    painter = painterResource(id = property.imageRes),
+                    contentDescription = "Immagine proprietà",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                    contentScale = ContentScale.Crop
+                )
+
+                // Pulsante di chiusura
+                IconButton(
+                    onClick = onClose,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(32.dp)
+                        .background(
+                            color = Color.Black.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(50)
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Chiudi",
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                // Badge del prezzo
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(12.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    color = colorScheme.primary,
+                    shadowElevation = 2.dp
+                ) {
+                    Text(
+                        text = property.price,
+                        style = typography.labelMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        ),
+                        color = colorScheme.onPrimary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            // Contenuto della card
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Titolo e tipo
                 Text(
                     text = property.title,
-                    style = typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
+                    style = typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
                     color = colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Text(
-                    text = property.price,
-                    style = typography.bodyMedium,
-                    color = colorScheme.primary,
-                    fontWeight = FontWeight.Medium
-                )
+
                 Text(
                     text = property.type,
-                    style = typography.bodySmall,
-                    color = colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    style = typography.bodyMedium,
+                    color = colorScheme.onSurfaceVariant
+                )
+
+                // Descrizione
+                if (property.description.isNotEmpty()) {
+                    Text(
+                        text = property.description,
+                        style = typography.bodySmall,
+                        color = colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                // Caratteristiche
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (property.surface.isNotEmpty()) {
+                        PropertyFeature(
+                            icon = Icons.Default.SquareFoot,
+                            text = property.surface,
+                            colorScheme = colorScheme,
+                            typography = typography
+                        )
+                    }
+
+                    if (property.bathrooms > 0) {
+                        PropertyFeature(
+                            icon = Icons.Default.Bathtub,
+                            text = "${property.bathrooms}",
+                            colorScheme = colorScheme,
+                            typography = typography
+                        )
+                    }
+
+                    if (property.bedrooms > 0) {
+                        PropertyFeature(
+                            icon = Icons.Default.Home,
+                            text = "${property.bedrooms}",
+                            colorScheme = colorScheme,
+                            typography = typography
+                        )
+                    }
+                }
+
+                // Pulsante "Visualizza dettagli"
+                AppPrimaryButton(
+                    text = "Visualizza dettagli",
+                    onClick = onClick,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun PropertyFeature(
+    icon: ImageVector,
+    text: String,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = colorScheme.primary,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = text,
+            style = typography.bodySmall,
+            color = colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PropertyPreviewInfoWindowPreview() {
+    DietiEstatesTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            PropertyPreviewInfoWindow(
+                property = PropertyMarker(
+                    id = "1",
+                    position = LatLng(40.8518, 14.2681),
+                    title = "Appartamento Centro Storico",
+                    price = "€850/mese",
+                    type = "2 locali",
+                    imageRes = PropertyMarker.getPropertyImage("1"), // Usa property1
+                    description = "Splendido appartamento nel cuore del centro storico di Napoli con vista panoramica",
+                    surface = "85 m²",
+                    bathrooms = 1,
+                    bedrooms = 2
+                ),
+                onClick = { },
+                onClose = { },
+                dimensions = Dimensions,
+                typography = MaterialTheme.typography,
+                colorScheme = MaterialTheme.colorScheme
+            )
         }
     }
 }
