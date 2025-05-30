@@ -1,7 +1,18 @@
 package com.dieti.dietiestates25.ui.screen
+import com.dieti.dietiestates25.ui.components.CircularIconActionButton
+import com.dieti.dietiestates25.ui.theme.Dimensions
 
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.*
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+
+import android.Manifest
 import android.content.res.Configuration
 import android.util.Log
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -14,21 +25,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.ui.components.CircularIconActionButton
-import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.*
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import android.Manifest
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
+import com.dieti.dietiestates25.ui.components.AppCustomMapMarker
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -36,7 +40,8 @@ fun FullScreenMapScreen(
     navController: NavController,
     latitude: Double,
     longitude: Double,
-    initialZoom: Float
+    initialZoom: Float,
+
 ) {
     val dimensions = Dimensions
     val colorScheme = MaterialTheme.colorScheme
@@ -132,10 +137,18 @@ fun FullScreenMapScreen(
                         isMapLoaded = true
                     }
                 ) {
-                    Marker(
+                    MarkerComposable(
                         state = MarkerState(position = propertyCoordinates),
-                        title = "Posizione Proprietà"
-                    )
+                        title = "Posizione Proprietà",
+                        anchor = Offset(0.5f, 0.5f) // Centra l'icona, regola se necessario
+                    ) {
+                        // Qui usi il tuo AppCustomMapMarker (che disegna Box + AppIconDisplay)
+                        AppCustomMapMarker(
+                            tint = colorScheme.primary, // primaryColor definito in MiniMapSection
+                            iconSize = 36.dp,     // O la dimensione che preferisci
+                            dimensions = dimensions
+                        )
+                    }
                 }
             } else {
                 // Mostra un messaggio o un'interfaccia utente alternativa
@@ -165,6 +178,6 @@ fun FullScreenMapScreenPreview() {
         navController = rememberNavController(),
         latitude = 40.8518, // Napoli
         longitude = 14.2681,
-        initialZoom = 15f
+        initialZoom = 13f
     )
 }

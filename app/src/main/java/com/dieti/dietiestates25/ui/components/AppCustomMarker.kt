@@ -14,9 +14,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @Composable
 fun CustomPriceMarker(
@@ -89,6 +91,44 @@ fun CustomPriceMarker(
     }
 }
 
+/**
+ * Un Composable che definisce l'aspetto visivo di un'icona personalizzata per la mappa.
+ * Questo Composable verrà convertito in una Bitmap per essere usato come marker.
+ *
+ * @param modifier Modificatori standard di Compose.
+ * @param tint Il colore con cui tingere l'icona.
+ * @param iconSize La dimensione dell'icona (e del Box che la contiene).
+ */
+@Composable
+fun AppCustomMapMarker(
+    modifier: Modifier = Modifier,
+    tint: Color = MaterialTheme.colorScheme.primary,
+    iconSize: Dp = 48.dp, // Dimensione base, puoi renderla "molto grande"
+    scale: Float = 1f,
+    dimensions: Dimensions
+) {
+    Box(
+        modifier = modifier
+            .size(iconSize) // La dimensione base è definita qui
+            .then(
+                if (scale != 1f) { // Applica la scala se diversa da 1
+                    Modifier.graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    }
+                } else Modifier
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        AppIconDisplay(
+            size = 100.dp,
+            shapeRadius = dimensions.cornerRadiusLarge,
+            internalPadding = dimensions.paddingExtraSmall,
+            imageClipRadius = dimensions.cornerRadiusMedium
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun CustomPriceMarkerPreview() {
@@ -108,6 +148,9 @@ fun CustomPriceMarkerPreview() {
 
             Text("Marker con scala 0.6:")
             CustomPriceMarker(price = "€850/mese", scale = 0.6f)
+
+            Text("Icona casa:")
+            AppCustomMapMarker(dimensions = Dimensions)
         }
     }
 }
