@@ -21,6 +21,7 @@ import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.components.PropertyPreviewInfoWindow
 import com.dieti.dietiestates25.ui.components.CustomPriceMarker
 import com.dieti.dietiestates25.ui.model.FilterModel
+import com.dieti.dietiestates25.ui.model.FilterOriginScreen
 import com.dieti.dietiestates25.ui.model.PropertyMarker
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
@@ -44,6 +45,7 @@ fun MapSearchScreen(
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
     val context = LocalContext.current
+    val originScreen = FilterOriginScreen.MAP_SEARCH
 
     // Stato per la mappa
     val initialMapCenter = remember(comune) { LatLng(40.8518, 14.2681) } // Default: Napoli
@@ -306,7 +308,8 @@ fun MapSearchScreen(
                         showFilterSheet = false
                         println("MapSearchScreen - Filtri da applicare: $filterData")
                     },
-                    isFullScreenContext = false
+                    isFullScreenContext = false,
+                    originScreen = originScreen
                 )
             }
         }
