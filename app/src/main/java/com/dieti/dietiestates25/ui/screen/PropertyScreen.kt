@@ -1,17 +1,33 @@
 package com.dieti.dietiestates25.ui.screen
 
 import com.dieti.dietiestates25.R
-import com.dieti.dietiestates25.ui.navigation.Screen // Assicurati che punti al tuo file Screen
+import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppSecondaryButton
 import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.components.AppPropertyCard
+import com.dieti.dietiestates25.ui.components.PropertyShowcaseSection
+import com.dieti.dietiestates25.ui.model.modelsource.sampleListingProperties
+import com.dieti.dietiestates25.ui.components.AppCustomMapMarker
 
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineScope
 
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.CameraPositionState
+import com.google.maps.android.compose.MapType
+import com.google.maps.android.compose.MarkerComposable
+
 import android.content.Intent
 import android.content.res.Configuration
+import android.content.Context
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -54,25 +70,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.net.toUri
-
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
-import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.CameraPositionState
-import com.google.maps.android.compose.MapType
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.foundation.BorderStroke
-import com.dieti.dietiestates25.ui.components.AppPropertyCard
-import com.dieti.dietiestates25.ui.components.PropertyShowcaseSection
-import com.dieti.dietiestates25.ui.model.modelsource.sampleListingProperties
-import androidx.compose.ui.graphics.toArgb
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import android.graphics.Color as AndroidGraphicsColor // Alias per evitare conflitti
+import androidx.compose.ui.geometry.Offset
 
 
 
@@ -235,17 +235,6 @@ private fun MiniMapSection(
     typography: Typography,
     dimensions: Dimensions
 ) {
-    val primaryColor = colorScheme.primary
-    val markerHue = remember(primaryColor) {
-        val hsv = FloatArray(3)
-        // Usiamo AndroidGraphicsColor.colorToHSV perché lavora con int ARGB
-        AndroidGraphicsColor.colorToHSV(primaryColor.toArgb(), hsv)
-        hsv[0] // Estraiamo la tonalità (hue)
-    }
-    val customMarkerIcon = remember(markerHue) {
-        BitmapDescriptorFactory.defaultMarker(markerHue)
-    }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -270,7 +259,7 @@ private fun MiniMapSection(
                     mapType = MapType.NORMAL,
                     isBuildingEnabled = true,
                     isTrafficEnabled = false,
-                    minZoomPreference = 10f,
+                    minZoomPreference = 13f,
                     maxZoomPreference = 18f
                 ),
                 uiSettings = MapUiSettings(
@@ -286,12 +275,19 @@ private fun MiniMapSection(
                     if (!isMapInteractive) {
                         onMapInteractionStart()
                     }
-                },
+                }
             ) {
-                Marker(
+                MarkerComposable(
                     state = MarkerState(position = propertyCoordinates),
-                    title = "Posizione Proprietà"
-                )
+                    title = "Posizione Proprietà",
+                    anchor = Offset(0.5f, 0.5f)
+                ) {
+                    AppCustomMapMarker(
+                        tint = colorScheme.primary,
+                        iconSize = 36.dp,
+                        dimensions = dimensions
+                    )
+                }
             }
 
             if (!isMapInteractive) {
@@ -587,7 +583,7 @@ fun ActionButtonsSection(
     navController: NavController,
     phoneNumber: String,
     typography: Typography,
-    context: android.content.Context,
+    context: Context,
     dimensions: Dimensions
 ) {
     Column(

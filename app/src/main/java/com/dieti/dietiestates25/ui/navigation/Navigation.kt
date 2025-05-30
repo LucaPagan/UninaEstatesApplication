@@ -215,7 +215,6 @@ fun Navigation() {
                 ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"   // Fallback
                 // SearchTypeSelectionScreen leggerà gli altri filtri da entry.arguments al suo interno
             )
-            MapSearchScreen(navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente")
         }
 
         composable(

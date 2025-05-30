@@ -44,6 +44,14 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
     )
 
     Scaffold(
+        topBar = {
+            HomeScreenHeader(
+                idUtente = idUtente,
+                dimensions = dimensions,
+                typography = typography,
+                colorScheme = colorScheme
+            )
+        },
         bottomBar = {
             AppBottomNavigation(navController = navController, idUtente = idUtente)
         }
@@ -59,12 +67,6 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
             ) {
-                HomeScreenHeader(
-                    idUtente = idUtente,
-                    dimensions = dimensions,
-                    typography = typography,
-                    colorScheme = colorScheme
-                )
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
                 ClickableSearchBar(
@@ -134,9 +136,15 @@ fun HomeScreenHeader(
         modifier = Modifier
             .fillMaxWidth()
             .background(colorScheme.primary)
-            .clip(RoundedCornerShape(bottomStart = dimensions.cornerRadiusLarge, bottomEnd = dimensions.cornerRadiusLarge))
+            .clip(
+                RoundedCornerShape(
+                    bottomStart = dimensions.cornerRadiusLarge,
+                    bottomEnd = dimensions.cornerRadiusLarge
+                )
+            )
             .padding(horizontal = dimensions.paddingLarge)
-            .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge),
+            .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge)
+            .statusBarsPadding(),
         contentAlignment = Alignment.CenterStart
     ) {
         Row(
