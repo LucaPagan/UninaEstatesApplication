@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -52,7 +53,7 @@ fun SearchTypeSelectionScreen(
     val dimensions = Dimensions
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val initialFiltersFromNav = remember(currentBackStackEntry) {
+    val initialFiltersFromNav = remember(Unit) {
         currentBackStackEntry?.arguments?.let { args ->
             val pType = args.getString("purchaseType")
             val mPrice = args.getFloat("minPrice").takeIf { it != -1f && it != 0f }
@@ -74,6 +75,16 @@ fun SearchTypeSelectionScreen(
         }
     }
 
+    LaunchedEffect(currentBackStackEntry) {
+        currentBackStackEntry?.let { entry ->
+            println("Current destination: ${entry.destination.route}")
+            println("Previous back stack entry exists: ${navController.previousBackStackEntry != null}")
+            navController.previousBackStackEntry?.let { prev ->
+                println("Previous destination: ${prev.destination.route}")
+            }
+        }
+    }
+
     val gradientColors = listOf(
         colorScheme.primary.copy(alpha = 0.7f),
         colorScheme.background,
@@ -92,7 +103,12 @@ fun SearchTypeSelectionScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        println("Current route: ${navController.currentDestination?.route}")
+                        println("Previous route: ${navController.previousBackStackEntry?.destination?.route}")
+
+                        navController.popBackStack(Screen.ApartmentListingScreen.route, inclusive = false)
+                    }) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Indietro",

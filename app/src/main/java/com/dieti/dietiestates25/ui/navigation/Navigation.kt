@@ -84,13 +84,12 @@ fun Navigation() {
                 },
                 onApplyFilters = { filterModel ->
                     // Utilizza la nuova funzione helper specifica con nomi di parametri chiari
-                    val destinationRoute = Screen.ApartmentListingScreen.buildRoute(
+                    val destinationRoute = Screen.SearchTypeSelectionScreen.buildRoute(
                         idUtentePath = idUtenteArg,       // Corrisponde a idUtentePath in buildRoute
                         comunePath = comuneArg,          // Corrisponde a comunePath in buildRoute
                         ricercaPath = ricercaQueryTextArg, // Corrisponde a ricercaPath in buildRoute
                         filters = filterModel
                     )
-                    navController.navigate(destinationRoute)
                 }
             )
         }
@@ -131,17 +130,11 @@ fun Navigation() {
 
         // PropertyScreen (verifica se la rotta definita qui corrisponde all'helper in Screen.kt)
         // Se Screen.PropertyScreen.withId("id") produce "property_screen/id", allora:
-        composable(
-            route = Screen.PropertyScreen.route
-        ) {
-            PropertyScreen(
-                navController = navController
-            )
+
+        //Se PropertyScreen non prende argomenti nel path, allora era corretto:
+        composable(route = Screen.PropertyScreen.route) {
+             PropertyScreen(navController = navController)
         }
-        // Se PropertyScreen non prende argomenti nel path, allora era corretto:
-        // composable(route = Screen.PropertyScreen.route) {
-        //     PropertyScreen(navController = navController)
-        // }
 
 
         composable(route = Screen.PriceProposalScreen.route){ PriceProposalScreen(navController = navController) }
@@ -215,7 +208,6 @@ fun Navigation() {
                 ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"   // Fallback
                 // SearchTypeSelectionScreen leggerà gli altri filtri da entry.arguments al suo interno
             )
-            MapSearchScreen(navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente")
         }
 
         composable(

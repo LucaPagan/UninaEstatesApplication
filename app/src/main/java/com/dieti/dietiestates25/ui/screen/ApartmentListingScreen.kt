@@ -25,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppPropertyCard
 import com.dieti.dietiestates25.ui.components.AppPropertyViewButton
 import com.dieti.dietiestates25.ui.model.FilterModel
+import com.dieti.dietiestates25.ui.model.FilterOriginScreen
 import com.dieti.dietiestates25.ui.model.modelsource.sampleListingProperties
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
@@ -42,6 +43,7 @@ fun ApartmentListingScreen(
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
         val dimensions = Dimensions
+        val originScreen = FilterOriginScreen.APARTMENT_LISTING
 
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
         var showFilterSheet by remember { mutableStateOf(false) }
@@ -205,7 +207,8 @@ fun ApartmentListingScreen(
                                 appliedFilters = filterData
                                 showFilterSheet = false
                             },
-                            isFullScreenContext = false
+                            isFullScreenContext = false,
+                            originScreen = originScreen
                         )
                     }
                 }

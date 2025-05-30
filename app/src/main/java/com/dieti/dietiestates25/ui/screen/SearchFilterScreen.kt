@@ -34,11 +34,11 @@ import com.dieti.dietiestates25.ui.components.SelectableOptionButton
 import com.dieti.dietiestates25.ui.components.SingleChoiceToggleGroup
 import com.dieti.dietiestates25.ui.components.defaultOutlineTextFieldColors
 import com.dieti.dietiestates25.ui.model.FilterModel
+import com.dieti.dietiestates25.ui.model.FilterOriginScreen
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.utils.findActivity
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +49,8 @@ fun SearchFilterScreen(
     ricercaQueryText: String,
     onNavigateBack: () -> Unit = { navController.popBackStack() },
     onApplyFilters: (FilterModel) -> Unit,
-    isFullScreenContext: Boolean = true
+    isFullScreenContext: Boolean = true,
+    originScreen: FilterOriginScreen? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
@@ -201,6 +202,8 @@ fun SearchFilterScreen(
                 AppSecondaryButton(
                     text = "Mostra risultati",
                     onClick = {
+                        println("DEBUG - originScreen: $originScreen")
+
                         val finalMinPrice = when {
                             minPriceText.isNotBlank() -> minPriceText.toFloatOrNull()
                             priceSliderPosition.start > priceValueRange.start -> priceSliderPosition.start
@@ -234,11 +237,36 @@ fun SearchFilterScreen(
                             condition = selectedCondition
                         )
                         onApplyFilters(appliedFilters)
-                        if (isFullScreenContext) {
-                            navController.navigate(Screen.SearchTypeSelectionScreen.buildRoute(idUtente, comune, ricercaQueryText, appliedFilters))
-                        } else {
-                            navController.navigate(Screen.ApartmentListingScreen.buildRoute(idUtente, comune, ricercaQueryText, appliedFilters))
-                        }
+
+                            when (originScreen) {
+                                FilterOriginScreen.APARTMENT_LISTING -> {
+                                    navController.navigate(
+                                        Screen.ApartmentListingScreen.buildRoute(
+                                            idUtente, comune, ricercaQueryText, appliedFilters
+                                        )
+                                    )
+                                }
+                                FilterOriginScreen.MAP_SEARCH -> {
+                                    navController.navigate(
+                                        Screen.MapSearchScreen.buildRoute(
+                                            idUtente, comune, ricercaQueryText, appliedFilters
+                                        )
+                                    )
+                                }
+                                null -> {
+                                    navController.navigate(
+                                        Screen.SearchTypeSelectionScreen.buildRoute(idUtente, comune, ricercaQueryText, appliedFilters)
+                                    ) {
+                                        popUpTo(Screen.ApartmentListingScreen.route) {
+                                            inclusive = true
+                                        }
+                                        // Oppure pulisci fino a una schermata specifica
+                                        // popUpTo("nome_schermata_di_partenza") {
+                                        //     inclusive = false
+                                        // }
+                                    }
+                                }
+                            }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
