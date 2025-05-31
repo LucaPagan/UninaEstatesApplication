@@ -181,7 +181,6 @@ private fun ProfileScreenHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .statusBarsPadding()
             .background(colorScheme.primary)
             .clip(
                 RoundedCornerShape(
@@ -190,10 +189,8 @@ private fun ProfileScreenHeader(
                 )
             )
             .padding(horizontal = dimensions.paddingLarge)
-            .padding(
-                top = 25.dp,
-                bottom = dimensions.paddingLarge
-            ),
+            .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge)
+            .statusBarsPadding(),
         contentAlignment = Alignment.CenterStart
     ) {
         Row(

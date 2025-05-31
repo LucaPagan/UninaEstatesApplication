@@ -1,7 +1,5 @@
 package com.dieti.dietiestates25.ui.components
 
-
-// Importa i modelli dal package corretto (ui.model)
 import com.dieti.dietiestates25.ui.model.Notification
 import com.dieti.dietiestates25.ui.model.NotificationIconType
 import com.dieti.dietiestates25.ui.model.Appointment
@@ -13,10 +11,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.More // Per BADGE notifica
+import androidx.compose.material.icons.automirrored.filled.More
 import androidx.compose.material.icons.filled.Bathtub
-import androidx.compose.material.icons.filled.Person // Per PERSON notifica
-import androidx.compose.material.icons.filled.Phone // Per PHONE notifica
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
@@ -27,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp // Mantieni per valori hardcoded non in Dimensions
+import androidx.compose.ui.unit.dp
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import androidx.compose.material.icons.filled.Event
@@ -46,7 +44,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.dieti.dietiestates25.ui.model.PropertyMarker
-import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.google.android.gms.maps.model.LatLng
@@ -60,7 +57,7 @@ fun NotificationCard(
     modifier: Modifier = Modifier,
     colorScheme: ColorScheme = MaterialTheme.colorScheme,
     typography: Typography = MaterialTheme.typography,
-    dimensions: Dimensions = Dimensions // Aggiunto per usare i valori di Dimensions
+    dimensions: Dimensions = Dimensions
 ) {
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd/MM/yy", Locale.ITALIAN) }
 
@@ -68,25 +65,25 @@ fun NotificationCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp), // 16.dp non è dimensions.cornerRadiusMedium (12dp) o Large (24dp). Lasciato.
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = dimensions.elevationSmall) // SOSTITUITO 2.dp
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensions.elevationSmall)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(dimensions.paddingMedium), // SOSTITUITO 16.dp
+                .padding(dimensions.paddingMedium),
             verticalAlignment = Alignment.Top
         ) {
             NotificationCardIcon(
                 iconType = notification.iconType,
                 colorScheme = colorScheme,
-                dimensions = dimensions // Passa dimensions
+                dimensions = dimensions
             )
 
-            Spacer(modifier = Modifier.width(dimensions.spacingMedium)) // SOSTITUITO 16.dp
+            Spacer(modifier = Modifier.width(dimensions.spacingMedium))
 
             NotificationCardContent(
                 modifier = Modifier.weight(1f),
@@ -94,10 +91,10 @@ fun NotificationCard(
                 message = notification.message,
                 colorScheme = colorScheme,
                 typography = typography,
-                dimensions = dimensions // Passa dimensions
+                dimensions = dimensions
             )
 
-            Spacer(modifier = Modifier.width(12.dp)) // 12.dp non in Dimensions.spacing*, lasciato.
+            Spacer(modifier = Modifier.width(12.dp))
 
             NotificationCardActions(
                 date = notification.date.format(dateFormatter),
@@ -105,7 +102,7 @@ fun NotificationCard(
                 onToggleFavorite = onToggleFavorite,
                 colorScheme = colorScheme,
                 typography = typography,
-                dimensions = dimensions // Passa dimensions
+                dimensions = dimensions
             )
         }
     }
@@ -119,8 +116,8 @@ private fun NotificationCardIcon(
 ) {
     Box(
         modifier = Modifier
-            .size(dimensions.iconSizeExtraLarge) // SOSTITUITO 48.dp
-            .clip(RoundedCornerShape(dimensions.cornerRadiusMedium)) // SOSTITUITO 12.dp
+            .size(dimensions.iconSizeExtraLarge)
+            .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
             .background(colorScheme.primaryContainer),
         contentAlignment = Alignment.Center
     ) {
@@ -131,7 +128,7 @@ private fun NotificationCardIcon(
                 NotificationIconType.BADGE -> Icons.AutoMirrored.Filled.More
             },
             contentDescription = "Notification Icon",
-            modifier = Modifier.size(dimensions.iconSizeMedium), // SOSTITUITO 24.dp
+            modifier = Modifier.size(dimensions.iconSizeMedium),
             tint = colorScheme.onPrimaryContainer
         )
     }
@@ -153,7 +150,7 @@ private fun NotificationCardContent(
             fontWeight = FontWeight.SemiBold,
             color = colorScheme.onSurface
         )
-        Spacer(modifier = Modifier.height(dimensions.spacingExtraSmall)) // SOSTITUITO 4.dp
+        Spacer(modifier = Modifier.height(dimensions.spacingExtraSmall))
         Text(
             text = message,
             style = typography.bodyMedium,
@@ -190,9 +187,7 @@ private fun NotificationCardActions(
         )
         IconButton(
             onClick = onToggleFavorite,
-            modifier = Modifier.size(dimensions.iconSizeLarge) // SOSTITUITO 32.dp con 36.dp (valore più vicino in Dimensions)
-            // oppure dimensions.paddingExtraLarge (32.dp) se si preferisce un match esatto di valore
-            // Ho scelto iconSizeLarge perché semanticamente più corretto per un'icona.
+            modifier = Modifier.size(dimensions.iconSizeLarge)
         ) {
             Icon(
                 imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
@@ -200,7 +195,7 @@ private fun NotificationCardActions(
                 tint = if (isFavorite) Color(0xFFFFC107) else colorScheme.onSurfaceVariant.copy(
                     alpha = 0.7f
                 ),
-                modifier = Modifier.size(22.dp) // 22.dp non in Dimensions.iconSize*, lasciato. (iconSizeMedium è 24.dp)
+                modifier = Modifier.size(22.dp)
             )
         }
     }
@@ -211,8 +206,8 @@ fun AppointmentCard(
     appointment: Appointment,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    colorScheme: ColorScheme = MaterialTheme.colorScheme, // Default aggiunto
-    typography: Typography = MaterialTheme.typography,   // Default aggiunto
+    colorScheme: ColorScheme = MaterialTheme.colorScheme,
+    typography: Typography = MaterialTheme.typography,
     dimensions: Dimensions = Dimensions
 ) {
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd/MM/yy", Locale.ITALIAN) }
@@ -221,23 +216,23 @@ fun AppointmentCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp), // Lasciato 16.dp
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = dimensions.elevationSmall) // SOSTITUITO 2.dp
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensions.elevationSmall)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(dimensions.paddingMedium), // SOSTITUITO 16.dp
+                .padding(dimensions.paddingMedium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AppointmentCardIcon(
                 iconType = appointment.iconType,
                 colorScheme = colorScheme,
-                dimensions = dimensions // Passa dimensions
+                dimensions = dimensions
             )
 
-            Spacer(modifier = Modifier.width(dimensions.spacingMedium)) // SOSTITUITO 16.dp
+            Spacer(modifier = Modifier.width(dimensions.spacingMedium))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -249,7 +244,7 @@ fun AppointmentCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 appointment.description?.let {
-                    Spacer(modifier = Modifier.height(2.dp)) // 2.dp non in Dimensions, lasciato.
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = it,
                         style = typography.bodySmall,
@@ -260,7 +255,7 @@ fun AppointmentCard(
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp)) // 12.dp non in Dimensions, lasciato.
+            Spacer(modifier = Modifier.width(12.dp))
 
             Column(
                 horizontalAlignment = Alignment.End,
@@ -270,7 +265,7 @@ fun AppointmentCard(
                     style = typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                     color = colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(2.dp)) // 2.dp non in Dimensions, lasciato.
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = appointment.timeSlot,
                     style = typography.labelLarge.copy(fontWeight = FontWeight.Bold),
@@ -289,9 +284,9 @@ private fun AppointmentCardIcon(
 ) {
     Box(
         modifier = Modifier
-            .size(dimensions.iconSizeExtraLarge) // SOSTITUITO 48.dp
-            .clip(RoundedCornerShape(dimensions.cornerRadiusMedium)) // SOSTITUITO 12.dp
-            .background(colorScheme.primaryContainer), // Cambiato da secondaryContainer per coerenza se è un'azione primaria
+            .size(dimensions.iconSizeExtraLarge)
+            .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
+            .background(colorScheme.primaryContainer),
         contentAlignment = Alignment.Center
     ) {
         Icon(
@@ -301,7 +296,7 @@ private fun AppointmentCardIcon(
                 AppointmentIconType.GENERIC -> Icons.Filled.Build
             },
             contentDescription = "Appointment Icon",
-            modifier = Modifier.size(dimensions.iconSizeMedium), // SOSTITUITO 24.dp
+            modifier = Modifier.size(dimensions.iconSizeMedium),
             tint = colorScheme.onPrimaryContainer
         )
     }
@@ -389,7 +384,6 @@ fun AppPropertyCard(
                         .weight(1f)
                         .padding(horizontal = Dimensions.paddingMedium, vertical = Dimensions.paddingSmall)
                 ) {
-                    // Riga 1: Prezzo e Pulsante Azione
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -408,7 +402,6 @@ fun AppPropertyCard(
                         actionButton?.invoke()
                     }
 
-                    // Riga 2: Indirizzo (se presente)
                     address?.let {
                         Text(
                             text = it,
@@ -420,7 +413,6 @@ fun AppPropertyCard(
                         )
                     }
 
-                    // Riga 3: Altri dettagli (tipo, mq, bagni)
                     if (details.isNotEmpty()) {
                         Text(
                             text = details.joinToString("  •  "),
@@ -464,7 +456,6 @@ fun PropertyPreviewInfoWindow(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column {
-            // Header con immagine e pulsante chiudi
             Box {
                 Image(
                     painter = painterResource(id = property.imageRes),
@@ -476,7 +467,6 @@ fun PropertyPreviewInfoWindow(
                     contentScale = ContentScale.Crop
                 )
 
-                // Pulsante di chiusura
                 IconButton(
                     onClick = onClose,
                     modifier = Modifier
@@ -496,7 +486,6 @@ fun PropertyPreviewInfoWindow(
                     )
                 }
 
-                // Badge del prezzo
                 Surface(
                     modifier = Modifier
                         .align(Alignment.BottomStart)

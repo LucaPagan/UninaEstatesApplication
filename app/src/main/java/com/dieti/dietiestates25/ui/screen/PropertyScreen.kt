@@ -28,6 +28,7 @@ import com.google.maps.android.compose.MarkerComposable
 import android.content.Intent
 import android.content.res.Configuration
 import android.content.Context
+import android.inputmethodservice.Keyboard
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -121,7 +122,11 @@ fun PropertyScreen(
         }
     }
 
-    Scaffold { innerPadding ->
+    Scaffold(
+        topBar = {
+            PropertyTopAppBar(colorScheme, navController, dimensions)
+        }
+    ){ innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -342,6 +347,7 @@ fun PropertyTopAppBar(
 ) {
     TopAppBar(
         modifier = Modifier
+            .background(colorScheme.primary)
             .statusBarsPadding()
             .padding(horizontal = 10.dp),
         navigationIcon = {
@@ -349,7 +355,7 @@ fun PropertyTopAppBar(
                 onClick = { navController.popBackStack() },
                 iconVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                backgroundColor = colorScheme.primary,
+                backgroundColor = colorScheme.primaryContainer,
                 iconTint = colorScheme.onPrimary,
                 buttonSize = dimensions.iconSizeExtraLarge,
                 iconSize = dimensions.iconSizeMedium
@@ -362,7 +368,7 @@ fun PropertyTopAppBar(
                 onClick = { isFavorite.value = !isFavorite.value },
                 iconVector = Icons.Default.Favorite,
                 contentDescription = "Favorite",
-                backgroundColor = colorScheme.primary,
+                backgroundColor = colorScheme.primaryContainer,
                 iconTint = if (isFavorite.value) colorScheme.error else colorScheme.onPrimary,
                 buttonSize = dimensions.iconSizeExtraLarge,
                 iconSize = dimensions.iconSizeMedium

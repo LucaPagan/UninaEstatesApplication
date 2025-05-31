@@ -1,5 +1,6 @@
 package com.dieti.dietiestates25.ui.screen
 
+import android.annotation.SuppressLint
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 import com.dieti.dietiestates25.ui.theme.Dimensions
@@ -98,7 +99,8 @@ fun PriceProposalScreen(
                 navController = navController,
                 haptic = haptic,
                 colorScheme = colorScheme,
-                typography = typography
+                typography = typography,
+                dimensions = dimensions
             )
         },
         bottomBar = {
@@ -130,11 +132,6 @@ fun PriceProposalScreen(
                     .fillMaxSize()
                     .imePadding()
             ) {
-                HorizontalDivider(
-                    color = colorScheme.onBackground,
-                    thickness = 1.dp
-                )
-
                 InformationCard(
                     text = "Proponi un nuovo prezzo all'inserzionista, senza impegno, adatto al tuo budget",
                     colorScheme = colorScheme,
@@ -191,34 +188,53 @@ private fun PriceProposalTopAppBar(
     navController: NavController,
     haptic: HapticFeedback,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions
 ) {
-    TopAppBar(
-        title = {
-            Text(
-                text = "Proponi prezzo",
-                style = typography.titleMedium
-            )
-        },
-        navigationIcon = {
-            CircularIconActionButton(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    navController.popBackStack()
+    Column {
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colorScheme.primary)
+                .padding(horizontal = dimensions.paddingMedium)
+                .padding(top = dimensions.paddingExtraSmall, bottom = dimensions.paddingExtraSmall)
+                .statusBarsPadding(),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Proponi prezzo",
+                        style = typography.titleMedium
+                    )
                 },
-                iconVector = Icons.Default.Close,
-                contentDescription = "Chiudi",
-                backgroundColor = colorScheme.primaryContainer,
-                iconTint = colorScheme.onPrimaryContainer
+                navigationIcon = {
+                    CircularIconActionButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            navController.popBackStack()
+                        },
+                        iconVector = Icons.Default.Close,
+                        contentDescription = "Chiudi",
+                        backgroundColor = colorScheme.primaryContainer,
+                        iconTint = colorScheme.onPrimaryContainer
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorScheme.primary,
+                    titleContentColor = colorScheme.onPrimary,
+                    navigationIconContentColor = colorScheme.onPrimaryContainer
+                ),
+                modifier = Modifier.statusBarsPadding()
             )
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = colorScheme.primary,
-            titleContentColor = colorScheme.onPrimary,
-            navigationIconContentColor = colorScheme.onPrimaryContainer
-        ),
-        modifier = Modifier.statusBarsPadding()
-    )
+        }
+
+        HorizontalDivider(
+            color = colorScheme.onBackground,
+            thickness = 1.dp
+        )
+    }
 }
 
 @Composable
@@ -284,6 +300,7 @@ private fun InformationCard(
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 private fun StartingPriceRow(
     startingPrice: Double,

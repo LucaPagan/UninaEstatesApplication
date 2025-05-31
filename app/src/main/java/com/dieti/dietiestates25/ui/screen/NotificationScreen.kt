@@ -118,14 +118,16 @@ private fun NotificationScreenHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .statusBarsPadding()
             .background(colorScheme.primary)
-            .clip(RoundedCornerShape(bottomStart = dimensions.cornerRadiusLarge, bottomEnd = dimensions.cornerRadiusLarge))
+            .clip(
+                RoundedCornerShape(
+                    bottomStart = dimensions.cornerRadiusLarge,
+                    bottomEnd = dimensions.cornerRadiusLarge
+                )
+            )
             .padding(horizontal = dimensions.paddingLarge)
-            .padding(
-                top = dimensions.paddingLarge, // Usando dimensions
-                bottom = dimensions.paddingLarge
-            ),
+            .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge)
+            .statusBarsPadding(),
         contentAlignment = Alignment.CenterStart
     ) {
         Row(

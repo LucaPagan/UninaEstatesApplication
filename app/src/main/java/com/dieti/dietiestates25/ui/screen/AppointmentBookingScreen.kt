@@ -55,7 +55,8 @@ fun AppointmentBookingScreen(
                 navController = navController,
                 haptic = haptic,
                 colorScheme = colorScheme,
-                typography = typography
+                typography = typography,
+                dimensions = dimensions
             )
         },
         bottomBar = {
@@ -90,41 +91,52 @@ private fun AppointmentBookingTopAppBar(
     navController: NavController,
     haptic: HapticFeedback,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        TopAppBar(
-            title = {
-                Text(
-                    text = "Prenota una visita",
-                    style = typography.titleMedium
-                )
-            },
-            navigationIcon = {
-                CircularIconActionButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        navController.popBackStack()
-                    },
-                    iconVector = Icons.Default.Close,
-                    contentDescription = "Chiudi",
-                    backgroundColor = colorScheme.primaryContainer,
-                    iconTint = colorScheme.onPrimaryContainer
-                    // buttonSize e iconSize usano i default di CircularIconActionButton (40.dp e 24.dp)
-                    // Se questi valori (40.dp, 24.dp) non sono in Dimensions, rimangono così
-                )
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = colorScheme.primary,
-                titleContentColor = colorScheme.onPrimary,
-                navigationIconContentColor = colorScheme.onPrimaryContainer,
-                actionIconContentColor = colorScheme.onPrimary
-            ),
-            modifier = Modifier.statusBarsPadding()
-        )
+    Column {
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colorScheme.primary)
+                .padding(horizontal = dimensions.paddingMedium)
+                .padding(top = dimensions.paddingExtraSmall, bottom = dimensions.paddingExtraSmall)
+                .statusBarsPadding(),
+            contentAlignment = Alignment.CenterStart
+        ) {
+
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Prenota una visita",
+                        style = typography.titleMedium
+                    )
+                },
+                navigationIcon = {
+                    CircularIconActionButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            navController.popBackStack()
+                        },
+                        iconVector = Icons.Default.Close,
+                        contentDescription = "Chiudi",
+                        backgroundColor = colorScheme.primaryContainer,
+                        iconTint = colorScheme.onPrimaryContainer
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorScheme.primary,
+                    titleContentColor = colorScheme.onPrimary,
+                    navigationIconContentColor = colorScheme.onPrimaryContainer,
+                    actionIconContentColor = colorScheme.onPrimary
+                ),
+            )
+        }
+
         HorizontalDivider(
-            color = colorScheme.onPrimary.copy(alpha = 0.3f),
-            thickness = 1.dp // 1.dp non in Dimensions, lasciato invariato
+            color = colorScheme.onBackground,
+            thickness = 1.dp
         )
     }
 }
@@ -135,7 +147,7 @@ private fun AppointmentBookingBottomBar(
     haptic: HapticFeedback,
     colorScheme: ColorScheme,
     onProceedClick: () -> Unit,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     Column(
         modifier = Modifier
@@ -143,14 +155,14 @@ private fun AppointmentBookingBottomBar(
             .navigationBarsPadding()
     ) {
         HorizontalDivider(
-            color = colorScheme.onSurfaceVariant,
-            thickness = 1.dp // 1.dp non in Dimensions, lasciato invariato
+            color = colorScheme.onBackground,
+            thickness = 1.dp
         )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colorScheme.surface)
-                .padding(dimensions.paddingMedium), // SOSTITUITO 16.dp
+                .padding(dimensions.paddingMedium),
         ) {
             AppPrimaryButton(
                 onClick = {
@@ -174,7 +186,7 @@ private fun AppointmentBookingContent(
     onTimeSlotSelected: (Int) -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     Box(
         modifier = Modifier
@@ -186,29 +198,29 @@ private fun AppointmentBookingContent(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(horizontal = dimensions.paddingMedium) // SOSTITUITO 16.dp
+                .padding(horizontal = dimensions.paddingMedium)
                 .imePadding()
         ) {
-            Spacer(modifier = Modifier.height(dimensions.spacingMedium)) // SOSTITUITO 16.dp
+            Spacer(modifier = Modifier.height(dimensions.spacingMedium))
             ScreenSectionTitle(
                 title = "Seleziona il tuo giorno disponibile",
                 colorScheme = colorScheme,
                 typography = typography
             )
-            Spacer(modifier = Modifier.height(dimensions.spacingSmall)) // SOSTITUITO 8.dp
+            Spacer(modifier = Modifier.height(dimensions.spacingSmall))
             CalendarView(
                 initialSelectedDate = selectedDate,
                 onDateSelected = onDateSelected,
                 colorScheme = colorScheme,
                 typography = typography
             )
-            Spacer(modifier = Modifier.height(dimensions.spacingLarge)) // SOSTITUITO 24.dp
+            Spacer(modifier = Modifier.height(dimensions.spacingLarge))
             ScreenSectionTitle(
                 title = "Scegli la fascia oraria",
                 colorScheme = colorScheme,
                 typography = typography
             )
-            Spacer(modifier = Modifier.height(12.dp)) // 12.dp non in Dimensions, lasciato invariato
+            Spacer(modifier = Modifier.height(12.dp))
             TimeSlotSelector(
                 selectedTimeSlot = selectedTimeSlot,
                 onTimeSlotSelected = onTimeSlotSelected,
@@ -216,13 +228,13 @@ private fun AppointmentBookingContent(
                 typography = typography,
                 dimensions = dimensions
             )
-            Spacer(modifier = Modifier.height(dimensions.spacingLarge)) // SOSTITUITO 24.dp
+            Spacer(modifier = Modifier.height(dimensions.spacingLarge))
             NotificationBox(
                 colorScheme = colorScheme,
                 typography = typography,
                 dimensions = dimensions
             )
-            Spacer(modifier = Modifier.height(dimensions.spacingLarge)) // SOSTITUITO 24.dp
+            Spacer(modifier = Modifier.height(dimensions.spacingLarge))
         }
     }
 }
@@ -247,25 +259,25 @@ fun TimeSlotSelector(
     onTimeSlotSelected: (Int) -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     val timeSlots = remember { listOf("9-12", "12-14", "14-17", "17-20") }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(0.dp) // 0.dp ok
+        horizontalArrangement = Arrangement.spacedBy(0.dp)
     ) {
         timeSlots.forEachIndexed { index, slot ->
             val isSelected = index == selectedTimeSlot
             val shape = when (index) {
                 0 -> RoundedCornerShape(topStart = dimensions.cornerRadiusLarge, bottomStart = dimensions.cornerRadiusLarge, topEnd = 0.dp, bottomEnd = 0.dp) // SOSTITUITO 24.dp
                 timeSlots.size - 1 -> RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = dimensions.cornerRadiusLarge, bottomEnd = dimensions.cornerRadiusLarge) // SOSTITUITO 24.dp
-                else -> RoundedCornerShape(0.dp) // 0.dp ok
+                else -> RoundedCornerShape(0.dp)
             }
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(dimensions.iconSizeExtraLarge) // SOSTITUITO 48.dp
+                    .height(dimensions.iconSizeExtraLarge)
                     .clip(shape)
                     .background(
                         if (isSelected) colorScheme.primary else colorScheme.secondary
@@ -282,8 +294,8 @@ fun TimeSlotSelector(
             if (index < timeSlots.size - 1) {
                 Box(
                     modifier = Modifier
-                        .width(1.dp) // 1.dp non in Dimensions
-                        .height(dimensions.spacingLarge) // SOSTITUITO 24.dp
+                        .width(1.dp)
+                        .height(dimensions.spacingLarge)
                         .background(color = colorScheme.outline.copy(alpha = 0.5f))
                         .align(Alignment.CenterVertically)
                 )
@@ -296,23 +308,23 @@ fun TimeSlotSelector(
 fun NotificationBox(
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions // Aggiunto
+    dimensions: Dimensions
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(dimensions.cornerRadiusMedium), // SOSTITUITO 12.dp
+        shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
         color = colorScheme.secondaryContainer,
-        border = BorderStroke(1.dp, colorScheme.outline) // 1.dp non in Dimensions
+        border = BorderStroke(1.dp, colorScheme.outline)
     ) {
         Column(
-            modifier = Modifier.padding(dimensions.paddingMedium) // SOSTITUITO 16.dp
+            modifier = Modifier.padding(dimensions.paddingMedium)
         ) {
             Text(
                 text = "Questa non è una prenotazione effettiva:",
                 style = typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                 color = colorScheme.onSecondaryContainer
             )
-            Spacer(modifier = Modifier.height(dimensions.spacingExtraSmall)) // SOSTITUITO 4.dp
+            Spacer(modifier = Modifier.height(dimensions.spacingExtraSmall))
             Text(
                 text = "La tua richiesta sarà inviata all'inserzionista che si occuperà di ricontattarti.",
                 style = typography.bodySmall,
