@@ -5,7 +5,6 @@ package com.dieti.dietiestates25.ui.theme
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -24,6 +23,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 // Light theme colors
 private val LightColors = lightColorScheme(
@@ -134,7 +134,6 @@ val typography = Typography(
     )
 )
 
-
 private fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
@@ -148,7 +147,7 @@ fun DietiEstatesTheme(
     content: @Composable () -> Unit
 ) {
     val selectedColorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        dynamicColor -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
@@ -161,31 +160,29 @@ fun DietiEstatesTheme(
         SideEffect {
             val activity = view.context.findActivity()
             activity?.window?.let { window ->
+                // 1. Permetti al contenuto di disegnarsi dietro le system bars
                 WindowCompat.setDecorFitsSystemWindows(window, false)
 
-                // 2. Imposta il colore desiderato per la Status Bar
-                val statusBarSystemColor = TealDeep.toArgb()
-                window.statusBarColor = statusBarSystemColor
+                // 2. FORZA il colore TealDeep per la Status Bar (NON trasparente)
+                val statusBarColor = TealDeep.toArgb()
+                window.statusBarColor = statusBarColor
 
-                // 3. Scegli un colore per la Navigation Bar
-                // Opzione C: Trasparente (se il contenuto deve disegnarvisi dietro)
-                val navigationBarSystemColor = Color.Transparent.toArgb()
-                window.navigationBarColor = navigationBarSystemColor
+                // 3. Navigation Bar trasparente
+                window.navigationBarColor = Color.Transparent.toArgb()
 
-
+                // 4. Configura le icone della status bar
                 val insetsController = WindowCompat.getInsetsController(window, view)
 
+                // Su TealDeep (scuro) -> icone chiare
                 insetsController.isAppearanceLightStatusBars = false
 
-                // Per la Navigation Bar
-                // Se usi TealDeep (scuro) -> icone chiare (false)
-                // Se usi surface (chiaro in light-theme, scuro in dark-theme) -> !darkTheme
-                // Se usi trasparente -> !darkTheme (dipende dal contenuto dell'app dietro)
-                if (navigationBarSystemColor == TealDeep.toArgb()) {
-                    insetsController.isAppearanceLightNavigationBars = false // Icone chiare su TealDeep
-                } else {
-                    insetsController.isAppearanceLightNavigationBars = !darkTheme
-                }
+                // Navigation bar trasparente -> icone dipendono dal tema
+                insetsController.isAppearanceLightNavigationBars = !darkTheme
+
+                // 5. IMPORTANTE: Su alcune versioni Android, forza la modalità
+                // Per Android 11+ assicurati che la status bar non sia trasparente
+                insetsController.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
         }
     }
