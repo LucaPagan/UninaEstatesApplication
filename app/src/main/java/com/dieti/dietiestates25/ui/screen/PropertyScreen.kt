@@ -28,7 +28,6 @@ import com.google.maps.android.compose.MarkerComposable
 import android.content.Intent
 import android.content.res.Configuration
 import android.content.Context
-import android.inputmethodservice.Keyboard
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -123,9 +122,6 @@ fun PropertyScreen(
     }
 
     Scaffold(
-        topBar = {
-            PropertyTopAppBar(colorScheme, navController, dimensions)
-        }
     ){ innerPadding ->
         Box(
             modifier = Modifier
@@ -326,7 +322,8 @@ private fun MiniMapSection(
                 backgroundColor = colorScheme.surface.copy(alpha = 0.8f),
                 iconTint = colorScheme.onSurface,
                 buttonSize = 36.dp,
-                iconSize = dimensions.iconSizeMedium
+                iconSize = dimensions.iconSizeMedium,
+                iconModifier = Modifier.size(dimensions.iconSizeMedium)
             )
         }
         Text(
@@ -347,7 +344,6 @@ fun PropertyTopAppBar(
 ) {
     TopAppBar(
         modifier = Modifier
-            .background(colorScheme.primary)
             .statusBarsPadding()
             .padding(horizontal = 10.dp),
         navigationIcon = {
@@ -358,7 +354,8 @@ fun PropertyTopAppBar(
                 backgroundColor = colorScheme.primaryContainer,
                 iconTint = colorScheme.onPrimary,
                 buttonSize = dimensions.iconSizeExtraLarge,
-                iconSize = dimensions.iconSizeMedium
+                iconSize = dimensions.iconSizeMedium,
+                iconModifier = Modifier.size(dimensions.iconSizeMedium)
             )
         },
         title = { /* Empty title */ },
@@ -371,7 +368,8 @@ fun PropertyTopAppBar(
                 backgroundColor = colorScheme.primaryContainer,
                 iconTint = if (isFavorite.value) colorScheme.error else colorScheme.onPrimary,
                 buttonSize = dimensions.iconSizeExtraLarge,
-                iconSize = dimensions.iconSizeMedium
+                iconSize = dimensions.iconSizeMedium,
+                iconModifier = Modifier.size(dimensions.iconSizeMedium)
             )
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -427,7 +425,8 @@ fun PropertyImagePager(
                 backgroundColor = colorScheme.onBackground.copy(alpha = 0.6f),
                 iconTint = colorScheme.background,
                 buttonSize = dimensions.iconSizeExtraLarge,
-                iconSize = dimensions.iconSizeMedium
+                iconSize = dimensions.iconSizeMedium,
+                iconModifier = Modifier.size(dimensions.iconSizeMedium)
             )
             Box(
                 modifier = Modifier
@@ -452,7 +451,8 @@ fun PropertyImagePager(
                 backgroundColor = colorScheme.onBackground.copy(alpha = 0.6f),
                 iconTint = colorScheme.background,
                 buttonSize = dimensions.iconSizeExtraLarge,
-                iconSize = dimensions.iconSizeMedium
+                iconSize = dimensions.iconSizeMedium,
+                iconModifier = Modifier.size(dimensions.iconSizeMedium)
             )
         }
     }

@@ -12,7 +12,7 @@ data class Notification(
 )
 
 enum class NotificationIconType {
-    PHONE, PERSON, BADGE
+    PHONE, PERSON, BADGE // Aggiunti altri tipi se necessario
 }
 
 data class Appointment(

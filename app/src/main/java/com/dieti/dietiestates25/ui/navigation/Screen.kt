@@ -66,14 +66,23 @@ sealed class Screen(val route: String) {
     }
 
     data object PriceProposalScreen : Screen("price_screen")
+
     data object PropertySellScreen : Screen("property_sell_screen") {
         fun withIdUtente(idUtente: String): String {
             return "$route/${Uri.encode(idUtente)}"
         }
     }
+
     data object AppointmentBookingScreen : Screen("appointment_screen")
+
     data object NotificationScreen : Screen("notification_screen")
-    data object NotificationDetailScreen : Screen("notification_detail_screen")
+
+    object NotificationDetailScreen : Screen("notification_detail_screen/{notificationId}") {
+        fun createRoute(notificationId: Int): String {
+            return "notification_detail_screen/$notificationId"
+        }
+    }
+
     data object ProfileScreen : Screen("profile_screen")
 
     data object MapSearchScreen : Screen("map_search_screen") {
@@ -161,4 +170,6 @@ sealed class Screen(val route: String) {
             return "$route/$encodedLat/$encodedLng/$encodedZoom"
         }
     }
+
+    data object AppointmentDetailScreen : Screen("appointment_detail_screen")
 }

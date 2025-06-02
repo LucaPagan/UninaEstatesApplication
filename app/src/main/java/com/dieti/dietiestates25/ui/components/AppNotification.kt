@@ -155,17 +155,14 @@ fun AppNotificationDisplay(
         subtitle = notification.message,
         trailingTopText = notification.date.format(dateFormatter),
         trailingBottomContent = {
-            IconButton(
+            CircularIconActionButton(
                 onClick = { onToggleFavorite(notification.id) },
-                modifier = Modifier.size(dimensions.iconSizeLarge) // Usa dimensions (32dp o 36dp)
-            ) {
-                Icon(
-                    imageVector = if (notification.isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
-                    contentDescription = "Aggiungi ai preferiti",
-                    tint = if (notification.isFavorite) Color(0xFFFFC107) else colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    modifier = Modifier.size(dimensions.iconSizeMedium) // Usa dimensions (24dp)
-                )
-            }
+                iconVector = if (notification.isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
+                contentDescription = if (notification.isFavorite) "Rimuovi dai preferiti" else "Aggiungi ai preferiti",
+                backgroundColor = colorScheme.surfaceDim,
+                iconTint = if (notification.isFavorite) colorScheme.surfaceTint else colorScheme.onPrimaryContainer,
+                iconModifier = Modifier.size(dimensions.iconSizeMedium) // Usa dimensions (24dp)
+            )
         },
         modifier = modifier,
         dimensions = dimensions,
