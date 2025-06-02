@@ -2,6 +2,7 @@
 
 package com.dieti.dietiestates25.ui.screen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,10 +24,12 @@ import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.theme.TealDeep
 
 private const val WELCOME_IMAGE_WIDTH_FRACTION = 0.9f
 private const val WELCOME_IMAGE_ASPECT_RATIO = 1f / 0.8f
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun WelcomeScreen(navController: NavController) {
     val colorScheme = MaterialTheme.colorScheme
@@ -41,78 +44,89 @@ fun WelcomeScreen(navController: NavController) {
         colorScheme.primary.copy(alpha = 0.6f)
     )
 
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Status Bar con colore TealDeep fisso
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(TealDeep)
+        )
 
-        Scaffold(topBar = {}) { innerPadding ->
-            Box(
+        // Contenuto principale con gradiente
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.verticalGradient(colors = gradientColors))
+        ) {
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Brush.verticalGradient(colors = gradientColors))
-                    .padding(innerPadding),
+                    .padding(horizontal = dimensions.paddingLarge),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
             ) {
-                Column(
+                Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
+
+                AppIconDisplay(
+                    size = 100.dp,
+                    shapeRadius = dimensions.cornerRadiusLarge,
+                    internalPadding = dimensions.paddingExtraSmall,
+                    imageClipRadius = dimensions.cornerRadiusMedium
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Image(
+                    painter = painterResource(id = R.drawable.welcome_image),
+                    contentDescription = "House illustration",
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = dimensions.paddingLarge),
+                        .fillMaxWidth(WELCOME_IMAGE_WIDTH_FRACTION)
+                        .aspectRatio(WELCOME_IMAGE_ASPECT_RATIO)
+                        .weight(1f, fill = false),
+                    contentScale = ContentScale.Fit
+                )
+
+                Spacer(modifier = Modifier.weight(0.7f))
+
+                Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge)) // Es. 32dp o più, regola a piacere
-
-                    AppIconDisplay(
-                        size = 100.dp,
-                        shapeRadius = dimensions.cornerRadiusLarge,
-                        internalPadding = dimensions.paddingExtraSmall,
-                        imageClipRadius = dimensions.cornerRadiusMedium
+                    Text(
+                        text = "Benvenuto",
+                        color = colorScheme.onBackground,
+                        style = typography.displaySmall,
+                        textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.weight(1f)) // Peso minore per spingere l'immagine un po' più in alto
+                    Spacer(modifier = Modifier.height(dimensions.spacingSmall))
 
-                    Image(
-                        painter = painterResource(id = R.drawable.welcome_image),
-                        contentDescription = "House illustration",
-                        modifier = Modifier
-                            .fillMaxWidth(WELCOME_IMAGE_WIDTH_FRACTION)
-                            .aspectRatio(WELCOME_IMAGE_ASPECT_RATIO)
-                            .weight(1f, fill = false), // L'immagine prende spazio proporzionale
-                        contentScale = ContentScale.Fit
+                    Text(
+                        text = "Compra la tua casa dei sogni con facilità e sicurezza.",
+                        color = colorScheme.onBackground.copy(alpha = 0.8f),
+                        style = typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = dimensions.paddingSmall)
                     )
-
-                    Spacer(modifier = Modifier.weight(0.7f))
-
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Benvenuto",
-                            color = colorScheme.onBackground,
-                            style = typography.displaySmall,
-                            textAlign = TextAlign.Center
-                        )
-
-                        Spacer(modifier = Modifier.height(dimensions.spacingSmall))
-
-                        Text(
-                            text = "Compra la tua casa dei sogni con facilità e sicurezza.",
-                            color = colorScheme.onBackground.copy(alpha = 0.8f),
-                            style = typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = dimensions.paddingSmall)
-                        )
-                    }
-                    Spacer(modifier = Modifier.weight(0.3f))
-
-                    AppPrimaryButton(
-                        text = "Inizia ora",
-                        onClick = {
-                            navController.navigate(Screen.HomeScreen.withIdUtente(idUtente))
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
                 }
+
+                Spacer(modifier = Modifier.weight(0.3f))
+
+                AppPrimaryButton(
+                    text = "Inizia ora",
+                    onClick = {
+                        navController.navigate(Screen.HomeScreen.withIdUtente(idUtente))
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
             }
         }
+    }
 }
 
 @Preview(showBackground = true, device = "id:pixel_4")

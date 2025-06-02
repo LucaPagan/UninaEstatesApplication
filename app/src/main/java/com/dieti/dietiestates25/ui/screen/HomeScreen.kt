@@ -28,6 +28,7 @@ import com.dieti.dietiestates25.ui.model.modelsource.sampleListingProperties
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.theme.TealDeep
 
 @Composable
 fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
@@ -92,9 +93,9 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                             onClick = {
                                 navController.navigate(Screen.PropertyScreen.route)
                             },
-                            actionButton = null,      // NESSUN bottone azione, l'intera card è cliccabile
-                            horizontalMode = false,   // <<-- IMPOSTA A FALSE per layout verticale
-                            imageHeightVerticalRatio = 0.55f, // Immagine occupa il 60% dell'altezza
+                            actionButton = null,
+                            horizontalMode = false,
+                            imageHeightVerticalRatio = 0.55f,
                             elevationDp = Dimensions.elevationSmall
                         )
                     },
@@ -132,43 +133,55 @@ fun HomeScreenHeader(
     typography: Typography,
     colorScheme: ColorScheme
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colorScheme.primary)
-            .clip(
-                RoundedCornerShape(
-                    bottomStart = dimensions.cornerRadiusLarge,
-                    bottomEnd = dimensions.cornerRadiusLarge
-                )
-            )
-            .padding(horizontal = dimensions.paddingLarge)
-            .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge)
-            .statusBarsPadding(),
-        contentAlignment = Alignment.CenterStart
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        // Status Bar con colore TealDeep fisso
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(TealDeep)
+        )
+
+        // Header content con primary color e angoli arrotondati
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colorScheme.primary)
+                .clip(
+                    RoundedCornerShape(
+                        bottomStart = dimensions.cornerRadiusLarge,
+                        bottomEnd = dimensions.cornerRadiusLarge
+                    )
+                )
+                .padding(horizontal = dimensions.paddingLarge)
+                .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge),
+            contentAlignment = Alignment.CenterStart
         ) {
-            AppIconDisplay(
-                size = 60.dp,
-                shapeRadius = dimensions.cornerRadiusMedium
-            )
-            Spacer(modifier = Modifier.width(dimensions.spacingMedium))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Bentornato",
-                    color = colorScheme.onPrimary.copy(alpha = 0.8f),
-                    style = typography.titleSmall
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AppIconDisplay(
+                    size = 60.dp,
+                    shapeRadius = dimensions.cornerRadiusMedium
                 )
-                Text(
-                    text = idUtente.ifEmpty { "Utente" },
-                    color = colorScheme.onPrimary,
-                    style = typography.titleLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Spacer(modifier = Modifier.width(dimensions.spacingMedium))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Bentornato",
+                        color = colorScheme.onPrimary.copy(alpha = 0.8f),
+                        style = typography.titleSmall
+                    )
+                    Text(
+                        text = idUtente.ifEmpty { "Utente" },
+                        color = colorScheme.onPrimary,
+                        style = typography.titleLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }

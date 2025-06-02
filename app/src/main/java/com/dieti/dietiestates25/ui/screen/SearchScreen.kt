@@ -9,13 +9,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,12 +56,12 @@ import com.dieti.dietiestates25.ui.components.CustomSearchAppBar
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.theme.TealDeep
 
 const val MAX_RECENT_SEARCHES = 5 // Limita il numero di ricerche recenti
 
 @Composable
 fun SearchScreen(navController: NavController, idUtente: String) {
-    DietiEstatesTheme {
         val colorScheme = MaterialTheme.colorScheme
         val typography = MaterialTheme.typography
         val dimensions = Dimensions
@@ -112,6 +115,16 @@ fun SearchScreen(navController: NavController, idUtente: String) {
             focusRequester.requestFocus()
             keyboardController?.show()
         }
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Status Bar con colore TealDeep fisso
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(TealDeep)
+        )
 
         Box(
             modifier = Modifier
@@ -124,7 +137,7 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                     focusManager.clearFocus()
                 }
         ) {
-            Column(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
+            Column(modifier = Modifier.fillMaxSize()) {
                 CustomSearchAppBar(
                     searchQuery = searchQuery,
                     onSearchQueryChange = { query -> searchQuery = query },
@@ -181,6 +194,7 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                             }
                         )
                     }
+
                     showPrompt -> {
                         Box(
                             modifier = Modifier
@@ -198,6 +212,7 @@ fun SearchScreen(navController: NavController, idUtente: String) {
                             )
                         }
                     }
+
                     showRecentSearches -> {
                         RecentSearchesView(
                             recentSearches = recentSearches,
