@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
@@ -97,7 +98,8 @@ fun FullScreenMapScreen(
                         backgroundColor = Color.Transparent,
                         iconTint = colorScheme.onPrimary,
                         buttonSize = dimensions.iconSizeExtraLarge,
-                        iconSize = dimensions.iconSizeMedium
+                        iconSize = dimensions.iconSizeMedium,
+                        iconModifier = Modifier.size(dimensions.iconSizeMedium)
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

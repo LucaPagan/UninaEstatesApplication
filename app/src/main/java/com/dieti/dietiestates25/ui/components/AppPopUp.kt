@@ -91,7 +91,7 @@ fun LogoutConfirmAlertDialog(
             } else {
                 AppPrimaryButton(
                     onClick = { onLogoutConfirm(false) },
-                    text = "Annulla",
+                    text = dismissButtonText,
                     textStyle = centeredButtonTextStyle
                 )
             }

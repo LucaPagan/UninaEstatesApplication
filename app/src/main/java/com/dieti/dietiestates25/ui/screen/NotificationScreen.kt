@@ -7,7 +7,6 @@ import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 
-// Importa i modelli e il ViewModel dal nuovo package model
 import com.dieti.dietiestates25.ui.model.Notification
 import com.dieti.dietiestates25.ui.model.Appointment
 import com.dieti.dietiestates25.ui.model.NotificationsViewModel
@@ -15,7 +14,7 @@ import com.dieti.dietiestates25.ui.model.NotificationsViewModel
 import com.dieti.dietiestates25.ui.components.AppNotificationDisplay
 import com.dieti.dietiestates25.ui.components.AppAppointmentDisplay
 
-import java.util.Locale // Già presente
+import java.util.Locale
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable // Già presente in TabButton
@@ -29,7 +28,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color // Già presente in TabButton
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -81,8 +79,7 @@ fun NotificationScreen(
                 AppointmentsView(
                     appointments = appointments,
                     onAppointmentClick = { appointment ->
-                        println("Clicked appointment: ${appointment.title}")
-                        // Es. navController.navigate(Screen.AppointmentDetailScreen.withId(appointment.id))
+                        navController.navigate(Screen.AppointmentDetailScreen.route)
                     },
                     dimensions = dimensions, // Passa dimensions
                     colorScheme = colorScheme, // Passa se AppAppointmentDisplay non usa il default
@@ -94,12 +91,11 @@ fun NotificationScreen(
                     notifications = notifications,
                     onTabSelected = viewModel::setCurrentTab,
                     onToggleFavorite = viewModel::toggleFavorite,
-                    onNotificationClick = { notification ->
-                        navController.navigate(Screen.NotificationDetailScreen.route)
-                    },
+                    navController = navController,
                     dimensions = dimensions, // Passa dimensions
                     colorScheme = colorScheme,
-                    typography = typography
+                    typography = typography,
+
                 )
             }
         }
@@ -160,7 +156,8 @@ private fun NotificationScreenHeader(
                 contentDescription = contentDesc,
                 backgroundColor = colorScheme.primaryContainer,
                 iconTint = colorScheme.onPrimaryContainer,
-                iconSize = dimensions.iconSizeMedium
+                iconSize = dimensions.iconSizeMedium,
+                iconModifier = Modifier.size(dimensions.iconSizeMedium)
             )
         }
     }
@@ -172,7 +169,7 @@ private fun NotificationScreenContent(
     notifications: List<Notification>,
     onTabSelected: (NotificationsViewModel.NotificationTab) -> Unit,
     onToggleFavorite: (Int) -> Unit,
-    onNotificationClick: (Notification) -> Unit,
+    navController: NavController,
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions
@@ -188,7 +185,7 @@ private fun NotificationScreenContent(
             dimensions = dimensions
         )
         if (notifications.isEmpty()) {
-            EmptyDisplayView( // Rinominato per generalità
+            EmptyDisplayView(
                 modifier = Modifier.weight(1f),
                 message = "Nessuna notifica da mostrare.",
                 dimensions = dimensions,
@@ -200,7 +197,9 @@ private fun NotificationScreenContent(
                 modifier = Modifier.weight(1f),
                 notifications = notifications,
                 onToggleFavorite = onToggleFavorite,
-                onNotificationClick = onNotificationClick,
+                onNotificationClick = { notification ->
+                    navController.navigate(Screen.NotificationDetailScreen.createRoute(notification.id))
+                },
                 dimensions = dimensions,
                 colorScheme = colorScheme,
                 typography = typography
@@ -289,12 +288,12 @@ private fun NotificationsList(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
             horizontal = dimensions.paddingMedium,
-            vertical = 12.dp // Lasciato 12.dp
+            vertical = 12.dp
         ),
-        verticalArrangement = Arrangement.spacedBy(12.dp) // Lasciato 12.dp
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(notifications, key = { it.id }) { notification ->
-            AppNotificationDisplay( // Usa il nuovo componente da AppNotification.kt
+            AppNotificationDisplay(
                 notification = notification,
                 onToggleFavorite = onToggleFavorite, // Già accetta (Int)
                 onClick = { onNotificationClick(notification) },
@@ -321,7 +320,7 @@ fun NotificationTabs(
                 horizontal = dimensions.paddingMedium,
                 vertical = dimensions.paddingMedium
             )
-            .height(52.dp) // Lasciato 52.dp
+            .height(52.dp)
             .clip(RoundedCornerShape(dimensions.cornerRadiusLarge))
             .background(colorScheme.surfaceVariant)
             .padding(dimensions.paddingExtraSmall),
@@ -357,11 +356,11 @@ fun TabButton(
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .padding(horizontal = 2.dp) // Lasciato 2.dp
-            .clip(RoundedCornerShape(dimensions.cornerRadiusLarge)) // Usa dimensions
+            .padding(horizontal = 2.dp)
+            .clip(RoundedCornerShape(dimensions.cornerRadiusLarge))
             .background(if (isSelected) colorScheme.primary else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp), // Lasciato 12.dp
+            .padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(

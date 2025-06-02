@@ -41,7 +41,7 @@ private val LightColors = lightColorScheme(
     error = Color.Red,
     onError = Color.White,
     surfaceDim = Color.Transparent,
-    surfaceTint = Color(0xFFFFD700)
+    surfaceTint = Yellow
 )
 
 // Dark theme colors

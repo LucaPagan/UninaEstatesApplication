@@ -33,6 +33,7 @@ object Dimensions {
     val elevationSmall = 2.dp
     val elevationMedium = 4.dp
     val elevationLarge = 8.dp
+    val elevationNone = 0.dp
 
     // Component specific
     val buttonHeight = 56.dp

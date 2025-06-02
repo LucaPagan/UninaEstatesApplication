@@ -3,11 +3,13 @@ package com.dieti.dietiestates25.ui.navigation
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.dieti.dietiestates25.ui.model.NotificationsViewModel
 import com.dieti.dietiestates25.ui.screen.ApartmentListingScreen
 import com.dieti.dietiestates25.ui.screen.HomeScreen
 // ... (altri import delle tue schermate)
@@ -18,6 +20,7 @@ import com.dieti.dietiestates25.ui.screen.PropertySellScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.PropertyScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.PriceProposalScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.AppointmentBookingScreen // Import mancante
+import com.dieti.dietiestates25.ui.screen.AppointmentDetailScreen
 import com.dieti.dietiestates25.ui.screen.FullScreenMapScreen
 import com.dieti.dietiestates25.ui.screen.MapSearchScreen
 import com.dieti.dietiestates25.ui.screen.NotificationScreen // Import mancante
@@ -138,10 +141,27 @@ fun Navigation() {
 
 
         composable(route = Screen.PriceProposalScreen.route){ PriceProposalScreen(navController = navController) }
+
         composable(route = Screen.AppointmentBookingScreen.route){ AppointmentBookingScreen(navController = navController) }
+
         composable(route = Screen.NotificationScreen.route){ NotificationScreen(navController = navController) }
-        composable(route = Screen.NotificationDetailScreen.route){ NotificationDetailScreen(navController = navController) }
+
+        composable(
+            route = Screen.NotificationDetailScreen.route, // Usa la route base "notification_detail_screen/{notificationId}"
+            arguments = listOf(navArgument("notificationId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val notificationId = backStackEntry.arguments?.getInt("notificationId")
+            val notificationsViewModel: NotificationsViewModel = viewModel() // O come ottieni il ViewModel principale
+
+            NotificationDetailScreen(
+                navController = navController,
+                notificationId = notificationId,
+                onToggleMasterFavorite = { id -> notificationsViewModel.toggleFavorite(id) }
+            )
+        }
+
         composable(route = Screen.ProfileScreen.route){ ProfileScreen(navController = navController) }
+
         composable(
             // La rotta di MapSearchScreen DEVE corrispondere a come viene costruita
             // e i nomi dei path parameters qui ({idUtente}, {comune}, {ricerca})
@@ -253,7 +273,11 @@ fun Navigation() {
                 navController.popBackStack()
             }
         }
-        
+
+        composable(route = Screen.AppointmentDetailScreen.route){ AppointmentDetailScreen(
+            navController = navController,
+            appointmentId = ""
+        ) }
 
     }
 }
