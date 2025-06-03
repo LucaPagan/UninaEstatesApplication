@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ListAlt
@@ -187,10 +188,15 @@ fun SearchTypeSelectionTopBar(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(colorScheme.primary) // Usa direttamente TealDeep come nel tema
-            .windowInsetsPadding(WindowInsets.statusBars) // Gestisce automaticamente la status bar
+            .background(colorScheme.primary)
     ) {
-        // TopBar content
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(colorScheme.primaryContainer)
+        )
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()

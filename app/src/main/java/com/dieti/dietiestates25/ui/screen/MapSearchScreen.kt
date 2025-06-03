@@ -1,5 +1,6 @@
 package com.dieti.dietiestates25.ui.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -10,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
@@ -233,191 +235,197 @@ fun MapSearchScreen(
     }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colorScheme.surfaceDim)
+    ) {
+        Scaffold(
+            topBar = {
+                ApartmentListingScreen_MapSearchScreen_HeaderBar(
+                    navController = navController,
+                    comune = comune,
+                    onFilterClick = { showFilterSheet = true },
+                    filtersApplied = appliedFilters != null
+                )
+            },
+            floatingActionButton = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
+                    modifier = Modifier.navigationBarsPadding()
+                ) {
+                    // Pulsante per resettare i filtri (se applicati)
+                    if (appliedFilters != null) {
+                        FloatingActionButton(
+                            onClick = {
+                                appliedFilters = null
+                                selectedProperty = null
+                                println("Filtri resettati")
+                            },
+                            containerColor = colorScheme.errorContainer,
+                            contentColor = colorScheme.onErrorContainer,
+                            modifier = Modifier.size(dimensions.buttonHeight)
+                        ) {
+                            Icon(Icons.Filled.FilterList, "Reset Filtri")
+                        }
+                    }
 
-    Scaffold(
-        topBar = {
-            ApartmentListingScreen_MapSearchScreen_HeaderBar(
-                navController = navController,
-                comune = comune,
-                onFilterClick = { showFilterSheet = true },
-                filtersApplied = appliedFilters != null
-            )
-        },
-        floatingActionButton = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
-                modifier = Modifier.navigationBarsPadding()
-            ) {
-                // Pulsante per resettare i filtri (se applicati)
-                if (appliedFilters != null) {
+                    // Pulsante posizione corrente
                     FloatingActionButton(
                         onClick = {
-                            appliedFilters = null
-                            selectedProperty = null
-                            println("Filtri resettati")
+                            println("FAB Posizione Corrente cliccato")
+                            // Qui puoi implementare la logica per centrare sulla posizione corrente
                         },
-                        containerColor = colorScheme.errorContainer,
-                        contentColor = colorScheme.onErrorContainer,
-                        modifier = Modifier.size(dimensions.buttonHeight)
+                        containerColor = colorScheme.secondaryContainer,
+                        contentColor = colorScheme.onSecondaryContainer
                     ) {
-                        Icon(Icons.Filled.FilterList, "Reset Filtri")
+                        Icon(Icons.Filled.MyLocation, "La Mia Posizione")
                     }
                 }
-
-                // Pulsante posizione corrente
-                FloatingActionButton(
-                    onClick = {
-                        println("FAB Posizione Corrente cliccato")
-                        // Qui puoi implementare la logica per centrare sulla posizione corrente
+            },
+            floatingActionButtonPosition = FabPosition.End
+        ) { innerPadding ->
+            Box(modifier = Modifier.fillMaxSize()) {
+                GoogleMap(
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize(),
+                    cameraPositionState = cameraPositionState,
+                    properties = MapProperties(
+                        isMyLocationEnabled = false,
+                        mapType = MapType.NORMAL
+                    ),
+                    uiSettings = MapUiSettings(
+                        myLocationButtonEnabled = false,
+                        zoomControlsEnabled = true,
+                        mapToolbarEnabled = false,
+                        compassEnabled = true
+                    ),
+                    onMapClick = { latLng ->
+                        // Nasconde la preview quando si clicca sulla mappa
+                        selectedProperty = null
+                        println("Mappa cliccata in posizione: $latLng")
                     },
-                    containerColor = colorScheme.secondaryContainer,
-                    contentColor = colorScheme.onSecondaryContainer
+                    onPOIClick = { poi ->
+                        println("POI Cliccato: ${poi.name} @ ${poi.latLng}")
+                    }
                 ) {
-                    Icon(Icons.Filled.MyLocation, "La Mia Posizione")
-                }
-            }
-        },
-        floatingActionButtonPosition = FabPosition.End
-    ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            GoogleMap(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
-                cameraPositionState = cameraPositionState,
-                properties = MapProperties(
-                    isMyLocationEnabled = false,
-                    mapType = MapType.NORMAL
-                ),
-                uiSettings = MapUiSettings(
-                    myLocationButtonEnabled = false,
-                    zoomControlsEnabled = true,
-                    mapToolbarEnabled = false,
-                    compassEnabled = true
-                ),
-                onMapClick = { latLng ->
-                    // Nasconde la preview quando si clicca sulla mappa
-                    selectedProperty = null
-                    println("Mappa cliccata in posizione: $latLng")
-                },
-                onPOIClick = { poi ->
-                    println("POI Cliccato: ${poi.name} @ ${poi.latLng}")
-                }
-            ) {
-                // Mostra i marker solo se il livello di zoom è appropriato
-                if (currentZoom >= 10f) {
-                    propertiesToDisplay.forEach { property ->
-                        MarkerComposable(
-                            state = MarkerState(position = property.position),
-                            onClick = { marker ->
-                                println("Marker personalizzato '${property.title}' cliccato")
-                                selectedProperty = property
-                                coroutineScope.launch {
-                                    cameraPositionState.animate(
-                                        CameraUpdateFactory.newLatLngZoom(marker.position, 15f),
-                                        700
-                                    )
+                    // Mostra i marker solo se il livello di zoom è appropriato
+                    if (currentZoom >= 10f) {
+                        propertiesToDisplay.forEach { property ->
+                            MarkerComposable(
+                                state = MarkerState(position = property.position),
+                                onClick = { marker ->
+                                    println("Marker personalizzato '${property.title}' cliccato")
+                                    selectedProperty = property
+                                    coroutineScope.launch {
+                                        cameraPositionState.animate(
+                                            CameraUpdateFactory.newLatLngZoom(marker.position, 15f),
+                                            700
+                                        )
+                                    }
+                                    true // Consume il click per evitare comportamenti di default
                                 }
-                                true // Consume il click per evitare comportamenti di default
+                            ) {
+                                CustomPriceMarker(
+                                    price = property.price,
+                                    isSelected = selectedProperty?.id == property.id,
+                                    colorScheme = colorScheme,
+                                    typography = typography,
+                                    // Scala il marker in base al livello di zoom
+                                    scale = when {
+                                        currentZoom >= 15f -> 1f
+                                        currentZoom >= 13f -> 0.9f
+                                        currentZoom >= 11f -> 0.8f
+                                        else -> 0.7f
+                                    }
+                                )
                             }
-                        ) {
-                            CustomPriceMarker(
-                                price = property.price,
-                                isSelected = selectedProperty?.id == property.id,
-                                colorScheme = colorScheme,
-                                typography = typography,
-                                // Scala il marker in base al livello di zoom
-                                scale = when {
-                                    currentZoom >= 15f -> 1f
-                                    currentZoom >= 13f -> 0.9f
-                                    currentZoom >= 11f -> 0.8f
-                                    else -> 0.7f
-                                }
-                            )
                         }
                     }
                 }
-            }
 
-            // Preview della proprietà selezionata
-            selectedProperty?.let { property ->
-                PropertyPreviewInfoWindow(
-                    property = property,
-                    onClick = {
-                        navController.navigate(Screen.PropertyScreen.route)
-                    },
-                    onClose = {
-                        selectedProperty = null
-                    },
-                    dimensions = dimensions,
-                    typography = typography,
-                    colorScheme = colorScheme,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(dimensions.spacingMedium)
-                        .padding(bottom = dimensions.spacingLarge * 4) // Spazio per i FAB
-                )
-            }
-
-            // Indicatore del numero di risultati filtrati
-            if (appliedFilters != null) {
-                Card(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = dimensions.spacingMedium),
-                    colors = CardDefaults.cardColors(
-                        containerColor = colorScheme.primaryContainer
+                // Preview della proprietà selezionata
+                selectedProperty?.let { property ->
+                    PropertyPreviewInfoWindow(
+                        property = property,
+                        onClick = {
+                            navController.navigate(Screen.PropertyScreen.route)
+                        },
+                        onClose = {
+                            selectedProperty = null
+                        },
+                        dimensions = dimensions,
+                        typography = typography,
+                        colorScheme = colorScheme,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(dimensions.spacingMedium)
+                            .padding(bottom = dimensions.spacingLarge * 4) // Spazio per i FAB
                     )
-                ) {
-                    Text(
-                        text = "${propertiesToDisplay.size} proprietà trovate",
-                        style = typography.bodyMedium,
-                        color = colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(
-                            horizontal = dimensions.spacingMedium,
-                            vertical = dimensions.spacingSmall
+                }
+
+                // Indicatore del numero di risultati filtrati
+                if (appliedFilters != null) {
+                    Card(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = dimensions.spacingMedium),
+                        colors = CardDefaults.cardColors(
+                            containerColor = colorScheme.primaryContainer
                         )
-                    )
+                    ) {
+                        Text(
+                            text = "${propertiesToDisplay.size} proprietà trovate",
+                            style = typography.bodyMedium,
+                            color = colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(
+                                horizontal = dimensions.spacingMedium,
+                                vertical = dimensions.spacingSmall
+                            )
+                        )
+                    }
                 }
             }
         }
-    }
 
-    // ModalBottomSheet per i Filtri
-    if (showFilterSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showFilterSheet = false },
-            sheetState = sheetState,
-            containerColor = colorScheme.background,
-            shape = RoundedCornerShape(
-                topStart = dimensions.cornerRadiusLarge,
-                topEnd = dimensions.cornerRadiusLarge
-            ),
-            scrimColor = Color.Black.copy(alpha = 0.32f)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .defaultMinSize(minHeight = dimensions.buttonHeight * 10)
-                    .statusBarsPadding()
-                    .navigationBarsPadding()
+
+        // ModalBottomSheet per i Filtri
+        if (showFilterSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showFilterSheet = false },
+                sheetState = sheetState,
+                containerColor = colorScheme.background,
+                shape = RoundedCornerShape(
+                    topStart = dimensions.cornerRadiusLarge,
+                    topEnd = dimensions.cornerRadiusLarge
+                ),
+                scrimColor = Color.Black.copy(alpha = 0.32f)
             ) {
-                SearchFilterScreen(
-                    navController = navController,
-                    idUtente = idUtente,
-                    comune = comune,
-                    ricercaQueryText = ricerca,
-                    initialFilters = appliedFilters, // Passa i filtri correnti
-                    onNavigateBack = { showFilterSheet = false },
-                    onApplyFilters = { filterData ->
-                        appliedFilters = filterData
-                        selectedProperty = null // Reset selezione
-                        showFilterSheet = false
-                        println("MapSearchScreen - Filtri applicati: $filterData")
-                    },
-                    isFullScreenContext = false,
-                    originScreen = originScreen
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = dimensions.buttonHeight * 10)
+                        .statusBarsPadding()
+                        .navigationBarsPadding()
+                ) {
+                    SearchFilterScreen(
+                        navController = navController,
+                        idUtente = idUtente,
+                        comune = comune,
+                        ricercaQueryText = ricerca,
+                        initialFilters = appliedFilters, // Passa i filtri correnti
+                        onNavigateBack = { showFilterSheet = false },
+                        onApplyFilters = { filterData ->
+                            appliedFilters = filterData
+                            selectedProperty = null // Reset selezione
+                            showFilterSheet = false
+                            println("MapSearchScreen - Filtri applicati: $filterData")
+                        },
+                        isFullScreenContext = false,
+                        originScreen = originScreen
+                    )
+                }
             }
         }
     }
