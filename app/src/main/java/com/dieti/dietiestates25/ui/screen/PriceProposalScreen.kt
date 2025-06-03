@@ -20,14 +20,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -191,43 +194,39 @@ private fun PriceProposalTopAppBar(
     typography: Typography,
     dimensions: Dimensions
 ) {
-    Column {
-
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        // Status Bar con colore TealDeep fisso
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(colorScheme.primaryContainer)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
                 .background(colorScheme.primary)
-                .padding(horizontal = dimensions.paddingMedium)
-                .padding(top = dimensions.paddingExtraSmall, bottom = dimensions.paddingExtraSmall)
-                .statusBarsPadding(),
-            contentAlignment = Alignment.CenterStart
+                .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingMedium),
+            verticalAlignment = Alignment.CenterVertically, // Vertically center all items in this Row
+            horizontalArrangement = Arrangement.Start // Align items to the start (left)
         ) {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Proponi prezzo",
-                        style = typography.titleMedium
-                    )
+            CircularIconActionButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    navController.popBackStack()
                 },
-                navigationIcon = {
-                    CircularIconActionButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            navController.popBackStack()
-                        },
-                        iconVector = Icons.Default.Close,
-                        contentDescription = "Chiudi",
-                        backgroundColor = colorScheme.primaryContainer,
-                        iconTint = colorScheme.onPrimaryContainer,
-                        iconModifier = Modifier.size(dimensions.iconSizeMedium)
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorScheme.primary,
-                    titleContentColor = colorScheme.onPrimary,
-                    navigationIconContentColor = colorScheme.onPrimaryContainer
-                ),
-                modifier = Modifier.statusBarsPadding()
+                iconVector = Icons.Default.Close,
+                contentDescription = "Chiudi",
+                backgroundColor = colorScheme.primaryContainer,
+                iconTint = colorScheme.onPrimaryContainer,
+                iconModifier = Modifier.size(dimensions.iconSizeMedium)
+            )
+            Text(
+                text = "Proponi prezzo",
+                style = typography.titleMedium
             )
         }
 

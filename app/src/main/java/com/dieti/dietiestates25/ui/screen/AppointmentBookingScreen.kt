@@ -94,44 +94,42 @@ private fun AppointmentBookingTopAppBar(
     typography: Typography,
     dimensions: Dimensions
 ) {
-    Column {
-
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        // Status Bar con colore TealDeep fisso
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(colorScheme.primaryContainer)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
                 .background(colorScheme.primary)
-                .padding(horizontal = dimensions.paddingMedium)
-                .padding(top = dimensions.paddingExtraSmall, bottom = dimensions.paddingExtraSmall)
-                .statusBarsPadding(),
-            contentAlignment = Alignment.CenterStart
-        ) {
-
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Prenota una visita",
-                        style = typography.titleMedium
-                    )
-                },
-                navigationIcon = {
-                    CircularIconActionButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            navController.popBackStack()
-                        },
-                        iconVector = Icons.Default.Close,
-                        contentDescription = "Chiudi",
-                        backgroundColor = colorScheme.primaryContainer,
-                        iconTint = colorScheme.onPrimaryContainer,
-                        iconModifier = Modifier.size(dimensions.iconSizeMedium)
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorScheme.primary,
-                    titleContentColor = colorScheme.onPrimary,
-                    navigationIconContentColor = colorScheme.onPrimaryContainer,
-                    actionIconContentColor = colorScheme.onPrimary
+                .padding(
+                    horizontal = dimensions.paddingMedium,
+                    vertical = dimensions.paddingMedium
                 ),
+            verticalAlignment = Alignment.CenterVertically, // Vertically center all items in this Row
+            horizontalArrangement = Arrangement.Start // Align items to the start (left)
+        ) {
+            CircularIconActionButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    navController.popBackStack()
+                },
+                iconVector = Icons.Default.Close,
+                contentDescription = "Chiudi",
+                backgroundColor = colorScheme.primaryContainer,
+                iconTint = colorScheme.onPrimaryContainer,
+                iconModifier = Modifier.size(dimensions.iconSizeMedium)
+            )
+            Text(
+                text = "Prenota una visita",
+                style = typography.titleMedium
             )
         }
 

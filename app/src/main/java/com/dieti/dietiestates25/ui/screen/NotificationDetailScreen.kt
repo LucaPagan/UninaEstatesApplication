@@ -111,55 +111,66 @@ private fun NotificationDetailTopAppBar(
     typography: Typography,
     dimensions: Dimensions
 ) {
-    TopAppBar(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colorScheme.primary)
-            .padding(horizontal = dimensions.paddingMedium)
-            .padding(top = dimensions.paddingExtraSmall, bottom = dimensions.paddingExtraSmall)
-            .statusBarsPadding(),
-        title = {
-            Text(
-                text = notificationDetail?.senderType ?: "Dettaglio Notifica",
-                style = typography.titleLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        navigationIcon = {
-            CircularIconActionButton(
-                onClick = { navController.popBackStack() },
-                iconVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Indietro",
-                backgroundColor = colorScheme.primaryContainer,
-                iconTint = colorScheme.onPrimaryContainer,
-                iconModifier = Modifier.size(dimensions.iconSizeMedium)
-            )
-        },
-        actions = {
-            notificationDetail?.let { detail ->
+    Column (
+            modifier = Modifier
+                .fillMaxSize()
+            ) {
+        // Status Bar con colore TealDeep fisso
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(colorScheme.primaryContainer)
+        )
+        TopAppBar(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colorScheme.primary)
+                .padding(horizontal = dimensions.paddingMedium)
+                .padding(top = dimensions.paddingExtraSmall, bottom = dimensions.paddingExtraSmall),
+            title = {
+                Text(
+                    text = notificationDetail?.senderType ?: "Dettaglio Notifica",
+                    style = typography.titleLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
+            navigationIcon = {
                 CircularIconActionButton(
-                    onClick = onToggleFavorite,
-                    iconVector = if (detail.isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
-                    contentDescription = if (detail.isFavorite) "Rimuovi dai preferiti" else "Aggiungi ai preferiti",
+                    onClick = { navController.popBackStack() },
+                    iconVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Indietro",
                     backgroundColor = colorScheme.primaryContainer,
-                    iconTint = if (detail.isFavorite) colorScheme.tertiary else colorScheme.onPrimaryContainer,
+                    iconTint = colorScheme.onPrimaryContainer,
                     iconModifier = Modifier.size(dimensions.iconSizeMedium)
                 )
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = colorScheme.primary,
-            titleContentColor = colorScheme.onPrimary
-            // navigationIconContentColor e actionIconContentColor sono gestiti da CircularIconActionButton
+            },
+            actions = {
+                notificationDetail?.let { detail ->
+                    CircularIconActionButton(
+                        onClick = onToggleFavorite,
+                        iconVector = if (detail.isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
+                        contentDescription = if (detail.isFavorite) "Rimuovi dai preferiti" else "Aggiungi ai preferiti",
+                        backgroundColor = colorScheme.primaryContainer,
+                        iconTint = if (detail.isFavorite) colorScheme.tertiary else colorScheme.onPrimaryContainer,
+                        iconModifier = Modifier.size(dimensions.iconSizeMedium)
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = colorScheme.primary,
+                titleContentColor = colorScheme.onPrimary
+                // navigationIconContentColor e actionIconContentColor sono gestiti da CircularIconActionButton
+            )
         )
-    )
+    }
 }
 
 @Composable
 private fun NotificationDetailContent(
     modifier: Modifier = Modifier,
-    notificationDetail: NotificationDetail, // Usa la data class aggiornata
+    notificationDetail: NotificationDetail,
     formattedMessage: String,
     onAccept: () -> Unit,
     onReject: () -> Unit,

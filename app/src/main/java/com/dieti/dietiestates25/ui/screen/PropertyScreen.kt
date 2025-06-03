@@ -73,7 +73,7 @@ import androidx.core.net.toUri
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.geometry.Offset
-
+import com.dieti.dietiestates25.ui.theme.TealDeep
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -101,7 +101,7 @@ fun PropertyScreen(
     var isPageScrollEnabled by remember { mutableStateOf(true) }
 
     val initialZoomMiniMap = 12f
-    val zoomForFullscreenNavigation = 15f // Zoom da passare alla nuova schermata
+    val zoomForFullscreenNavigation = 15f
 
     val cameraPositionStateMiniMap = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(propertyCoordinates, initialZoomMiniMap)
@@ -121,8 +121,7 @@ fun PropertyScreen(
         }
     }
 
-    Scaffold(
-    ){ innerPadding ->
+    Scaffold { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -342,11 +341,25 @@ fun PropertyTopAppBar(
     navController: NavController,
     dimensions: Dimensions
 ) {
-    TopAppBar(
+    Column (
         modifier = Modifier
-            .statusBarsPadding()
-            .padding(horizontal = 10.dp),
-        navigationIcon = {
+            .fillMaxSize()
+    ) {
+        // Status Bar con colore TealDeep fisso
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(colorScheme.primaryContainer)
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth() // Occupa l'intera larghezza
+                .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingSmall), // Aggiunto padding standard
+            horizontalArrangement = Arrangement.SpaceBetween, // Spazio tra i pulsanti
+            verticalAlignment = Alignment.CenterVertically // Allinea i pulsanti verticalmente
+        ) {
             CircularIconActionButton(
                 onClick = { navController.popBackStack() },
                 iconVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -357,9 +370,6 @@ fun PropertyTopAppBar(
                 iconSize = dimensions.iconSizeMedium,
                 iconModifier = Modifier.size(dimensions.iconSizeMedium)
             )
-        },
-        title = { /* Empty title */ },
-        actions = {
             val isFavorite = remember { mutableStateOf(false) }
             CircularIconActionButton(
                 onClick = { isFavorite.value = !isFavorite.value },
@@ -371,11 +381,8 @@ fun PropertyTopAppBar(
                 iconSize = dimensions.iconSizeMedium,
                 iconModifier = Modifier.size(dimensions.iconSizeMedium)
             )
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color.Transparent
-        )
-    )
+        }
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
