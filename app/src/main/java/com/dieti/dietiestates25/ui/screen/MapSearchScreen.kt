@@ -18,6 +18,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
+import com.dieti.dietiestates25.ui.components.ApartmentListingScreen_MapSearchScreen_HeaderBar
 import com.dieti.dietiestates25.ui.components.PropertyPreviewInfoWindow
 import com.dieti.dietiestates25.ui.components.CustomPriceMarker
 import com.dieti.dietiestates25.ui.model.FilterModel
@@ -57,25 +58,33 @@ fun MapSearchScreen(
     // Stati per i filtri
     var showFilterSheet by remember { mutableStateOf(false) }
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    var initialFiltersFromNav = remember(currentBackStackEntry) {
-        currentBackStackEntry?.arguments?.let { args ->
-            val pType = args.getString("purchaseType")
-            val mPrice = args.getFloat("minPrice").takeIf { it != -1f && it != 0f }
-            val mxPrice = args.getFloat("maxPrice").takeIf { it != -1f }
-            val mSurf = args.getFloat("minSurface").takeIf { it != -1f && it != 0f }
-            val mxSurf = args.getFloat("maxSurface").takeIf { it != -1f }
-            val mRooms = args.getInt("minRooms").takeIf { it != -1 }
-            val mxRooms = args.getInt("maxRooms").takeIf { it != -1 }
-            val baths = args.getInt("bathrooms").takeIf { it != -1 }
-            val cond = args.getString("condition")
 
-            if (pType != null || mPrice != null || mxPrice != null || mSurf != null || mxSurf != null || mRooms != null || mxRooms != null || baths != null || cond != null) {
-                FilterModel(
-                    purchaseType = pType, minPrice = mPrice, maxPrice = mxPrice,
-                    minSurface = mSurf, maxSurface = mxSurf, minRooms = mRooms,
-                    maxRooms = mxRooms, bathrooms = baths, condition = cond
-                )
-            } else { null }
+    // Gestione dei filtri con stato reattivo
+    var appliedFilters by remember { mutableStateOf<FilterModel?>(null) }
+
+    // Inizializza i filtri dai parametri di navigazione una sola volta
+    LaunchedEffect(currentBackStackEntry) {
+        if (appliedFilters == null) {
+            currentBackStackEntry?.arguments?.let { args ->
+                val pType = args.getString("purchaseType")
+                val mPrice = args.getFloat("minPrice").takeIf { it != -1f && it != 0f }
+                val mxPrice = args.getFloat("maxPrice").takeIf { it != -1f }
+                val mSurf = args.getFloat("minSurface").takeIf { it != -1f && it != 0f }
+                val mxSurf = args.getFloat("maxSurface").takeIf { it != -1f }
+                val mRooms = args.getInt("minRooms").takeIf { it != -1 }
+                val mxRooms = args.getInt("maxRooms").takeIf { it != -1 }
+                val baths = args.getInt("bathrooms").takeIf { it != -1 }
+                val cond = args.getString("condition")
+
+                if (pType != null || mPrice != null || mxPrice != null || mSurf != null ||
+                    mxSurf != null || mRooms != null || mxRooms != null || baths != null || cond != null) {
+                    appliedFilters = FilterModel(
+                        purchaseType = pType, minPrice = mPrice, maxPrice = mxPrice,
+                        minSurface = mSurf, maxSurface = mxSurf, minRooms = mRooms,
+                        maxRooms = mxRooms, bathrooms = baths, condition = cond
+                    )
+                }
+            }
         }
     }
 
@@ -89,8 +98,8 @@ fun MapSearchScreen(
         derivedStateOf { cameraPositionState.position.zoom }
     }
 
-    // Lista delle proprietà da mostrare con dati più completi
-    val propertiesToDisplay = remember(comune, ricerca, initialFiltersFromNav) {
+    // Lista completa delle proprietà (simulata)
+    val allProperties = remember {
         listOf(
             PropertyMarker(
                 id = "1",
@@ -98,11 +107,15 @@ fun MapSearchScreen(
                 title = "Appartamento Centro Storico",
                 price = "€850/mese",
                 type = "2 locali",
-                imageRes = PropertyMarker.getPropertyImage("1"), // property1
+                imageRes = PropertyMarker.getPropertyImage("1"),
                 description = "Splendido appartamento nel cuore del centro storico di Napoli",
                 surface = "85 m²",
                 bathrooms = 1,
-                bedrooms = 2
+                bedrooms = 2,
+                purchaseType = "affitto",
+                condition = "ottimo",
+                priceValue = 850,
+                surfaceValue = 85
             ),
             PropertyMarker(
                 id = "2",
@@ -110,11 +123,15 @@ fun MapSearchScreen(
                 title = "Monolocale Vomero",
                 price = "€650/mese",
                 type = "1 locale",
-                imageRes = PropertyMarker.getPropertyImage("2"), // property2
+                imageRes = PropertyMarker.getPropertyImage("2"),
                 description = "Accogliente monolocale nella zona residenziale del Vomero",
                 surface = "45 m²",
                 bathrooms = 1,
-                bedrooms = 1
+                bedrooms = 1,
+                purchaseType = "affitto",
+                condition = "buono",
+                priceValue = 650,
+                surfaceValue = 45
             ),
             PropertyMarker(
                 id = "3",
@@ -122,76 +139,142 @@ fun MapSearchScreen(
                 title = "Trilocale Chiaia",
                 price = "€1200/mese",
                 type = "3 locali",
-                imageRes = PropertyMarker.getPropertyImage("3"), // property1 come fallback
+                imageRes = PropertyMarker.getPropertyImage("3"),
                 description = "Elegante trilocale nella prestigiosa zona di Chiaia",
                 surface = "120 m²",
                 bathrooms = 2,
-                bedrooms = 3
+                bedrooms = 3,
+                purchaseType = "affitto",
+                condition = "eccellente",
+                priceValue = 1200,
+                surfaceValue = 120
+            ),
+            PropertyMarker(
+                id = "4",
+                position = LatLng(40.8350, 14.2450),
+                title = "Villa Posillipo",
+                price = "€450.000",
+                type = "Villa",
+                imageRes = PropertyMarker.getPropertyImage("1"),
+                description = "Splendida villa con vista mare a Posillipo",
+                surface = "200 m²",
+                bathrooms = 3,
+                bedrooms = 4,
+                purchaseType = "vendita",
+                condition = "eccellente",
+                priceValue = 450000,
+                surfaceValue = 200
+            ),
+            PropertyMarker(
+                id = "5",
+                position = LatLng(40.8550, 14.2750),
+                title = "Loft Moderno",
+                price = "€900/mese",
+                type = "Loft",
+                imageRes = PropertyMarker.getPropertyImage("2"),
+                description = "Loft moderno con design contemporaneo",
+                surface = "95 m²",
+                bathrooms = 2,
+                bedrooms = 1,
+                purchaseType = "affitto",
+                condition = "nuovo",
+                priceValue = 900,
+                surfaceValue = 95
             )
-        ).filter { true }
+        )
+    }
+
+    // Filtra le proprietà in base ai filtri applicati
+    val propertiesToDisplay = remember(appliedFilters, comune, ricerca) {
+        allProperties.filter { property ->
+            appliedFilters?.let { filters ->
+                // Filtra per tipo di acquisto
+                if (filters.purchaseType != null && property.purchaseType != filters.purchaseType) {
+                    return@filter false
+                }
+
+                // Filtra per prezzo
+                if (filters.minPrice != null && property.priceValue < filters.minPrice) {
+                    return@filter false
+                }
+                if (filters.maxPrice != null && property.priceValue > filters.maxPrice) {
+                    return@filter false
+                }
+
+                // Filtra per superficie
+                if (filters.minSurface != null && property.surfaceValue < filters.minSurface) {
+                    return@filter false
+                }
+                if (filters.maxSurface != null && property.surfaceValue > filters.maxSurface) {
+                    return@filter false
+                }
+
+                // Filtra per stanze
+                if (filters.minRooms != null && property.bedrooms < filters.minRooms) {
+                    return@filter false
+                }
+                if (filters.maxRooms != null && property.bedrooms > filters.maxRooms) {
+                    return@filter false
+                }
+
+                // Filtra per bagni
+                if (filters.bathrooms != null && property.bathrooms < filters.bathrooms) {
+                    return@filter false
+                }
+
+                // Filtra per condizione
+                if (filters.condition != null && property.condition != filters.condition) {
+                    return@filter false
+                }
+
+                true
+            } ?: true // Se non ci sono filtri, mostra tutto
+        }
     }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
 
     Scaffold(
-        modifier = Modifier.statusBarsPadding(),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = comune.capitalizeFirstLetter() +
-                                if (ricerca.isNotBlank() && ricerca.lowercase() != comune.lowercase()) {
-                                    " - ${ricerca.capitalizeFirstLetter()}"
-                                } else { "" },
-                        style = typography.titleMedium,
-                        color = colorScheme.onPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Indietro",
-                            tint = colorScheme.onPrimary
-                        )
-                    }
-                },
-                actions = {
-                    Box {
-                        IconButton(onClick = { showFilterSheet = true }) {
-                            Icon(
-                                Icons.Default.FilterList,
-                                contentDescription = "Filtri",
-                                tint = colorScheme.onPrimary
-                            )
-                        }
-                        if (initialFiltersFromNav != null) {
-                            Badge(
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .offset(x = dimensions.spacingExtraSmall, y = -(dimensions.spacingExtraSmall)),
-                                containerColor = colorScheme.error
-                            ) {}
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorScheme.primary
-                )
+            ApartmentListingScreen_MapSearchScreen_HeaderBar(
+                navController = navController,
+                comune = comune,
+                onFilterClick = { showFilterSheet = true },
+                filtersApplied = appliedFilters != null
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    println("FAB Posizione Corrente cliccato")
-                },
-                containerColor = colorScheme.secondaryContainer,
-                contentColor = colorScheme.onSecondaryContainer,
+            Column(
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
                 modifier = Modifier.navigationBarsPadding()
             ) {
-                Icon(Icons.Filled.MyLocation, "La Mia Posizione")
+                // Pulsante per resettare i filtri (se applicati)
+                if (appliedFilters != null) {
+                    FloatingActionButton(
+                        onClick = {
+                            appliedFilters = null
+                            selectedProperty = null
+                            println("Filtri resettati")
+                        },
+                        containerColor = colorScheme.errorContainer,
+                        contentColor = colorScheme.onErrorContainer,
+                        modifier = Modifier.size(dimensions.buttonHeight)
+                    ) {
+                        Icon(Icons.Filled.FilterList, "Reset Filtri")
+                    }
+                }
+
+                // Pulsante posizione corrente
+                FloatingActionButton(
+                    onClick = {
+                        println("FAB Posizione Corrente cliccato")
+                        // Qui puoi implementare la logica per centrare sulla posizione corrente
+                    },
+                    containerColor = colorScheme.secondaryContainer,
+                    contentColor = colorScheme.onSecondaryContainer
+                ) {
+                    Icon(Icons.Filled.MyLocation, "La Mia Posizione")
+                }
             }
         },
         floatingActionButtonPosition = FabPosition.End
@@ -272,8 +355,30 @@ fun MapSearchScreen(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(dimensions.spacingMedium)
-                        .padding(bottom = dimensions.spacingLarge * 2) // Spazio per il FAB
+                        .padding(bottom = dimensions.spacingLarge * 4) // Spazio per i FAB
                 )
+            }
+
+            // Indicatore del numero di risultati filtrati
+            if (appliedFilters != null) {
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = dimensions.spacingMedium),
+                    colors = CardDefaults.cardColors(
+                        containerColor = colorScheme.primaryContainer
+                    )
+                ) {
+                    Text(
+                        text = "${propertiesToDisplay.size} proprietà trovate",
+                        style = typography.bodyMedium,
+                        color = colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(
+                            horizontal = dimensions.spacingMedium,
+                            vertical = dimensions.spacingSmall
+                        )
+                    )
+                }
             }
         }
     }
@@ -302,11 +407,13 @@ fun MapSearchScreen(
                     idUtente = idUtente,
                     comune = comune,
                     ricercaQueryText = ricerca,
+                    initialFilters = appliedFilters, // Passa i filtri correnti
                     onNavigateBack = { showFilterSheet = false },
                     onApplyFilters = { filterData ->
-                        initialFiltersFromNav = filterData
+                        appliedFilters = filterData
+                        selectedProperty = null // Reset selezione
                         showFilterSheet = false
-                        println("MapSearchScreen - Filtri da applicare: $filterData")
+                        println("MapSearchScreen - Filtri applicati: $filterData")
                     },
                     isFullScreenContext = false,
                     originScreen = originScreen
@@ -324,7 +431,7 @@ fun MapSearchScreenPreview() {
             navController = rememberNavController(),
             idUtente = "previewUser",
             comune = "Napoli",
-            ricerca = "Centro", // Nome parametro corretto
+            ricerca = "Centro",
         )
     }
 }

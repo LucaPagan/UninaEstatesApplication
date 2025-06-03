@@ -14,9 +14,13 @@ data class PropertyMarker(
     val surface: String = "",
     val bathrooms: Int = 0,
     val bedrooms: Int = 0,
+    val purchaseType : String = "",
     val address: String = "",
     val condition: String = "",
-    val isAvailable: Boolean = true
+    val isAvailable: Boolean = true,
+    val priceValue: Int = 850,
+    val surfaceValue: Int = 85
+
 ) {
     companion object {
         // Helper per le immagini delle proprietà

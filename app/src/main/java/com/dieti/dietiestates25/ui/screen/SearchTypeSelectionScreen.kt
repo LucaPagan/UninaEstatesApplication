@@ -2,25 +2,26 @@ package com.dieti.dietiestates25.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.filled.Train
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -38,9 +40,9 @@ import com.dieti.dietiestates25.ui.model.FilterModel
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.theme.TealDeep
 import com.dieti.dietiestates25.ui.utils.capitalizeFirstLetter
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchTypeSelectionScreen(
     navController: NavController,
@@ -92,42 +94,28 @@ fun SearchTypeSelectionScreen(
         colorScheme.primary.copy(alpha = 0.6f)
     )
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Scegli Visualizzazione",
-                        style = typography.titleLarge, // Titolo più grande per la schermata
-                        color = colorScheme.onPrimary
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        println("Current route: ${navController.currentDestination?.route}")
-                        println("Previous route: ${navController.previousBackStackEntry?.destination?.route}")
+    // Layout principale senza Scaffold
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // TopBar personalizzata
+        SearchTypeSelectionTopBar(
+            title = "Scegli Visualizzazione",
+            onNavigationClick = {
+                println("Current route: ${navController.currentDestination?.route}")
+                println("Previous route: ${navController.previousBackStackEntry?.destination?.route}")
+                navController.popBackStack()
+            }
+        )
 
-                        navController.popBackStack(Screen.ApartmentListingScreen.route, inclusive = false)
-                    }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Indietro",
-                            tint = colorScheme.onPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary)
-            )
-        }
-    ) { innerPadding ->
+        // Contenuto principale
         Column(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
                 .background(Brush.verticalGradient(colors = gradientColors))
                 .padding(dimensions.paddingLarge),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center // Centra i bottoni verticalmente
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = "Risultati per: ${comune.capitalizeFirstLetter()}" +
@@ -149,7 +137,7 @@ fun SearchTypeSelectionScreen(
                         Screen.ApartmentListingScreen.buildRoute(
                             idUtentePath = idUtente,
                             comunePath = comune,
-                            ricercaPath = ricerca, // Passa la query originale
+                            ricercaPath = ricerca,
                             filters = initialFiltersFromNav
                         )
                     )
@@ -172,19 +160,60 @@ fun SearchTypeSelectionScreen(
             )
 
             Spacer(modifier = Modifier.height(dimensions.spacingMedium))
+
             AppPrimaryButton(
                 text = "Visualizza per Stazioni Metro",
                 onClick = {
-            //       // TODO: Naviga alla schermata di ricerca per metro con i filtri
-            //       // navController.navigate(Screen.MetroSearchScreen.buildRoute(idUtente, comune, ricercaQueryText, appliedFilters))
-            },
-            modifier = Modifier.fillMaxWidth(),
-            icon = Icons.Filled.Train
+                    // TODO: Naviga alla schermata di ricerca per metro con i filtri
+                    // navController.navigate(Screen.MetroSearchScreen.buildRoute(idUtente, comune, ricercaQueryText, appliedFilters))
+                },
+                modifier = Modifier.fillMaxWidth(),
+                icon = Icons.Filled.Train
             )
         }
     }
+}
 
+@Composable
+fun SearchTypeSelectionTopBar(
+    title: String,
+    onNavigationClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
 
+    // Container che include la status bar
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(colorScheme.primary) // Usa direttamente TealDeep come nel tema
+            .windowInsetsPadding(WindowInsets.statusBars) // Gestisce automaticamente la status bar
+    ) {
+        // TopBar content
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp) // Altezza standard della TopAppBar
+                .padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onNavigationClick) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Indietro",
+                    tint = colorScheme.onPrimary
+                )
+            }
+
+            Text(
+                text = title,
+                style = typography.titleLarge,
+                color = colorScheme.onPrimary,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true, device = "spec:width=411dp,height=891dp,dpi=420")

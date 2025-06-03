@@ -3,20 +3,29 @@ package com.dieti.dietiestates25.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,10 +42,13 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.theme.TealDeep
 
 @Composable
 fun ClickableSearchBar(
@@ -193,3 +205,103 @@ fun ClickableSearchBar(
             }
         }
     }
+
+@Composable
+fun ApartmentListingScreen_MapSearchScreen_HeaderBar(
+    navController: NavController,
+    comune: String,
+    onFilterClick: () -> Unit,
+    filtersApplied: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val dimensions = Dimensions
+
+    // Container che include la status bar
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(TealDeep)
+        )
+        // Header content con forma arrotondata
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(dimensions.buttonHeight + dimensions.spacingSmall),
+            color = colorScheme.primary,
+            shape = RoundedCornerShape(
+                bottomStart = dimensions.cornerRadiusLarge,
+                bottomEnd = dimensions.cornerRadiusLarge
+            ),
+            shadowElevation = dimensions.elevationMedium
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = dimensions.spacingSmall),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.size(dimensions.iconSizeLarge + dimensions.spacingSmall)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Indietro",
+                        tint = colorScheme.onPrimary,
+                        modifier = Modifier.size(dimensions.iconSizeMedium)
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = dimensions.spacingSmall),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = comune.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase() else it.toString()
+                        },
+                        color = colorScheme.onPrimary,
+                        style = typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Box {
+                    IconButton(
+                        onClick = onFilterClick,
+                        modifier = Modifier.size(dimensions.iconSizeLarge + dimensions.spacingSmall)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = "Filtra",
+                            tint = colorScheme.onPrimary,
+                            modifier = Modifier.size(dimensions.iconSizeMedium)
+                        )
+                    }
+                    if (filtersApplied) {
+                        Badge(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(
+                                    x = -(dimensions.spacingSmall),
+                                    y = dimensions.spacingExtraSmall
+                                ),
+                            containerColor = colorScheme.error
+                        ) {}
+                    }
+                }
+            }
+        }
+    }
+}
