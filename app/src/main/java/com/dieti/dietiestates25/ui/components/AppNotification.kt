@@ -161,7 +161,7 @@ fun AppNotificationDisplay(
                 contentDescription = if (notification.isFavorite) "Rimuovi dai preferiti" else "Aggiungi ai preferiti",
                 backgroundColor = colorScheme.surfaceDim,
                 iconTint = if (notification.isFavorite) colorScheme.surfaceTint else colorScheme.onPrimaryContainer,
-                iconModifier = Modifier.size(dimensions.iconSizeMedium) // Usa dimensions (24dp)
+                iconModifier = Modifier.size(dimensions.iconSizeMedium)
             )
         },
         modifier = modifier,

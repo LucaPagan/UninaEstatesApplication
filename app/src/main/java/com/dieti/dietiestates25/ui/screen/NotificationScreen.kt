@@ -19,6 +19,7 @@ import java.util.Locale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable // Già presente in TabButton
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -111,54 +112,68 @@ private fun NotificationScreenHeader(
     isShowingAppointments: Boolean,
     onCalendarIconClick: () -> Unit
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colorScheme.primary)
-            .clip(
-                RoundedCornerShape(
-                    bottomStart = dimensions.cornerRadiusLarge,
-                    bottomEnd = dimensions.cornerRadiusLarge
-                )
-            )
-            .padding(horizontal = dimensions.paddingLarge)
-            .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge)
-            .statusBarsPadding(),
-        contentAlignment = Alignment.CenterStart
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                AppIconDisplay(
-                    size = 60.dp, // Valore specifico per questo design
-                    shapeRadius = dimensions.cornerRadiusMedium
+        // Status Bar con colore TealDeep fisso
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(colorScheme.primaryContainer)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colorScheme.primary)
+                .clip(
+                    RoundedCornerShape(
+                        bottomStart = dimensions.cornerRadiusLarge,
+                        bottomEnd = dimensions.cornerRadiusLarge
+                    )
                 )
-                Spacer(modifier = Modifier.width(dimensions.spacingMedium))
-                Text(
-                    text = if (isShowingAppointments) "Appuntamenti" else "Notifiche",
-                    color = colorScheme.onPrimary,
-                    style = typography.titleLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                .padding(horizontal = dimensions.paddingLarge)
+                .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge),
+            contentAlignment = Alignment.CenterStart
+        ) {
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    AppIconDisplay(
+                        size = 60.dp, // Valore specifico per questo design
+                        shapeRadius = dimensions.cornerRadiusMedium
+                    )
+                    Spacer(modifier = Modifier.width(dimensions.spacingMedium))
+                    Text(
+                        text = if (isShowingAppointments) "Appuntamenti" else "Notifiche",
+                        color = colorScheme.onPrimary,
+                        style = typography.titleLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                val iconVector =
+                    if (isShowingAppointments) Icons.Filled.Notifications else Icons.Filled.CalendarToday
+                val contentDesc =
+                    if (isShowingAppointments) "Mostra Notifiche" else "Mostra Appuntamenti"
+                CircularIconActionButton(
+                    onClick = onCalendarIconClick,
+                    iconVector = iconVector,
+                    contentDescription = contentDesc,
+                    backgroundColor = colorScheme.primaryContainer,
+                    iconTint = colorScheme.onPrimaryContainer,
+                    iconSize = dimensions.iconSizeMedium,
+                    iconModifier = Modifier.size(dimensions.iconSizeMedium)
                 )
             }
-            val iconVector = if (isShowingAppointments) Icons.Filled.Notifications else Icons.Filled.CalendarToday
-            val contentDesc = if (isShowingAppointments) "Mostra Notifiche" else "Mostra Appuntamenti"
-            CircularIconActionButton(
-                onClick = onCalendarIconClick,
-                iconVector = iconVector,
-                contentDescription = contentDesc,
-                backgroundColor = colorScheme.primaryContainer,
-                iconTint = colorScheme.onPrimaryContainer,
-                iconSize = dimensions.iconSizeMedium,
-                iconModifier = Modifier.size(dimensions.iconSizeMedium)
-            )
         }
     }
 }
