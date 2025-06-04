@@ -21,13 +21,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -179,58 +182,73 @@ private fun ProfileScreenHeader(
     typography: Typography,
     dimensions: Dimensions
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colorScheme.primary)
-            .clip(
-                RoundedCornerShape(
-                    bottomStart = dimensions.cornerRadiusLarge,
-                    bottomEnd = dimensions.cornerRadiusLarge
-                )
-            )
-            .padding(horizontal = dimensions.paddingLarge)
-            .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge)
-            .statusBarsPadding(),
-        contentAlignment = Alignment.CenterStart
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        // Status Bar con colore TealDeep fisso
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(colorScheme.primaryContainer)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colorScheme.primary)
+                .clip(
+                    RoundedCornerShape(
+                        bottomStart = dimensions.cornerRadiusLarge,
+                        bottomEnd = dimensions.cornerRadiusLarge
+                    )
+                )
+                .padding(horizontal = dimensions.paddingLarge)
+                .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge),
+            contentAlignment = Alignment.CenterStart
         ) {
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                AppIconDisplay(
-                    size = 60.dp,
-                    shapeRadius = dimensions.cornerRadiusMedium
-                )
-                Spacer(modifier = Modifier.width(dimensions.spacingMedium))
-                val baseTitle = if (isEditMode) "Modifica Profilo" else "Profilo Utente"
-                val screenTitle = if (isEditMode && hasUnsavedChanges) "$baseTitle*" else baseTitle
-                Text(
-                    text = screenTitle,
-                    style = typography.titleLarge,
-                    color = colorScheme.onPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    AppIconDisplay(
+                        size = 60.dp,
+                        shapeRadius = dimensions.cornerRadiusMedium
+                    )
+                    Spacer(modifier = Modifier.width(dimensions.spacingMedium))
+                    val baseTitle = if (isEditMode) "Modifica Profilo" else "Profilo Utente"
+                    val screenTitle =
+                        if (isEditMode && hasUnsavedChanges) "$baseTitle*" else baseTitle
+                    Text(
+                        text = screenTitle,
+                        style = typography.titleLarge,
+                        color = colorScheme.onPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                val currentIconVector = if (isEditMode) Icons.Filled.Close else Icons.Filled.Edit
+                val currentContentDescription =
+                    if (isEditMode) "Annulla Modifiche" else "Modifica Dati"
+                val currentBackgroundColor =
+                    if (isEditMode) colorScheme.errorContainer else colorScheme.primaryContainer
+                val currentIconTint =
+                    if (isEditMode) colorScheme.onErrorContainer else colorScheme.onPrimaryContainer
+                CircularIconActionButton(
+                    onClick = onToggleEditMode,
+                    iconVector = currentIconVector,
+                    contentDescription = currentContentDescription,
+                    backgroundColor = currentBackgroundColor,
+                    iconTint = currentIconTint,
+                    iconSize = dimensions.iconSizeMedium,
+                    iconModifier = Modifier.size(dimensions.iconSizeMedium)
                 )
             }
-            val currentIconVector = if (isEditMode) Icons.Filled.Close else Icons.Filled.Edit
-            val currentContentDescription = if (isEditMode) "Annulla Modifiche" else "Modifica Dati"
-            val currentBackgroundColor = if (isEditMode) colorScheme.errorContainer else colorScheme.primaryContainer
-            val currentIconTint = if (isEditMode) colorScheme.onErrorContainer else colorScheme.onPrimaryContainer
-            CircularIconActionButton(
-                onClick = onToggleEditMode,
-                iconVector = currentIconVector,
-                contentDescription = currentContentDescription,
-                backgroundColor = currentBackgroundColor,
-                iconTint = currentIconTint,
-                iconSize = dimensions.iconSizeMedium,
-                iconModifier = Modifier.size(dimensions.iconSizeMedium)
-            )
         }
     }
 }
@@ -446,19 +464,19 @@ private fun ProfileOtherOptions(
                 .align(Alignment.Start)
         )
         ProfileOptionRow(
-            text = "Controlla immobili salvati",
+            text = "I tuoi immobili",
             icon = Icons.Default.NightsStay,
             onClick = { /* Naviga */ },
             dimensions = dimensions
         )
         ProfileOptionRow(
-            text = "Controlla richieste agenzia",
+            text = "Immobili salvati",
             icon = Icons.Default.NightsStay,
             onClick = { /* Naviga */ },
             dimensions = dimensions
         )
         ProfileOptionRow(
-            text = "Impostazioni Notifiche",
+            text = "Richieste appuntamenti",
             icon = Icons.Default.NightsStay,
             onClick = { /* Naviga */ },
             dimensions = dimensions

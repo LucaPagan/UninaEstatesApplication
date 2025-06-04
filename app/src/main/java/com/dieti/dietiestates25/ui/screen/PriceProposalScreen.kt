@@ -211,7 +211,7 @@ private fun PriceProposalTopAppBar(
                 .background(colorScheme.primary)
                 .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingMedium),
             verticalAlignment = Alignment.CenterVertically, // Vertically center all items in this Row
-            horizontalArrangement = Arrangement.Start // Align items to the start (left)
+            horizontalArrangement = Arrangement.Start, // Align items to the start (left)
         ) {
             CircularIconActionButton(
                 onClick = {

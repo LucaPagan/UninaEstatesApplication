@@ -1,62 +1,59 @@
-package com.dieti.dietiestates25.ui.model // O il tuo percorso corretto per i model
+package com.dieti.dietiestates25.ui.model
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dieti.dietiestates25.R // Per accedere alle risorse di esempio
+import com.dieti.dietiestates25.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import android.util.Log
 
-// Data class per rappresentare i dettagli di un appuntamento (può espandere Appointment se necessario)
-data class AppointmentDetail(
+data class AppointmentDetail( // Già definito, lo lascio per completezza
     val id: String,
     val title: String,
     val date: LocalDate,
-    val timeSlot: String, // Es. "10:00 - 11:00"
+    val timeSlot: String,
     val address: String,
-    val propertyImageUrl: Int?, // ID risorsa drawable, nullable
+    val propertyImageUrl: Int?,
     val description: String?,
     val participants: List<String>?,
     val iconType: AppointmentIconType = AppointmentIconType.VISIT,
-    val notes: String? = null // Note aggiuntive per l'appuntamento
+    val notes: String? = null
 )
 
-// ViewModel per AppointmentDetailScreen
 class AppointmentDetailViewModel : ViewModel() {
 
     private val _currentAppointment = MutableStateFlow<AppointmentDetail?>(null)
     val currentAppointment: StateFlow<AppointmentDetail?> = _currentAppointment.asStateFlow()
 
-    // Formatter riutilizzabili
-    private val dateFormatter = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.ITALIAN)
-    private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.ITALIAN)
+    private val dateFormatter = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.ITALIAN) // Modificato yyyy per anno completo
 
+    // Mappa per convertire l'indice dello slot orario in una stringa rappresentativa
+    private val timeSlotMap = mapOf(
+        0 to "9:00 - 12:00",
+        1 to "12:00 - 14:00",
+        2 to "14:00 - 17:00",
+        3 to "17:00 - 20:00"
+    )
 
     fun loadAppointmentDetail(appointmentId: String?) {
         viewModelScope.launch {
-            // --- SIMULAZIONE CARICAMENTO DATI ---
-            // In un'app reale, qui faresti una chiamata a un repository/database
-            // per ottenere i dettagli dell'appuntamento basati su appointmentId.
             if (appointmentId == null) {
-                _currentAppointment.value = null // O gestisci l'errore
+                _currentAppointment.value = null
                 return@launch
             }
-
-            // Dati di esempio
             _currentAppointment.value = when (appointmentId) {
                 "apt1" -> AppointmentDetail(
                     id = "apt1",
                     title = "Visita Appartamento Via Roma",
                     date = LocalDate.now().plusDays(2),
-                    timeSlot = "10:00 - 11:00",
+                    timeSlot = "10:00 - 11:00", // Questo è un esempio, potrebbe non mappare direttamente agli indici
                     address = "Via Roma, 123, Napoli",
-                    propertyImageUrl = R.drawable.property1, // Usa una tua risorsa drawable
+                    propertyImageUrl = R.drawable.property1,
                     description = "Visione dell'appartamento trilocale con il Sig. Rossi. Portare planimetrie.",
                     participants = listOf("Mario Rossi (Cliente)", "Luigi Verdi (Agente)"),
                     iconType = AppointmentIconType.VISIT,
@@ -68,16 +65,16 @@ class AppointmentDetailViewModel : ViewModel() {
                     date = LocalDate.now().plusDays(1),
                     timeSlot = "15:30 - 16:30",
                     address = "Sede Agenzia DietiEstates, Via Toledo 45, Napoli",
-                    propertyImageUrl = null, // Nessuna immagine per un meeting
+                    propertyImageUrl = null,
                     description = "Riunione interna per discutere le nuove strategie di marketing per il trimestre.",
                     participants = listOf("Team Marketing", "Direzione Vendite"),
                     iconType = AppointmentIconType.MEETING
                 )
-                else -> AppointmentDetail( // Fallback o appuntamento di default
+                else -> AppointmentDetail(
                     id = appointmentId,
-                    title = "Appuntamento Generico",
+                    title = "Appuntamento Generico ID: $appointmentId",
                     date = LocalDate.now().plusDays(5),
-                    timeSlot = "Orario da definire",
+                    timeSlot = timeSlotMap[0] ?: "Orario da definire", // Usa il primo slot come default
                     address = "Indirizzo non specificato",
                     propertyImageUrl = R.drawable.property2,
                     description = "Dettagli non disponibili per questo appuntamento.",
@@ -85,7 +82,6 @@ class AppointmentDetailViewModel : ViewModel() {
                     iconType = AppointmentIconType.GENERIC
                 )
             }
-            // --- FINE SIMULAZIONE ---
         }
     }
 
@@ -96,19 +92,35 @@ class AppointmentDetailViewModel : ViewModel() {
     }
 
     fun getFormattedTime(appointmentDetail: AppointmentDetail?): String {
-        // Questa è una semplificazione, potresti voler estrarre l'ora di inizio da timeSlot
         return appointmentDetail?.timeSlot ?: "Orario non specificato"
     }
 
-    // Eventuali azioni (es. modifica, cancella appuntamento) possono essere aggiunte qui
-    fun rescheduleAppointment() {
-        // Logica per riprogrammare
-        Log.d("AppointmentDetailVM", "Riprogrammazione appuntamento: ${_currentAppointment.value?.title}")
+    fun rescheduleAppointmentAction() { // Nome precedente, ora apre il dialog
+        Log.d("AppointmentDetailVM", "Azione Riprogramma chiamata per: ${_currentAppointment.value?.title}")
+        // La logica di apertura del dialog sarà nella UI
     }
 
     fun cancelAppointment() {
-        // Logica per cancellare
         Log.d("AppointmentDetailVM", "Cancellazione appuntamento: ${_currentAppointment.value?.title}")
-        // Esempio: navigare indietro o mostrare conferma
+        // Qui aggiorneresti il backend/repository e poi lo stato dell'UI
+        // Esempio: _currentAppointment.value = null o navigare indietro
+    }
+
+    // NUOVA FUNZIONE PER CONFERMARE LA RIPROGRAMMAZIONE
+    fun confirmReschedule(newDate: LocalDate, timeSlotIndex: Int) {
+        val newTimeSlotString = timeSlotMap[timeSlotIndex] ?: "Orario non specificato"
+        _currentAppointment.value?.let { currentApt ->
+            // In un'app reale: aggiorna il backend/repository
+            Log.i("AppointmentDetailVM", "CONFERMA RIPROGRAMMAZIONE per appuntamento ID: ${currentApt.id}")
+            Log.i("AppointmentDetailVM", "Vecchia data: ${currentApt.date}, Vecchio orario: ${currentApt.timeSlot}")
+            Log.i("AppointmentDetailVM", "NUOVA data: $newDate, NUOVO orario: $newTimeSlotString (indice: $timeSlotIndex)")
+
+            // Aggiorna lo stato locale per riflettere il cambiamento (simulazione)
+            _currentAppointment.value = currentApt.copy(
+                date = newDate,
+                timeSlot = newTimeSlotString
+            )
+            // Qui potresti voler mostrare un messaggio di successo, chiudere il dialog, ecc.
+        }
     }
 }
