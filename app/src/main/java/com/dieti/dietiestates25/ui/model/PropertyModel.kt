@@ -12,6 +12,7 @@ data class PropertyModel(
     val areaMq: Int?,
     val rooms: Int?,
     val bathrooms: Int?,
+    val purchaseType: String?,
     // val description: String?,
     // val isFavorite: Boolean = false
 )
