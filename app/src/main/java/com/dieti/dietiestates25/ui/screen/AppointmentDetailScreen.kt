@@ -1,10 +1,9 @@
 package com.dieti.dietiestates25.ui.screen
 
-import android.content.res.Configuration
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.model.AppointmentDetailViewModel
-import com.dieti.dietiestates25.ui.model.AppointmentDetail // Importa la data class
-import com.dieti.dietiestates25.ui.model.AppointmentIconType // Importa l'enum per l'icona
+import com.dieti.dietiestates25.ui.model.AppointmentDetail
+import com.dieti.dietiestates25.ui.model.AppointmentIconType
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,12 +12,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.BusinessCenter // Per MEETING appuntamento
-import androidx.compose.material.icons.filled.Build // Per GENERIC appuntamento
-import androidx.compose.material.icons.filled.Event // Per VISIT appuntamento
+import androidx.compose.material.icons.filled.BusinessCenter
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.EditCalendar
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog // Importa Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavController
@@ -40,18 +43,25 @@ import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
+import com.dieti.dietiestates25.ui.components.CalendarView // Importa dal nuovo file
+import com.dieti.dietiestates25.ui.components.TimeSlotSelector // Importa dal nuovo file
+import java.time.LocalDate
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentDetailScreen(
     navController: NavController,
-    appointmentId: String?, // L'ID dell'appuntamento da visualizzare
+    appointmentId: String?,
     viewModel: AppointmentDetailViewModel = viewModel()
 ) {
     val appointmentDetail by viewModel.currentAppointment.collectAsState()
     val dimensions = Dimensions
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
+
+    // Stato per controllare la visibilità del dialogo di riprogrammazione
+    var showRescheduleDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(appointmentId) {
         viewModel.loadAppointmentDetail(appointmentId)
@@ -65,13 +75,15 @@ fun AppointmentDetailScreen(
                 colorScheme = colorScheme,
                 typography = typography,
                 dimensions = dimensions,
-                onReschedule = viewModel::rescheduleAppointment, // Aggiungi azioni se necessario
+                onReschedule = { // Modificato: ora apre il dialogo
+                    Log.d("AppointmentDetailScreen", "Reschedule button clicked. Opening dialog.")
+                    showRescheduleDialog = true
+                },
                 onCancel = viewModel::cancelAppointment
             )
         }
     ) { paddingValues ->
         if (appointmentDetail == null && appointmentId != null) {
-            // Mostra un caricamento o uno scheletro
             Box(modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues), contentAlignment = Alignment.Center) {
@@ -80,23 +92,46 @@ fun AppointmentDetailScreen(
         } else if (appointmentDetail != null) {
             AppointmentDetailContent(
                 modifier = Modifier.padding(paddingValues),
-                appointmentDetail = appointmentDetail!!, // Sappiamo che non è nullo qui
+                appointmentDetail = appointmentDetail!!,
                 formattedDate = viewModel.getFormattedDate(appointmentDetail),
                 formattedTime = viewModel.getFormattedTime(appointmentDetail),
-                onReschedule = viewModel::rescheduleAppointment,
+                onReschedule = { // Modificato: ora apre il dialogo
+                    Log.d("AppointmentDetailScreen", "Reschedule from content clicked. Opening dialog.")
+                    showRescheduleDialog = true
+                },
                 onCancel = viewModel::cancelAppointment,
                 colorScheme = colorScheme,
                 typography = typography,
                 dimensions = dimensions
             )
         } else {
-            // Messaggio di errore o stato vuoto se l'ID era nullo o il caricamento fallisce
             Box(modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues), contentAlignment = Alignment.Center) {
                 Text("Impossibile caricare i dettagli dell'appuntamento.")
             }
         }
+    }
+
+    // Dialogo per la riprogrammazione
+    if (showRescheduleDialog && appointmentDetail != null) {
+        RescheduleAppointmentDialog(
+            currentAppointmentDate = appointmentDetail!!.date, // Passa la data corrente
+            // Per currentTimeSlotIndex, dovresti mappare appointmentDetail!!.timeSlot a un indice
+            // Se non hai una mappatura semplice, puoi passare null o 0 come default.
+            // Qui passiamo null per far partire TimeSlotSelector non selezionato.
+            initialSelectedTimeSlotIndex = null, // O calcola l'indice dal timeSlot string
+            onDismiss = { showRescheduleDialog = false },
+            onConfirm = { newDate, newTimeSlotIndex ->
+                viewModel.confirmReschedule(newDate, newTimeSlotIndex)
+                showRescheduleDialog = false
+                // Opzionale: ricarica i dettagli per vedere l'aggiornamento
+                // viewModel.loadAppointmentDetail(appointmentId) // Già fatto da confirmReschedule se aggiorna _currentAppointment
+            },
+            colorScheme = colorScheme,
+            typography = typography,
+            dimensions = dimensions
+        )
     }
 }
 
@@ -109,43 +144,88 @@ private fun AppointmentDetailTopAppBar(
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions,
-    onReschedule: () -> Unit,
+    onReschedule: () -> Unit, // Questa ora apre il dialog
     onCancel: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
-
-    TopAppBar(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colorScheme.primary)
-            .padding(horizontal = dimensions.paddingMedium)
-            .padding(top = dimensions.paddingExtraSmall, bottom = dimensions.paddingExtraSmall)
-            .statusBarsPadding(),
-        title = {
-            Text(
-                text = appointmentTitle,
-                style = typography.titleLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        navigationIcon = {
-            CircularIconActionButton(
-                onClick = { navController.popBackStack() },
-                iconVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Indietro",
-                backgroundColor = colorScheme.primaryContainer,
-                iconTint = colorScheme.onPrimaryContainer,
-                iconModifier = Modifier.size(dimensions.iconSizeMedium)
-            )
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = colorScheme.primary,
-            titleContentColor = colorScheme.onPrimary,
-            navigationIconContentColor = colorScheme.onPrimary,
-            actionIconContentColor = colorScheme.onPrimary
+    Column (
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(colorScheme.primaryContainer)
         )
-    )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colorScheme.primary)
+                .padding(
+                    horizontal = dimensions.paddingMedium,
+                    vertical = dimensions.paddingMedium
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                CircularIconActionButton(
+                    onClick = { navController.popBackStack() },
+                    iconVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Indietro",
+                    backgroundColor = colorScheme.primaryContainer,
+                    iconTint = colorScheme.onPrimaryContainer,
+                    buttonSize = dimensions.iconSizeLarge,
+                    iconSize = dimensions.iconSizeMedium
+                )
+                Spacer(modifier = Modifier.width(dimensions.spacingMedium))
+                Text(
+                    text = appointmentTitle,
+                    style = typography.titleLarge,
+                    color = colorScheme.onPrimary, // Assicura visibilità
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+            }
+            // Menu azioni nella TopAppBar
+            Box {
+                CircularIconActionButton(
+                    onClick = { showMenu = !showMenu },
+                    iconVector = Icons.Filled.MoreVert,
+                    contentDescription = "Altre opzioni",
+                    backgroundColor = colorScheme.primaryContainer,
+                    iconTint = colorScheme.onPrimaryContainer,
+                    buttonSize = dimensions.iconSizeLarge,
+                    iconSize = dimensions.iconSizeMedium
+                )
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Riprogramma") },
+                        onClick = {
+                            onReschedule() // Chiama la lambda che apre il dialog
+                            showMenu = false
+                        },
+                        leadingIcon = { Icon(Icons.Filled.EditCalendar, contentDescription = "Riprogramma") }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Annulla Appuntamento", color = colorScheme.error) },
+                        onClick = {
+                            onCancel()
+                            showMenu = false
+                        },
+                        leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = "Annulla", tint = colorScheme.error) }
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -154,7 +234,7 @@ private fun AppointmentDetailContent(
     appointmentDetail: AppointmentDetail,
     formattedDate: String,
     formattedTime: String,
-    onReschedule: () -> Unit,
+    onReschedule: () -> Unit, // Questa ora apre il dialog
     onCancel: () -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
@@ -176,10 +256,9 @@ private fun AppointmentDetailContent(
                 )
                 .background(colorScheme.background)
                 .padding(dimensions.paddingMedium)
-                .verticalScroll(rememberScrollState()), // Permette lo scroll se il contenuto è lungo
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
         ) {
-            // Header con icona e titolo appuntamento
             AppointmentHeaderCard(
                 title = appointmentDetail.title,
                 iconType = appointmentDetail.iconType,
@@ -187,19 +266,13 @@ private fun AppointmentDetailContent(
                 typography = typography,
                 dimensions = dimensions
             )
-
-            // Card Dettagli Data e Ora
             InfoCard {
                 InfoRow(icon = Icons.Filled.Event, label = "Data", value = formattedDate, dimensions = dimensions, colorScheme = colorScheme, typography = typography)
                 InfoRow(icon = Icons.Filled.Schedule, label = "Orario", value = formattedTime, dimensions = dimensions, colorScheme = colorScheme, typography = typography)
             }
-
-            // Card Indirizzo
             InfoCard {
                 InfoRow(icon = Icons.Filled.LocationOn, label = "Indirizzo", value = appointmentDetail.address, dimensions = dimensions, colorScheme = colorScheme, typography = typography)
             }
-
-            // Immagine Proprietà (se presente)
             appointmentDetail.propertyImageUrl?.let { imageUrl ->
                 Card(
                     shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
@@ -209,26 +282,22 @@ private fun AppointmentDetailContent(
                         model = ImageRequest.Builder(LocalContext.current)
                             .data(imageUrl)
                             .crossfade(true)
-                            .error(R.drawable.property1) // Placeholder se l'immagine non carica
+                            .error(R.drawable.property1)
                             .build(),
                         contentDescription = "Immagine proprietà",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp) // Altezza fissa per l'immagine
+                            .height(200.dp)
                             .clip(RoundedCornerShape(dimensions.cornerRadiusMedium)),
                         contentScale = ContentScale.Crop
                     )
                 }
             }
-
-            // Card Descrizione (se presente)
             appointmentDetail.description?.takeIf { it.isNotBlank() }?.let {
                 InfoCard(title = "Descrizione") {
                     Text(text = it, style = typography.bodyMedium, color = colorScheme.onSurfaceVariant)
                 }
             }
-
-            // Card Partecipanti (se presente)
             appointmentDetail.participants?.takeIf { it.isNotEmpty() }?.let { participants ->
                 InfoCard(title = "Partecipanti") {
                     participants.forEach { participant ->
@@ -236,21 +305,14 @@ private fun AppointmentDetailContent(
                     }
                 }
             }
-
-            // Card Note (se presente)
             appointmentDetail.notes?.takeIf { it.isNotBlank() }?.let {
                 InfoCard(title = "Note Aggiuntive") {
                     Text(text = it, style = typography.bodyMedium, color = colorScheme.onSurfaceVariant)
                 }
             }
-
-
-            // Spacer per spingere i bottoni in fondo se il contenuto è corto
             Spacer(modifier = Modifier.weight(1f))
-
-            // Sezione Bottoni Azione
-            AppointmentActionButtons(
-                onReschedule = onReschedule,
+            AppointmentActionButtons( // I bottoni principali sono ancora qui
+                onReschedule = onReschedule, // Questa lambda ora apre il dialog
                 onCancel = onCancel,
                 dimensions = dimensions
             )
@@ -258,6 +320,81 @@ private fun AppointmentDetailContent(
     }
 }
 
+// --- NUOVO COMPOSABLE PER IL DIALOGO DI RIPROGRAMMAZIONE ---
+@Composable
+private fun RescheduleAppointmentDialog(
+    currentAppointmentDate: LocalDate,
+    initialSelectedTimeSlotIndex: Int?, // Può essere null se non c'è una preselezione
+    onDismiss: () -> Unit,
+    onConfirm: (newDate: LocalDate, newTimeSlotIndex: Int) -> Unit,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions
+) {
+    var selectedDateInDialog by remember { mutableStateOf(currentAppointmentDate) }
+    var selectedTimeSlotInDialog by remember { mutableStateOf(initialSelectedTimeSlotIndex) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(dimensions.cornerRadiusLarge),
+            colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(dimensions.paddingLarge)
+                    .width(IntrinsicSize.Max), // Per adattare la larghezza al contenuto
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingLarge)
+            ) {
+                Text(
+                    text = "Riprogramma Appuntamento",
+                    style = typography.titleLarge,
+                    color = colorScheme.onSurface
+                )
+
+                CalendarView(
+                    initialSelectedDate = selectedDateInDialog,
+                    onDateSelected = { newDate -> selectedDateInDialog = newDate },
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
+
+                TimeSlotSelector(
+                    selectedTimeSlotIndex = selectedTimeSlotInDialog,
+                    onTimeSlotSelected = { index -> selectedTimeSlotInDialog = index },
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End, // Allinea i bottoni a destra
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Annulla", color = colorScheme.primary)
+                    }
+                    Spacer(modifier = Modifier.width(dimensions.spacingSmall))
+                    Button(
+                        onClick = {
+                            selectedTimeSlotInDialog?.let { timeSlotIndex -> // Conferma solo se uno slot è selezionato
+                                onConfirm(selectedDateInDialog, timeSlotIndex)
+                            }
+                        },
+                        enabled = selectedTimeSlotInDialog != null // Abilita solo se uno slot è selezionato
+                    ) {
+                        Text("Conferma")
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// ... (Il resto dei Composable: AppointmentHeaderCard, InfoCard, InfoRow, AppointmentActionButtons, Preview rimangono invariati) ...
 @Composable
 private fun AppointmentHeaderCard(
     title: String,
@@ -281,15 +418,15 @@ private fun AppointmentHeaderCard(
     ) {
         Box(
             modifier = Modifier
-                .size(dimensions.iconSizeExtraLarge) // Es. 48.dp
-                .clip(RoundedCornerShape(dimensions.cornerRadiusSmall)) // Es. 8.dp
+                .size(dimensions.iconSizeExtraLarge)
+                .clip(RoundedCornerShape(dimensions.cornerRadiusSmall))
                 .background(colorScheme.secondaryContainer),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = "Icona Appuntamento",
-                modifier = Modifier.size(dimensions.iconSizeLarge), // Es. 32dp o 36dp
+                modifier = Modifier.size(dimensions.iconSizeLarge),
                 tint = colorScheme.onSecondaryContainer
             )
         }
@@ -313,7 +450,7 @@ private fun InfoCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(Dimensions.cornerRadiusMedium),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.elevationNone)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Usando 0.dp direttamente
     ) {
         Column(modifier = Modifier.padding(Dimensions.paddingMedium)) {
             title?.let {
@@ -332,9 +469,9 @@ private fun InfoCard(
 @Composable
 private fun InfoRow(
     icon: ImageVector,
-    label: String? = null, // Etichetta opzionale
+    label: String? = null,
     value: String,
-    showLabel: Boolean = true, // Controlla se mostrare l'etichetta
+    showLabel: Boolean = true,
     dimensions: Dimensions,
     colorScheme: ColorScheme,
     typography: Typography
@@ -347,7 +484,7 @@ private fun InfoRow(
             imageVector = icon,
             contentDescription = label ?: value,
             tint = colorScheme.primary,
-            modifier = Modifier.size(dimensions.iconSizeSmall) // 20.dp
+            modifier = Modifier.size(dimensions.iconSizeSmall)
         )
         Spacer(modifier = Modifier.width(dimensions.spacingMedium))
         Column {
@@ -368,14 +505,14 @@ private fun AppointmentActionButtons(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall) // Spazio tra i bottoni
+        verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
     ) {
         AppPrimaryButton(
-            onClick = onReschedule,
+            onClick = onReschedule, // Questa ora apre il dialog
             modifier = Modifier.fillMaxWidth(),
             text = "Riprogramma Appuntamento",
         )
-        AppRedButton( // Assumendo che AppRedButton sia definito nei tuoi componenti
+        AppRedButton(
             onClick = onCancel,
             modifier = Modifier.fillMaxWidth(),
             text = "Annulla Appuntamento"
@@ -384,19 +521,17 @@ private fun AppointmentActionButtons(
 }
 
 @Preview(showBackground = true, name = "Appointment Detail Light")
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, name = "Appointment Detail Dark")
+@Preview(showBackground = true, name = "Appointment Detail Dark")
 @Composable
 fun AppointmentDetailScreenPreview() {
     val navController = rememberNavController()
     val previewViewModel = viewModel<AppointmentDetailViewModel>()
-    // Carica un appuntamento di esempio per la preview
     LaunchedEffect(Unit) {
         previewViewModel.loadAppointmentDetail("apt1")
     }
     AppointmentDetailScreen(
         navController = navController,
-        appointmentId = "apt1", // ID di esempio per la preview
+        appointmentId = "apt1",
         viewModel = previewViewModel
     )
-
 }

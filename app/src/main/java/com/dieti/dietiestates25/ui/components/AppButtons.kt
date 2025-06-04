@@ -499,7 +499,7 @@ fun CircularIconActionButton(
     buttonSize: Dp = 40.dp,
     circleSize: Dp = 200.dp,
     iconSize: Dp = 22.dp,
-    iconModifier: Modifier
+    iconModifier: Modifier? = null
 ) {
     IconButton(
         onClick = onClick,

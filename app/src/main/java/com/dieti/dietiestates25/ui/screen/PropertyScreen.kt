@@ -72,6 +72,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.core.net.toUri
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.ui.geometry.Offset
 import com.dieti.dietiestates25.ui.theme.TealDeep
 
@@ -373,10 +374,10 @@ fun PropertyTopAppBar(
             val isFavorite = remember { mutableStateOf(false) }
             CircularIconActionButton(
                 onClick = { isFavorite.value = !isFavorite.value },
-                iconVector = Icons.Default.Favorite,
+                iconVector = if (isFavorite.value) Icons.Filled.Star else Icons.Outlined.Star,
+                iconTint = if (isFavorite.value) colorScheme.surfaceTint else colorScheme.onPrimaryContainer,
                 contentDescription = "Favorite",
                 backgroundColor = colorScheme.primaryContainer,
-                iconTint = if (isFavorite.value) colorScheme.error else colorScheme.onPrimary,
                 buttonSize = dimensions.iconSizeExtraLarge,
                 iconSize = dimensions.iconSizeMedium,
                 iconModifier = Modifier.size(dimensions.iconSizeMedium)

@@ -10,6 +10,7 @@ import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -112,9 +113,8 @@ private fun NotificationDetailTopAppBar(
     dimensions: Dimensions
 ) {
     Column (
-            modifier = Modifier
-                .fillMaxSize()
-            ) {
+        modifier = Modifier.fillMaxWidth()
+    ) {
         // Status Bar con colore TealDeep fisso
         Box(
             modifier = Modifier
@@ -122,21 +122,24 @@ private fun NotificationDetailTopAppBar(
                 .windowInsetsTopHeight(WindowInsets.statusBars)
                 .background(colorScheme.primaryContainer)
         )
-        TopAppBar(
+        // Main content Row for buttons and title
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colorScheme.primary)
-                .padding(horizontal = dimensions.paddingMedium)
-                .padding(top = dimensions.paddingExtraSmall, bottom = dimensions.paddingExtraSmall),
-            title = {
-                Text(
-                    text = notificationDetail?.senderType ?: "Dettaglio Notifica",
-                    style = typography.titleLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            },
-            navigationIcon = {
+                .padding(
+                    horizontal = dimensions.paddingMedium, // MODIFICATO: Più padding orizzontale
+                    vertical = dimensions.paddingMedium    // MODIFICATO: Leggermente più padding verticale
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween // Pushes elements to sides
+        ) {
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .weight(1f) // Allows title group to take available
+            ) {
                 CircularIconActionButton(
                     onClick = { navController.popBackStack() },
                     iconVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -145,25 +148,26 @@ private fun NotificationDetailTopAppBar(
                     iconTint = colorScheme.onPrimaryContainer,
                     iconModifier = Modifier.size(dimensions.iconSizeMedium)
                 )
-            },
-            actions = {
-                notificationDetail?.let { detail ->
-                    CircularIconActionButton(
-                        onClick = onToggleFavorite,
-                        iconVector = if (detail.isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
-                        contentDescription = if (detail.isFavorite) "Rimuovi dai preferiti" else "Aggiungi ai preferiti",
-                        backgroundColor = colorScheme.primaryContainer,
-                        iconTint = if (detail.isFavorite) colorScheme.tertiary else colorScheme.onPrimaryContainer,
-                        iconModifier = Modifier.size(dimensions.iconSizeMedium)
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = colorScheme.primary,
-                titleContentColor = colorScheme.onPrimary
-                // navigationIconContentColor e actionIconContentColor sono gestiti da CircularIconActionButton
-            )
-        )
+
+                Text(
+                    text = notificationDetail?.senderType ?: "Dettaglio Notifica",
+                    style = typography.titleLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            notificationDetail?.let { detail ->
+                CircularIconActionButton(
+                    onClick = onToggleFavorite,
+                    iconVector = if (detail.isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
+                    contentDescription = if (detail.isFavorite) "Rimuovi dai preferiti" else "Aggiungi ai preferiti",
+                    backgroundColor = colorScheme.primaryContainer,
+                    iconTint = if (detail.isFavorite) colorScheme.tertiary else colorScheme.onPrimaryContainer,
+                    iconModifier = Modifier.size(dimensions.iconSizeMedium)
+                )
+            }
+        }
     }
 }
 

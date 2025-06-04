@@ -12,6 +12,7 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import android.Manifest
 import android.content.res.Configuration
 import android.util.Log
+import androidx.compose.foundation.background
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,9 +28,14 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
@@ -88,24 +94,42 @@ fun FullScreenMapScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Mappa Proprietà", color = colorScheme.onPrimary) },
-                navigationIcon = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                // Status Bar con colore TealDeep fisso
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .windowInsetsTopHeight(WindowInsets.statusBars)
+                        .background(colorScheme.primaryContainer)
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(colorScheme.primary)
+                        .padding(
+                            horizontal = dimensions.paddingMedium,
+                            vertical = dimensions.paddingMedium
+                        ),
+                    verticalAlignment = Alignment.CenterVertically, // Vertically center all items in this Row
+                    horizontalArrangement = Arrangement.Start, // Align items to the start (left)
+                ) {
                     CircularIconActionButton(
                         onClick = { navController.popBackStack() },
                         iconVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Indietro",
-                        backgroundColor = Color.Transparent,
+                        backgroundColor = colorScheme.primaryContainer,
                         iconTint = colorScheme.onPrimary,
                         buttonSize = dimensions.iconSizeExtraLarge,
                         iconSize = dimensions.iconSizeMedium,
                         iconModifier = Modifier.size(dimensions.iconSizeMedium)
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorScheme.primary
-                )
-            )
+
+                    Text("Mappa Proprietà", color = colorScheme.onPrimary)
+                }
+            }
         }
     ) { innerPadding ->
         Box(
@@ -113,7 +137,6 @@ fun FullScreenMapScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // 3. Mostra la mappa solo se i permessi sono concessi, o gestisci il caso contrario
             if (locationPermissionsState.allPermissionsGranted) {
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
@@ -144,7 +167,6 @@ fun FullScreenMapScreen(
                         title = "Posizione Proprietà",
                         anchor = Offset(0.5f, 0.5f) // Centra l'icona, regola se necessario
                     ) {
-                        // Qui usi il tuo AppCustomMapMarker (che disegna Box + AppIconDisplay)
                         AppCustomMapMarker(
                             tint = colorScheme.primary, // primaryColor definito in MiniMapSection
                             iconSize = 36.dp,     // O la dimensione che preferisci
@@ -153,9 +175,6 @@ fun FullScreenMapScreen(
                     }
                 }
             } else {
-                // Mostra un messaggio o un'interfaccia utente alternativa
-                // se i permessi non sono concessi.
-                // Potresti anche aggiungere un pulsante per richiederli di nuovo.
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
