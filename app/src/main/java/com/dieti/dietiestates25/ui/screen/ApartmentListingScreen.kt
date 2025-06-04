@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,7 +13,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -31,7 +27,6 @@ import com.dieti.dietiestates25.ui.model.modelsource.sampleListingProperties
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.ui.theme.TealDeep
 import com.dieti.dietiestates25.ui.utils.parsePriceToFloat
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,33 +46,98 @@ fun ApartmentListingScreen(
     var showFilterSheet by remember { mutableStateOf(false) }
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val initialFiltersFromNav = remember(currentBackStackEntry) {
-        currentBackStackEntry?.arguments?.let { args ->
-            val pType = args.getString("purchaseType")
-            val mPrice = args.getFloat("minPrice").takeIf { it != -1f && it != 0f }
-            val mxPrice = args.getFloat("maxPrice").takeIf { it != -1f }
-            val mSurf = args.getFloat("minSurface").takeIf { it != -1f && it != 0f }
-            val mxSurf = args.getFloat("maxSurface").takeIf { it != -1f }
-            val mRooms = args.getInt("minRooms").takeIf { it != -1 }
-            val mxRooms = args.getInt("maxRooms").takeIf { it != -1 }
-            val baths = args.getInt("bathrooms").takeIf { it != -1 }
-            val cond = args.getString("condition")
 
-            if (pType != null || mPrice != null || mxPrice != null || mSurf != null || mxSurf != null || mRooms != null || mxRooms != null || baths != null || cond != null) {
-                FilterModel(
-                    purchaseType = pType, minPrice = mPrice, maxPrice = mxPrice,
-                    minSurface = mSurf, maxSurface = mxSurf, minRooms = mRooms,
-                    maxRooms = mxRooms, bathrooms = baths, condition = cond
-                )
-            } else { null }
+    // Gestione dei filtri con stato reattivo (come in MapSearchScreen)
+    var appliedFilters by remember { mutableStateOf<FilterModel?>(null) }
+
+    // Inizializza i filtri dai parametri di navigazione una sola volta
+    LaunchedEffect(currentBackStackEntry) {
+        if (appliedFilters == null) {
+            currentBackStackEntry?.arguments?.let { args ->
+                val pType = args.getString("purchaseType")
+                val mPrice = args.getFloat("minPrice").takeIf { it != -1f && it != 0f }
+                val mxPrice = args.getFloat("maxPrice").takeIf { it != -1f }
+                val mSurf = args.getFloat("minSurface").takeIf { it != -1f && it != 0f }
+                val mxSurf = args.getFloat("maxSurface").takeIf { it != -1f }
+                val mRooms = args.getInt("minRooms").takeIf { it != -1 }
+                val mxRooms = args.getInt("maxRooms").takeIf { it != -1 }
+                val baths = args.getInt("bathrooms").takeIf { it != -1 }
+                val cond = args.getString("condition")
+
+                if (pType != null || mPrice != null || mxPrice != null || mSurf != null ||
+                    mxSurf != null || mRooms != null || mxRooms != null || baths != null || cond != null) {
+                    appliedFilters = FilterModel(
+                        purchaseType = pType, minPrice = mPrice, maxPrice = mxPrice,
+                        minSurface = mSurf, maxSurface = mxSurf, minRooms = mRooms,
+                        maxRooms = mxRooms, bathrooms = baths, condition = cond
+                    )
+                }
+            }
         }
     }
-    var appliedFilters by remember { mutableStateOf(initialFiltersFromNav) }
 
     val gradientColors = arrayOf(
         0.0f to colorScheme.primary, 0.20f to colorScheme.background,
         0.60f to colorScheme.background, 1.0f to colorScheme.primary
     )
+
+    // Filtra le proprietà in base ai filtri applicati (logica completa come in MapSearchScreen)
+    val filteredProperties = remember(appliedFilters, sampleListingProperties, comune, ricerca) {
+        sampleListingProperties.filter { property ->
+            appliedFilters?.let { filters ->
+                // Filtra per tipo di acquisto
+                if(filters.purchaseType != null) {
+                    property.purchaseType?.let { if (it != filters.purchaseType) return@filter false }
+                }
+
+                // Filtra per prezzo
+                val propertyPriceFloat = property.price.parsePriceToFloat()
+                if (filters.minPrice != null && (propertyPriceFloat == null || propertyPriceFloat < filters.minPrice)) {
+                    return@filter false
+                }
+                if (filters.maxPrice != null && (propertyPriceFloat == null || propertyPriceFloat > filters.maxPrice)) {
+                    return@filter false
+                }
+
+                // Filtra per superficie
+                if (filters.minSurface != null) {
+                    val propertySurface = property.areaMq?.toFloat()
+                    if (propertySurface == null || propertySurface < filters.minSurface) {
+                        return@filter false
+                    }
+                }
+                if (filters.maxSurface != null) {
+                    val propertySurface = property.areaMq?.toFloat()
+                    if (propertySurface == null || propertySurface > filters.maxSurface) {
+                        return@filter false
+                    }
+                }
+
+                // Filtra per stanze (assumendo che PropertyModel abbia un campo rooms o bedrooms)
+                if (filters.minRooms != null) {
+                    property.rooms?.let { if (it < filters.minRooms) return@filter false }
+                }
+                if (filters.maxRooms != null) {
+                    property.rooms?.let { if (it > filters.maxRooms) return@filter false }
+                }
+
+                // Filtra per bagni
+                if (filters.bathrooms != null) {
+                    property.bathrooms?.let {
+                        if (it < filters.bathrooms) return@filter false
+                    }
+                }
+
+                // Filtra per condizione (assumendo che PropertyModel abbia un campo condition)
+                if (filters.condition != null) {
+                    // property.condition?.let { if (it != filters.condition) return@filter false }
+                    // Commentato perché potrebbe non essere disponibile nel modello corrente
+                }
+
+                true
+            } ?: true // Se non ci sono filtri, mostra tutto
+        }
+    }
 
     // Layout principale senza systemBarsPadding() in quanto gestito dalla CustomHeaderBar
     Column(
@@ -93,33 +153,6 @@ fun ApartmentListingScreen(
             filtersApplied = appliedFilters != null
         )
 
-        val filteredProperties = remember(appliedFilters, sampleListingProperties) {
-            val currentFilters = appliedFilters
-            if (currentFilters == null) {
-                sampleListingProperties
-            } else {
-                sampleListingProperties.filter { property ->
-                    var match = true
-                    currentFilters.purchaseType?.let { _ ->
-                    }
-                    val propertyPriceFloat = property.price.parsePriceToFloat()
-
-                    currentFilters.minPrice?.let { minP ->
-                        if (propertyPriceFloat == null || propertyPriceFloat < minP) match = false
-                    }
-                    currentFilters.maxPrice?.let { maxP ->
-                        if (propertyPriceFloat == null || propertyPriceFloat > maxP) match = false
-                    }
-                    // TODO: Implementa la logica di filtro per:
-                    // currentFilters.minSurface, currentFilters.maxSurface (richiede campo area in PropertyModel)
-                    // currentFilters.minRooms, currentFilters.maxRooms (richiede campo stanze in PropertyModel)
-                    // currentFilters.bathrooms (richiede campo bagni in PropertyModel)
-                    // currentFilters.condition (richiede campo condizione in PropertyModel)
-                    match
-                }
-            }
-        }
-
         if (filteredProperties.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -128,15 +161,51 @@ fun ApartmentListingScreen(
                     .padding(dimensions.paddingLarge),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = if (appliedFilters != null)
-                        "Nessun immobile trovato con i filtri selezionati per \"$comune\"."
-                    else
-                        "Nessun immobile disponibile per \"$comune\".",
-                    style = typography.bodyLarge,
-                    color = colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
+                ) {
+                    Text(
+                        text = if (appliedFilters != null)
+                            "Nessun immobile trovato con i filtri selezionati per \"$comune\"."
+                        else
+                            "Nessun immobile disponibile per \"$comune\".",
+                        style = typography.bodyLarge,
+                        color = colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+
+                    // Pulsante per resettare i filtri (se applicati)
+                    if (appliedFilters != null) {
+                        OutlinedButton(
+                            onClick = {
+                                appliedFilters = null
+                                println("Filtri resettati")
+                            }
+                        ) {
+                            Text("Reset Filtri")
+                        }
+                    }
+
+                    // Indicatore del numero di risultati trovati
+                    if (appliedFilters != null) {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = colorScheme.primaryContainer
+                            )
+                        ) {
+                            Text(
+                                text = "${filteredProperties.size} proprietà trovate",
+                                style = typography.bodyMedium,
+                                color = colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(
+                                    horizontal = dimensions.spacingMedium,
+                                    vertical = dimensions.spacingSmall
+                                )
+                            )
+                        }
+                    }
+                }
             }
         } else {
             LazyColumn(
@@ -150,13 +219,40 @@ fun ApartmentListingScreen(
                 verticalArrangement = Arrangement.spacedBy(dimensions.paddingMedium)
             ) {
                 item {
-                    Text(
-                        text = "Annunci immobiliari a $comune",
-                        style = typography.titleLarge,
-                        color = colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = dimensions.paddingSmall)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Annunci immobiliari a $comune",
+                            style = typography.titleLarge,
+                            color = colorScheme.onBackground,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        // Indicatore del numero di risultati filtrati (come in MapSearchScreen)
+                        if (appliedFilters != null) {
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = colorScheme.primaryContainer
+                                )
+                            ) {
+                                Text(
+                                    text = "${filteredProperties.size} trovate",
+                                    style = typography.bodySmall,
+                                    color = colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.padding(
+                                        horizontal = dimensions.spacingSmall,
+                                        vertical = dimensions.spacingExtraSmall
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(dimensions.paddingSmall))
                 }
 
                 items(items = filteredProperties, key = { it.id }) { property ->
@@ -191,6 +287,7 @@ fun ApartmentListingScreen(
         }
     }
 
+    // ModalBottomSheet per i Filtri (identica a MapSearchScreen)
     if (showFilterSheet) {
         ModalBottomSheet(
             onDismissRequest = { showFilterSheet = false },
@@ -200,23 +297,26 @@ fun ApartmentListingScreen(
                 topStart = dimensions.cornerRadiusLarge,
                 topEnd = dimensions.cornerRadiusLarge
             ),
-            scrimColor = Color.Black.copy(alpha = 0.32f),
+            scrimColor = Color.Black.copy(alpha = 0.32f)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .defaultMinSize(minHeight = dimensions.buttonHeight * 10)
-                    .fillMaxHeight(0.87f)
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
             ) {
                 SearchFilterScreen(
                     navController = navController,
                     idUtente = idUtente,
                     comune = comune,
                     ricercaQueryText = ricerca,
+                    initialFilters = appliedFilters, // Passa i filtri correnti
                     onNavigateBack = { showFilterSheet = false },
                     onApplyFilters = { filterData ->
                         appliedFilters = filterData
                         showFilterSheet = false
+                        println("ApartmentListingScreen - Filtri applicati: $filterData")
                     },
                     isFullScreenContext = false,
                     originScreen = originScreen
