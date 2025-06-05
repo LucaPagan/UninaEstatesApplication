@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import android.util.Log
 
-data class AppointmentDetail( // Già definito, lo lascio per completezza
+data class AppointmentDetail(
     val id: String,
     val title: String,
     val date: LocalDate,
@@ -30,15 +30,12 @@ class AppointmentDetailViewModel : ViewModel() {
     private val _currentAppointment = MutableStateFlow<AppointmentDetail?>(null)
     val currentAppointment: StateFlow<AppointmentDetail?> = _currentAppointment.asStateFlow()
 
-    private val dateFormatter = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.ITALIAN) // Modificato yyyy per anno completo
+    // Evento per segnalare alla UI di navigare indietro dopo la cancellazione
+    private val _appointmentCancelledEvent = MutableStateFlow(false)
+    val appointmentCancelledEvent: StateFlow<Boolean> = _appointmentCancelledEvent.asStateFlow()
 
-    // Mappa per convertire l'indice dello slot orario in una stringa rappresentativa
-    private val timeSlotMap = mapOf(
-        0 to "9:00 - 12:00",
-        1 to "12:00 - 14:00",
-        2 to "14:00 - 17:00",
-        3 to "17:00 - 20:00"
-    )
+    private val dateFormatter = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.ITALIAN)
+    val timeSlotOptions = listOf("9-12", "12-14", "14-17", "17-20")
 
     fun loadAppointmentDetail(appointmentId: String?) {
         viewModelScope.launch {
@@ -46,12 +43,13 @@ class AppointmentDetailViewModel : ViewModel() {
                 _currentAppointment.value = null
                 return@launch
             }
+            // SIMULAZIONE CARICAMENTO DATI (come prima)
             _currentAppointment.value = when (appointmentId) {
                 "apt1" -> AppointmentDetail(
                     id = "apt1",
                     title = "Visita Appartamento Via Roma",
                     date = LocalDate.now().plusDays(2),
-                    timeSlot = "10:00 - 11:00", // Questo è un esempio, potrebbe non mappare direttamente agli indici
+                    timeSlot = timeSlotOptions[0],
                     address = "Via Roma, 123, Napoli",
                     propertyImageUrl = R.drawable.property1,
                     description = "Visione dell'appartamento trilocale con il Sig. Rossi. Portare planimetrie.",
@@ -63,7 +61,7 @@ class AppointmentDetailViewModel : ViewModel() {
                     id = "apt2",
                     title = "Meeting Agenzia",
                     date = LocalDate.now().plusDays(1),
-                    timeSlot = "15:30 - 16:30",
+                    timeSlot = timeSlotOptions[2],
                     address = "Sede Agenzia DietiEstates, Via Toledo 45, Napoli",
                     propertyImageUrl = null,
                     description = "Riunione interna per discutere le nuove strategie di marketing per il trimestre.",
@@ -72,9 +70,9 @@ class AppointmentDetailViewModel : ViewModel() {
                 )
                 else -> AppointmentDetail(
                     id = appointmentId,
-                    title = "Appuntamento Generico ID: $appointmentId",
+                    title = "Appuntamento Generico",
                     date = LocalDate.now().plusDays(5),
-                    timeSlot = timeSlotMap[0] ?: "Orario da definire", // Usa il primo slot come default
+                    timeSlot = timeSlotOptions.first(),
                     address = "Indirizzo non specificato",
                     propertyImageUrl = R.drawable.property2,
                     description = "Dettagli non disponibili per questo appuntamento.",
@@ -95,32 +93,39 @@ class AppointmentDetailViewModel : ViewModel() {
         return appointmentDetail?.timeSlot ?: "Orario non specificato"
     }
 
-    fun rescheduleAppointmentAction() { // Nome precedente, ora apre il dialog
-        Log.d("AppointmentDetailVM", "Azione Riprogramma chiamata per: ${_currentAppointment.value?.title}")
-        // La logica di apertura del dialog sarà nella UI
+    fun getTimeSlotIndex(timeSlotString: String?): Int? {
+        return timeSlotString?.let { timeSlotOptions.indexOf(it).takeIf { index -> index != -1 } }
     }
+
+    // rescheduleAppointmentAction RIMOSSA perché non utilizzata
 
     fun cancelAppointment() {
-        Log.d("AppointmentDetailVM", "Cancellazione appuntamento: ${_currentAppointment.value?.title}")
-        // Qui aggiorneresti il backend/repository e poi lo stato dell'UI
-        // Esempio: _currentAppointment.value = null o navigare indietro
+        _currentAppointment.value?.let { currentApt ->
+            Log.d("AppointmentDetailVM", "Cancellazione appuntamento: ${currentApt.title}, ID: ${currentApt.id}")
+            // In un'app reale:
+            // 1. Chiamare il repository per cancellare l'appuntamento dal backend/database.
+            // 2. Se l'operazione ha successo:
+            _currentAppointment.value = null // Rimuovi dalla visualizzazione corrente
+            _appointmentCancelledEvent.value = true // Emetti evento per navigare indietro
+            // Se l'operazione fallisce, gestire l'errore (es. mostrare un messaggio)
+        }
     }
 
-    // NUOVA FUNZIONE PER CONFERMARE LA RIPROGRAMMAZIONE
+    // Funzione per resettare l'evento dopo che è stato gestito dalla UI
+    fun onCancellationEventConsumed() {
+        _appointmentCancelledEvent.value = false
+    }
+
     fun confirmReschedule(newDate: LocalDate, timeSlotIndex: Int) {
-        val newTimeSlotString = timeSlotMap[timeSlotIndex] ?: "Orario non specificato"
+        val newTimeSlotString = timeSlotOptions.getOrElse(timeSlotIndex) { "Orario non valido" }
         _currentAppointment.value?.let { currentApt ->
-            // In un'app reale: aggiorna il backend/repository
             Log.i("AppointmentDetailVM", "CONFERMA RIPROGRAMMAZIONE per appuntamento ID: ${currentApt.id}")
             Log.i("AppointmentDetailVM", "Vecchia data: ${currentApt.date}, Vecchio orario: ${currentApt.timeSlot}")
             Log.i("AppointmentDetailVM", "NUOVA data: $newDate, NUOVO orario: $newTimeSlotString (indice: $timeSlotIndex)")
-
-            // Aggiorna lo stato locale per riflettere il cambiamento (simulazione)
             _currentAppointment.value = currentApt.copy(
                 date = newDate,
                 timeSlot = newTimeSlotString
             )
-            // Qui potresti voler mostrare un messaggio di successo, chiudere il dialog, ecc.
         }
     }
 }

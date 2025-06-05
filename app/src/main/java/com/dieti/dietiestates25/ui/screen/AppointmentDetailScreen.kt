@@ -14,13 +14,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BusinessCenter
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.EditCalendar
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,7 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog // Importa Dialog
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavController
@@ -43,8 +43,9 @@ import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
-import com.dieti.dietiestates25.ui.components.CalendarView // Importa dal nuovo file
-import com.dieti.dietiestates25.ui.components.TimeSlotSelector // Importa dal nuovo file
+import com.dieti.dietiestates25.ui.components.CalendarView
+import com.dieti.dietiestates25.ui.components.TimeSlotSelector
+import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme // Per la Preview
 import java.time.LocalDate
 import android.util.Log
 
@@ -56,15 +57,25 @@ fun AppointmentDetailScreen(
     viewModel: AppointmentDetailViewModel = viewModel()
 ) {
     val appointmentDetail by viewModel.currentAppointment.collectAsState()
+    val appointmentCancelledEvent by viewModel.appointmentCancelledEvent.collectAsState() // Osserva l'evento
+
     val dimensions = Dimensions
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
 
-    // Stato per controllare la visibilità del dialogo di riprogrammazione
     var showRescheduleDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(appointmentId) {
         viewModel.loadAppointmentDetail(appointmentId)
+    }
+
+    // Effetto per gestire la navigazione dopo la cancellazione
+    LaunchedEffect(appointmentCancelledEvent) {
+        if (appointmentCancelledEvent) {
+            Log.d("AppointmentDetailScreen", "Appointment cancelled event received, navigating back.")
+            navController.popBackStack()
+            viewModel.onCancellationEventConsumed() // Resetta l'evento nel ViewModel
+        }
     }
 
     Scaffold(
@@ -75,15 +86,16 @@ fun AppointmentDetailScreen(
                 colorScheme = colorScheme,
                 typography = typography,
                 dimensions = dimensions,
-                onReschedule = { // Modificato: ora apre il dialogo
+                onReschedule = {
                     Log.d("AppointmentDetailScreen", "Reschedule button clicked. Opening dialog.")
                     showRescheduleDialog = true
                 },
-                onCancel = viewModel::cancelAppointment
+                onCancel = viewModel::cancelAppointment // Questa chiamata ora triggererà l'evento
             )
         }
     ) { paddingValues ->
-        if (appointmentDetail == null && appointmentId != null) {
+        // La logica per mostrare caricamento/contenuto/errore rimane la stessa
+        if (appointmentDetail == null && appointmentId != null && !appointmentCancelledEvent) { // Non mostrare loader se stiamo per navigare indietro
             Box(modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues), contentAlignment = Alignment.Center) {
@@ -95,11 +107,11 @@ fun AppointmentDetailScreen(
                 appointmentDetail = appointmentDetail!!,
                 formattedDate = viewModel.getFormattedDate(appointmentDetail),
                 formattedTime = viewModel.getFormattedTime(appointmentDetail),
-                onReschedule = { // Modificato: ora apre il dialogo
+                onReschedule = {
                     Log.d("AppointmentDetailScreen", "Reschedule from content clicked. Opening dialog.")
                     showRescheduleDialog = true
                 },
-                onCancel = viewModel::cancelAppointment,
+                onCancel = viewModel::cancelAppointment, // Questa chiamata ora triggererà l'evento
                 colorScheme = colorScheme,
                 typography = typography,
                 dimensions = dimensions
@@ -113,20 +125,15 @@ fun AppointmentDetailScreen(
         }
     }
 
-    // Dialogo per la riprogrammazione
     if (showRescheduleDialog && appointmentDetail != null) {
+        val currentApt = appointmentDetail!!
         RescheduleAppointmentDialog(
-            currentAppointmentDate = appointmentDetail!!.date, // Passa la data corrente
-            // Per currentTimeSlotIndex, dovresti mappare appointmentDetail!!.timeSlot a un indice
-            // Se non hai una mappatura semplice, puoi passare null o 0 come default.
-            // Qui passiamo null per far partire TimeSlotSelector non selezionato.
-            initialSelectedTimeSlotIndex = null, // O calcola l'indice dal timeSlot string
+            currentAppointmentDate = currentApt.date,
+            currentAppointmentTimeSlotIndex = viewModel.getTimeSlotIndex(currentApt.timeSlot),
             onDismiss = { showRescheduleDialog = false },
             onConfirm = { newDate, newTimeSlotIndex ->
                 viewModel.confirmReschedule(newDate, newTimeSlotIndex)
                 showRescheduleDialog = false
-                // Opzionale: ricarica i dettagli per vedere l'aggiornamento
-                // viewModel.loadAppointmentDetail(appointmentId) // Già fatto da confirmReschedule se aggiorna _currentAppointment
             },
             colorScheme = colorScheme,
             typography = typography,
@@ -144,7 +151,7 @@ private fun AppointmentDetailTopAppBar(
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions,
-    onReschedule: () -> Unit, // Questa ora apre il dialog
+    onReschedule: () -> Unit,
     onCancel: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -181,17 +188,16 @@ private fun AppointmentDetailTopAppBar(
                     buttonSize = dimensions.iconSizeLarge,
                     iconSize = dimensions.iconSizeMedium
                 )
-                Spacer(modifier = Modifier.width(dimensions.spacingMedium))
+                Spacer(modifier = Modifier.width(dimensions.spacingSmall))
                 Text(
                     text = appointmentTitle,
                     style = typography.titleLarge,
-                    color = colorScheme.onPrimary, // Assicura visibilità
+                    color = colorScheme.onPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false)
                 )
             }
-            // Menu azioni nella TopAppBar
             Box {
                 CircularIconActionButton(
                     onClick = { showMenu = !showMenu },
@@ -209,7 +215,7 @@ private fun AppointmentDetailTopAppBar(
                     DropdownMenuItem(
                         text = { Text("Riprogramma") },
                         onClick = {
-                            onReschedule() // Chiama la lambda che apre il dialog
+                            onReschedule()
                             showMenu = false
                         },
                         leadingIcon = { Icon(Icons.Filled.EditCalendar, contentDescription = "Riprogramma") }
@@ -217,7 +223,7 @@ private fun AppointmentDetailTopAppBar(
                     DropdownMenuItem(
                         text = { Text("Annulla Appuntamento", color = colorScheme.error) },
                         onClick = {
-                            onCancel()
+                            onCancel() // Chiama la lambda per cancellare
                             showMenu = false
                         },
                         leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = "Annulla", tint = colorScheme.error) }
@@ -234,8 +240,8 @@ private fun AppointmentDetailContent(
     appointmentDetail: AppointmentDetail,
     formattedDate: String,
     formattedTime: String,
-    onReschedule: () -> Unit, // Questa ora apre il dialog
-    onCancel: () -> Unit,
+    onReschedule: () -> Unit,
+    onCancel: () -> Unit, // Riceve la lambda
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions
@@ -311,20 +317,19 @@ private fun AppointmentDetailContent(
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
-            AppointmentActionButtons( // I bottoni principali sono ancora qui
-                onReschedule = onReschedule, // Questa lambda ora apre il dialog
-                onCancel = onCancel,
+            AppointmentActionButtons(
+                onReschedule = onReschedule,
+                onCancel = onCancel, // Passa la lambda
                 dimensions = dimensions
             )
         }
     }
 }
 
-// --- NUOVO COMPOSABLE PER IL DIALOGO DI RIPROGRAMMAZIONE ---
 @Composable
 private fun RescheduleAppointmentDialog(
     currentAppointmentDate: LocalDate,
-    initialSelectedTimeSlotIndex: Int?, // Può essere null se non c'è una preselezione
+    currentAppointmentTimeSlotIndex: Int?,
     onDismiss: () -> Unit,
     onConfirm: (newDate: LocalDate, newTimeSlotIndex: Int) -> Unit,
     colorScheme: ColorScheme,
@@ -332,7 +337,7 @@ private fun RescheduleAppointmentDialog(
     dimensions: Dimensions
 ) {
     var selectedDateInDialog by remember { mutableStateOf(currentAppointmentDate) }
-    var selectedTimeSlotInDialog by remember { mutableStateOf(initialSelectedTimeSlotIndex) }
+    var selectedTimeSlotInDialog by remember { mutableStateOf<Int?>(null) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -342,7 +347,7 @@ private fun RescheduleAppointmentDialog(
             Column(
                 modifier = Modifier
                     .padding(dimensions.paddingLarge)
-                    .width(IntrinsicSize.Max), // Per adattare la larghezza al contenuto
+                    .width(IntrinsicSize.Max),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(dimensions.spacingLarge)
             ) {
@@ -351,26 +356,30 @@ private fun RescheduleAppointmentDialog(
                     style = typography.titleLarge,
                     color = colorScheme.onSurface
                 )
-
                 CalendarView(
                     initialSelectedDate = selectedDateInDialog,
                     onDateSelected = { newDate -> selectedDateInDialog = newDate },
                     colorScheme = colorScheme,
                     typography = typography,
-                    dimensions = dimensions
+                    dimensions = dimensions,
+                    highlightedDate = LocalDate.now(),
+                    disabledDates = setOf(currentAppointmentDate)
                 )
-
                 TimeSlotSelector(
                     selectedTimeSlotIndex = selectedTimeSlotInDialog,
                     onTimeSlotSelected = { index -> selectedTimeSlotInDialog = index },
                     colorScheme = colorScheme,
                     typography = typography,
-                    dimensions = dimensions
+                    dimensions = dimensions,
+                    disabledTimeSlotIndices = if (selectedDateInDialog == currentAppointmentDate) {
+                        currentAppointmentTimeSlotIndex?.let { setOf(it) } ?: emptySet()
+                    } else {
+                        emptySet()
+                    }
                 )
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End, // Allinea i bottoni a destra
+                    horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = onDismiss) {
@@ -379,11 +388,12 @@ private fun RescheduleAppointmentDialog(
                     Spacer(modifier = Modifier.width(dimensions.spacingSmall))
                     Button(
                         onClick = {
-                            selectedTimeSlotInDialog?.let { timeSlotIndex -> // Conferma solo se uno slot è selezionato
+                            selectedTimeSlotInDialog?.let { timeSlotIndex ->
                                 onConfirm(selectedDateInDialog, timeSlotIndex)
                             }
                         },
-                        enabled = selectedTimeSlotInDialog != null // Abilita solo se uno slot è selezionato
+                        enabled = selectedTimeSlotInDialog != null &&
+                                (selectedDateInDialog != currentAppointmentDate || selectedTimeSlotInDialog != currentAppointmentTimeSlotIndex)
                     ) {
                         Text("Conferma")
                     }
@@ -393,8 +403,6 @@ private fun RescheduleAppointmentDialog(
     }
 }
 
-
-// ... (Il resto dei Composable: AppointmentHeaderCard, InfoCard, InfoRow, AppointmentActionButtons, Preview rimangono invariati) ...
 @Composable
 private fun AppointmentHeaderCard(
     title: String,
@@ -450,7 +458,7 @@ private fun InfoCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(Dimensions.cornerRadiusMedium),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Usando 0.dp direttamente
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(Dimensions.paddingMedium)) {
             title?.let {
@@ -500,7 +508,7 @@ private fun InfoRow(
 @Composable
 private fun AppointmentActionButtons(
     onReschedule: () -> Unit,
-    onCancel: () -> Unit,
+    onCancel: () -> Unit, // Riceve la lambda per cancellare
     dimensions: Dimensions
 ) {
     Column(
@@ -508,12 +516,12 @@ private fun AppointmentActionButtons(
         verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
     ) {
         AppPrimaryButton(
-            onClick = onReschedule, // Questa ora apre il dialog
+            onClick = onReschedule,
             modifier = Modifier.fillMaxWidth(),
             text = "Riprogramma Appuntamento",
         )
         AppRedButton(
-            onClick = onCancel,
+            onClick = onCancel, // Chiama la lambda per cancellare
             modifier = Modifier.fillMaxWidth(),
             text = "Annulla Appuntamento"
         )

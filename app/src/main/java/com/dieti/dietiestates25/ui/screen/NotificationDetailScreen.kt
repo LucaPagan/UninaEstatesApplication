@@ -148,7 +148,7 @@ private fun NotificationDetailTopAppBar(
                     iconTint = colorScheme.onPrimaryContainer,
                     iconModifier = Modifier.size(dimensions.iconSizeMedium)
                 )
-
+                Spacer(modifier = Modifier.width(dimensions.spacingSmall))
                 Text(
                     text = notificationDetail?.senderType ?: "Dettaglio Notifica",
                     style = typography.titleLarge,

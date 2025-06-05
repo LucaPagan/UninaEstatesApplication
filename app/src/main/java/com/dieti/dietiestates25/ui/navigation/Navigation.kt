@@ -27,6 +27,7 @@ import com.dieti.dietiestates25.ui.screen.NotificationScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.NotificationDetailScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.ProfileScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.SearchTypeSelectionScreen
+import com.dieti.dietiestates25.ui.screen.YourPropertyScreen
 
 
 @Composable
@@ -279,6 +280,12 @@ fun Navigation() {
             appointmentId = ""
         ) }
 
+        composable(route = Screen.YourPropertyScreen.route) {
+            YourPropertyScreen(
+                navController = navController,
+                idUtente = ""
+            )
+        }
     }
 }
 
