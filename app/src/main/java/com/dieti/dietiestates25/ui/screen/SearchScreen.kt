@@ -62,59 +62,68 @@ const val MAX_RECENT_SEARCHES = 5 // Limita il numero di ricerche recenti
 
 @Composable
 fun SearchScreen(navController: NavController, idUtente: String) {
-        val colorScheme = MaterialTheme.colorScheme
-        val typography = MaterialTheme.typography
-        val dimensions = Dimensions
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val dimensions = Dimensions
 
-        val focusRequester = remember { FocusRequester() }
-        val keyboardController = LocalSoftwareKeyboardController.current
-        val focusManager = LocalFocusManager.current
-        val interactionSource = remember { MutableInteractionSource() }
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+    val interactionSource = remember { MutableInteractionSource() }
 
-        var searchQuery by remember { mutableStateOf("") }
-        var searchBarHasFocus by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var searchBarHasFocus by remember { mutableStateOf(false) }
 
-        // Stato per le ricerche recenti (in memoria per questo esempio)
-        val recentSearches = remember { mutableStateListOf<String>() }
+    // Stato per le ricerche recenti (in memoria per questo esempio)
+    val recentSearches = remember { mutableStateListOf<String>() }
 
-        // Funzione per aggiungere una ricerca alle recenti
-        fun addSearchToRecents(query: String) {
-            if (query.isBlank()) return
-            recentSearches.remove(query) // Rimuove se già presente per metterla in cima
-            recentSearches.add(0, query) // Aggiunge in cima
-            if (recentSearches.size > MAX_RECENT_SEARCHES) {
-                recentSearches.removeAt(recentSearches.lastIndex) // Mantiene la lista alla dimensione massima
-            }
+    // Funzione per aggiungere una ricerca alle recenti
+    fun addSearchToRecents(query: String) {
+        if (query.isBlank()) return
+        recentSearches.remove(query) // Rimuove se già presente per metterla in cima
+        recentSearches.add(0, query) // Aggiunge in cima
+        if (recentSearches.size > MAX_RECENT_SEARCHES) {
+            recentSearches.removeAt(recentSearches.lastIndex) // Mantiene la lista alla dimensione massima
         }
+    }
 
-        // Funzione per rimuovere una ricerca dalle recenti
-        fun removeSearchFromRecents(query: String) {
-            recentSearches.remove(query)
-        }
+    // Funzione per rimuovere una ricerca dalle recenti
+    fun removeSearchFromRecents(query: String) {
+        recentSearches.remove(query)
+    }
 
-        val searchResults = remember {
-            listOf("Napoli - Comune", "Roma - Comune", "Milano - Comune", "Torino - Comune", "Firenze - Comune", "Bologna - Comune", "Genova - Comune")
+    val searchResults = remember {
+        listOf(
+            "Napoli - Comune",
+            "Roma - Comune",
+            "Milano - Comune",
+            "Torino - Comune",
+            "Firenze - Comune",
+            "Bologna - Comune",
+            "Genova - Comune"
+        )
+    }
+    val filteredComuni = remember(searchQuery, searchResults) {
+        if (searchQuery.isBlank()) {
+            emptyList()
+        } else {
+            searchResults.filter { it.contains(searchQuery, ignoreCase = true) }
         }
-        val filteredComuni = remember(searchQuery, searchResults) {
-            if (searchQuery.isBlank()) {
-                emptyList()
-            } else {
-                searchResults.filter { it.contains(searchQuery, ignoreCase = true) }
-            }
-        }
+    }
 
-        val gradientColors = remember(colorScheme) {
-            listOf(
-                colorScheme.primary.copy(alpha = 0.7f),
-                colorScheme.background,
-                colorScheme.primary.copy(alpha = 0.7f)
-            )
-        }
+    val gradientColors = remember(colorScheme) {
+        listOf(
+            colorScheme.primary.copy(alpha = 0.7f),
+            colorScheme.background,
+            colorScheme.primary.copy(alpha = 0.7f)
+        )
+    }
 
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
-            keyboardController?.show()
-        }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+        keyboardController?.show()
+    }
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -402,7 +411,13 @@ fun SearchResultItem(
             .clickable {
                 onItemClick() // Esegue azioni pre-navigazione (es. aggiunta a recenti, pulizia UI)
                 // La navigazione vera e propria
-                navController.navigate(Screen.SearchFilterScreen.withInitialArgs(idUtente, comune, ""))
+                navController.navigate(
+                    Screen.SearchFilterScreen.withInitialArgs(
+                        idUtente,
+                        comune,
+                        ""
+                    )
+                )
             },
         colors = CardDefaults.cardColors(
             containerColor = colorScheme.surfaceVariant

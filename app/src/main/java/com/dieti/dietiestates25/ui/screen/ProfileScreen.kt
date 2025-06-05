@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.navigation.Screen
 
 @Composable
 fun ProfileScreen(
@@ -472,7 +473,7 @@ private fun ProfileOtherOptions(
         ProfileOptionRow(
             text = "Immobili salvati",
             icon = Icons.Default.NightsStay,
-            onClick = { /* Naviga */ },
+            onClick = { navController.navigate(Screen.ApartmentListingScreen.route) },
             dimensions = dimensions
         )
         ProfileOptionRow(

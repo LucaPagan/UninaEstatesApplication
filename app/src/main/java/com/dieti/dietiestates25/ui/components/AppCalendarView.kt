@@ -1,5 +1,6 @@
 package com.dieti.dietiestates25.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -42,16 +43,27 @@ fun CalendarView(
     typography: Typography,
     modifier: Modifier = Modifier,
     dimensions: Dimensions = Dimensions,
-    highlightedDate: LocalDate? = LocalDate.now(), // Data da evidenziare (es. oggi)
-    disabledDates: Set<LocalDate> = emptySet() // Date da disabilitare
+    highlightedDate: LocalDate? = LocalDate.now(),
+    disabledDates: Set<LocalDate> = emptySet()
 ) {
     var internalSelectedDate by remember { mutableStateOf(initialSelectedDate) }
     var viewingDate by remember { mutableStateOf(initialSelectedDate) }
 
     LaunchedEffect(initialSelectedDate) {
-        internalSelectedDate = initialSelectedDate
-        viewingDate = initialSelectedDate
-        // Non chiamare onDateSelected qui per evitare doppia chiamata all'init
+        // Se la data iniziale è passata e non è tra le date specificamente disabilitate,
+        // spostala al giorno corrente per evitare una preselezione non valida.
+        if (initialSelectedDate.isBefore(LocalDate.now()) && !disabledDates.contains(initialSelectedDate)) {
+            internalSelectedDate = LocalDate.now()
+            viewingDate = LocalDate.now()
+            onDateSelected(LocalDate.now()) // Notifica la data corretta
+        } else {
+            internalSelectedDate = initialSelectedDate
+            viewingDate = initialSelectedDate
+            // Non chiamare onDateSelected qui se initialSelectedDate è valida,
+            // per evitare doppia chiamata. La prima selezione avviene al click.
+            // Ma se si vuole notificare subito lo stato iniziale, decommentare:
+            // onDateSelected(initialSelectedDate)
+        }
     }
 
     val currentMonth = remember(viewingDate) { viewingDate.month }
@@ -68,9 +80,10 @@ fun CalendarView(
     val weekdays = remember { listOf("L", "M", "M", "G", "V", "S", "D") }
 
     val selectedTextColor = colorScheme.onPrimaryContainer
-    val weekendDayColor = colorScheme.onSurfaceVariant // Colore per i giorni del weekend non festivi
-    val holidayTextColor = colorScheme.error // Colore per le festività
+    val weekendDayColor = colorScheme.onSurfaceVariant
+    val holidayTextColor = colorScheme.error
     val disabledTextColor = colorScheme.onSurface.copy(alpha = 0.38f)
+    val todayTextColor = colorScheme.tertiary // Colore specifico per il testo di "oggi" se non selezionato
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -91,7 +104,7 @@ fun CalendarView(
             Spacer(modifier = Modifier.height(dimensions.spacingMedium))
             WeekdayHeaders(
                 weekdays = weekdays,
-                weekendHeaderColor = colorScheme.error.copy(alpha = 0.7f), // Header weekend leggermente diverso
+                weekendHeaderColor = colorScheme.error.copy(alpha = 0.7f),
                 defaultHeaderColor = colorScheme.onSurfaceVariant,
                 typography = typography
             )
@@ -102,18 +115,23 @@ fun CalendarView(
                 daysInMonth = daysInMonth,
                 firstDayOfWeekOffset = firstDayOfWeekOffset,
                 internalSelectedDate = internalSelectedDate,
-                highlightedDate = highlightedDate,
-                disabledDates = disabledDates,
+                highlightedDate = highlightedDate, // Data corrente da evidenziare
+                disabledDates = disabledDates, // Date specifiche da disabilitare
                 colorScheme = colorScheme,
                 typography = typography,
                 selectedTextColor = selectedTextColor,
                 holidayTextColor = holidayTextColor,
                 weekendDayColor = weekendDayColor,
                 disabledTextColor = disabledTextColor,
+                todayTextColor = todayTextColor,
                 onDateClick = { date ->
-                    if (!disabledDates.contains(date)) {
+                    // Permetti la selezione solo se la data non è passata e non è nelle disabledDates
+                    if (!date.isBefore(LocalDate.now()) && !disabledDates.contains(date)) {
                         internalSelectedDate = date
                         onDateSelected(date)
+                    } else if (disabledDates.contains(date) && date == internalSelectedDate) {
+                        // Se una data disabilitata specificamente è già selezionata (caso limite),
+                        // non fare nulla o deselezionala
                     }
                 },
                 dimensions = dimensions
@@ -144,7 +162,7 @@ private fun CalendarHeader(
             tint = colorScheme.onSurfaceVariant,
             dimensions = dimensions
         )
-        val monthYearFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ITALIAN) }
+        val monthYearFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ITALIAN) } // Modificato per includere l'anno
         val formattedMonthYear = viewingDate.format(monthYearFormatter).replaceFirstChar {
             if (it.isLowerCase()) it.titlecase(Locale.ITALIAN) else it.toString()
         }
@@ -205,9 +223,12 @@ private fun CalendarGrid(
     internalSelectedDate: LocalDate, highlightedDate: LocalDate?, disabledDates: Set<LocalDate>,
     colorScheme: ColorScheme, typography: Typography, selectedTextColor: Color,
     holidayTextColor: Color, weekendDayColor: Color, disabledTextColor: Color,
+    todayTextColor: Color, // Nuovo colore per il testo di oggi
     onDateClick: (LocalDate) -> Unit, dimensions: Dimensions
 ) {
     val totalCells = if (firstDayOfWeekOffset + daysInMonth <= 35) 35 else 42
+    val today = LocalDate.now() // Ottieni la data di oggi una volta
+
     Column {
         for (i in 0 until totalCells / 7) {
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = dimensions.spacingExtraSmall / 2)) {
@@ -217,33 +238,39 @@ private fun CalendarGrid(
                     if (dayOfMonth in 1..daysInMonth) {
                         val date = LocalDate.of(currentYear, currentMonth, dayOfMonth)
                         val isSelected = date == internalSelectedDate
-                        val isHighlighted = date == highlightedDate && !isSelected // Evidenzia solo se non già selezionato
-                        val isDisabled = disabledDates.contains(date)
+                        // Modifica: isHighlighted è solo se è oggi E non è selezionato.
+                        val isHighlightedAsToday = date == highlightedDate && date == today && !isSelected
+                        // Modifica: isDisabled ora include anche i giorni prima di oggi
+                        val isGenerallyDisabled = date.isBefore(today)
+                        val isSpecificallyDisabled = disabledDates.contains(date)
+                        val isDisabled = isGenerallyDisabled || isSpecificallyDisabled
+
                         val isPublicHoliday = isItalianHoliday(date)
                         val isWeekendDay = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
 
                         val textColor = when {
-                            isDisabled -> disabledTextColor
+                            isDisabled && !isSelected -> disabledTextColor // Se disabilitato e non selezionato
                             isSelected -> selectedTextColor
+                            isHighlightedAsToday -> todayTextColor // Colore specifico per il testo di "oggi"
                             isPublicHoliday -> holidayTextColor
-                            isWeekendDay && !isHighlighted -> weekendDayColor // Colore weekend se non è oggi
+                            isWeekendDay -> weekendDayColor
                             else -> colorScheme.onSurface
                         }
                         val backgroundColor = when {
                             isSelected -> colorScheme.primaryContainer
-                            isHighlighted -> colorScheme.tertiaryContainer.copy(alpha = 0.5f) // Colore per oggi
+                            isHighlightedAsToday -> colorScheme.tertiaryContainer.copy(alpha = 0.3f) // Sfondo per "oggi"
                             else -> Color.Transparent
                         }
 
                         DayCell(
                             day = dayOfMonth.toString(),
                             isSelected = isSelected,
-                            isHighlighted = isHighlighted,
-                            isDisabled = isDisabled,
+                            isHighlighted = isHighlightedAsToday, // Passa il nuovo stato di evidenziazione
+                            isDisabled = isDisabled, // Passa lo stato di disabilitazione combinato
                             textColor = textColor,
                             backgroundColor = backgroundColor,
                             typography = typography,
-                            onClick = { onDateClick(date) },
+                            onClick = { onDateClick(date) }, // onDateClick in CalendarView gestirà la logica di disabilitazione
                             dimensions = dimensions
                         )
                     } else {
@@ -268,14 +295,14 @@ private fun RowScope.DayCell(
             .padding(dimensions.spacingExtraSmall / 2)
             .clip(CircleShape)
             .background(backgroundColor)
-            .clickable(enabled = !isDisabled, onClick = onClick), // Disabilita click se isDisabled
+            .clickable(enabled = !isDisabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = day,
             style = typography.bodyMedium.copy(
                 fontWeight = if (isSelected || isHighlighted) FontWeight.Bold else FontWeight.Normal,
-                textDecoration = if (isDisabled) TextDecoration.LineThrough else null // Sbarra il testo se disabilitato
+                textDecoration = if (isDisabled && !isSelected) TextDecoration.LineThrough else null // Sbarra solo se disabilitato e non selezionato
             ),
             color = textColor
         )
@@ -306,9 +333,15 @@ private fun isItalianHoliday(date: LocalDate): Boolean {
     val m = (a + 11 * h + 22 * l) / 451
     val easterMonth = (h + l - 7 * m + 114) / 31
     val easterDay = ((h + l - 7 * m + 114) % 31) + 1
-    val easterSunday = LocalDate.of(year, easterMonth, easterDay)
-    val easterMonday = easterSunday.plusDays(1)
-    return date.isEqual(easterSunday) || date.isEqual(easterMonday)
+    try { // Aggiunto try-catch per LocalDate.of in caso di calcoli errati per Pasqua (rari)
+        val easterSunday = LocalDate.of(year, easterMonth, easterDay)
+        val easterMonday = easterSunday.plusDays(1)
+        return date.isEqual(easterSunday) || date.isEqual(easterMonday)
+    } catch (e: Exception) {
+        // Logga l'errore se necessario, ma ritorna false per evitare crash
+        Log.e("CalendarUtils", "Error calculating Easter for $year: ${e.message}")
+        return false
+    }
 }
 
 @Composable
@@ -318,7 +351,7 @@ fun TimeSlotSelector(
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions,
-    disabledTimeSlotIndices: Set<Int> = emptySet() // Nuovo parametro
+    disabledTimeSlotIndices: Set<Int> = emptySet()
 ) {
     val timeSlots = remember { listOf("9-12", "12-14", "14-17", "17-20") }
 
@@ -328,7 +361,7 @@ fun TimeSlotSelector(
     ) {
         timeSlots.forEachIndexed { index, slot ->
             val isSelected = index == selectedTimeSlotIndex
-            val isDisabled = disabledTimeSlotIndices.contains(index) // Controlla se lo slot è disabilitato
+            val isDisabled = disabledTimeSlotIndices.contains(index)
 
             val shape = when (index) {
                 0 -> RoundedCornerShape(topStart = dimensions.cornerRadiusMedium, bottomStart = dimensions.cornerRadiusMedium, topEnd = 0.dp, bottomEnd = 0.dp)
@@ -336,12 +369,12 @@ fun TimeSlotSelector(
                 else -> RoundedCornerShape(0.dp)
             }
             val backgroundColor = when {
-                isDisabled -> colorScheme.surfaceContainerLowest // Colore per disabilitato
+                isDisabled -> colorScheme.surfaceContainerLowest.copy(alpha = 0.5f) // Più trasparente se disabilitato
                 isSelected -> colorScheme.primary
                 else -> colorScheme.surfaceContainer
             }
             val textColor = when {
-                isDisabled -> colorScheme.onSurface.copy(alpha = 0.38f) // Testo disabilitato
+                isDisabled -> colorScheme.onSurface.copy(alpha = 0.38f)
                 isSelected -> colorScheme.onPrimary
                 else -> colorScheme.onSurfaceVariant
             }
@@ -352,7 +385,7 @@ fun TimeSlotSelector(
                     .height(dimensions.iconSizeExtraLarge)
                     .clip(shape)
                     .background(backgroundColor)
-                    .clickable(enabled = !isDisabled) { // Disabilita click se isDisabled
+                    .clickable(enabled = !isDisabled) {
                         if (!isDisabled) onTimeSlotSelected(index)
                     }
                     .padding(horizontal = dimensions.paddingSmall),
@@ -363,7 +396,7 @@ fun TimeSlotSelector(
                     color = textColor,
                     style = typography.labelLarge.copy(
                         fontWeight = if (isSelected && !isDisabled) FontWeight.Bold else FontWeight.Normal,
-                        textDecoration = if (isDisabled) TextDecoration.LineThrough else null // Sbarra testo se disabilitato
+                        textDecoration = if (isDisabled) TextDecoration.LineThrough else null
                     )
                 )
             }
@@ -372,7 +405,7 @@ fun TimeSlotSelector(
                     modifier = Modifier
                         .width(1.dp)
                         .height(dimensions.spacingLarge * 0.6f)
-                        .background(color = colorScheme.outline.copy(alpha = 0.5f))
+                        .background(color = colorScheme.outline.copy(alpha = 0.3f)) // Meno opaco
                         .align(Alignment.CenterVertically)
                 )
             }

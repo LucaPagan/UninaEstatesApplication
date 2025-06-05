@@ -224,6 +224,7 @@ private fun PriceProposalTopAppBar(
                 iconTint = colorScheme.onPrimaryContainer,
                 iconModifier = Modifier.size(dimensions.iconSizeMedium)
             )
+            Spacer(modifier = Modifier.width(dimensions.spacingSmall))
             Text(
                 text = "Proponi prezzo",
                 style = typography.titleMedium

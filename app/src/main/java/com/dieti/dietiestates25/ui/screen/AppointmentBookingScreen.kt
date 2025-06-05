@@ -129,7 +129,7 @@ private fun AppointmentBookingTopAppBar(
                 buttonSize = dimensions.iconSizeLarge, // Coerenza con altre TopAppBar
                 iconSize = dimensions.iconSizeMedium
             )
-            Spacer(modifier = Modifier.width(dimensions.spacingMedium)) // Spazio tra bottone e testo
+            Spacer(modifier = Modifier.width(dimensions.spacingSmall))
             Text(
                 text = "Prenota una visita",
                 style = typography.titleMedium, // Potrebbe essere titleLarge per coerenza
