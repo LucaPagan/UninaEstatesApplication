@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.dieti.dietiestates25.ui.model.NotificationsViewModel
+import com.dieti.dietiestates25.ui.navigation.Screen.EditPropertyScreen
 import com.dieti.dietiestates25.ui.screen.ApartmentListingScreen
 import com.dieti.dietiestates25.ui.screen.HomeScreen
 // ... (altri import delle tue schermate)
@@ -21,6 +22,7 @@ import com.dieti.dietiestates25.ui.screen.PropertyScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.PriceProposalScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.AppointmentBookingScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.AppointmentDetailScreen
+import com.dieti.dietiestates25.ui.screen.EditPropertyScreen
 import com.dieti.dietiestates25.ui.screen.FullScreenMapScreen
 import com.dieti.dietiestates25.ui.screen.MapSearchScreen
 import com.dieti.dietiestates25.ui.screen.NotificationScreen // Import mancante
@@ -284,6 +286,12 @@ fun Navigation() {
             YourPropertyScreen(
                 navController = navController,
                 idUtente = ""
+            )
+        }
+
+        composable(route = Screen.EditPropertyScreen.route) {
+            EditPropertyScreen(
+                navController = navController
             )
         }
     }

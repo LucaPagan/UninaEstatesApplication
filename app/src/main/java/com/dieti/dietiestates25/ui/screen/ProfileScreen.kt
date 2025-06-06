@@ -1,18 +1,5 @@
 package com.dieti.dietiestates25.ui.screen
 
-import com.dieti.dietiestates25.ui.components.AppBottomNavigation
-import com.dieti.dietiestates25.ui.components.AppPrimaryButton
-import com.dieti.dietiestates25.ui.components.AppRedButton
-import com.dieti.dietiestates25.ui.components.CircularIconActionButton
-import com.dieti.dietiestates25.ui.components.AppIconDisplay
-import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.ui.model.ProfileData
-import com.dieti.dietiestates25.ui.model.ProfileViewModel
-import com.dieti.dietiestates25.ui.components.UnsavedChangesAlertDialog
-import com.dieti.dietiestates25.ui.components.LogoutConfirmAlertDialog
-import com.dieti.dietiestates25.ui.components.DeleteConfirmAlertDialog
-import com.dieti.dietiestates25.ui.model.modelsource.PhonePrefix
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,9 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
@@ -69,7 +54,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.components.AppBottomNavigation
+import com.dieti.dietiestates25.ui.components.AppIconDisplay
+import com.dieti.dietiestates25.ui.components.CircularIconActionButton
+import com.dieti.dietiestates25.ui.components.DeleteConfirmAlertDialog
+import com.dieti.dietiestates25.ui.components.LogoutConfirmAlertDialog
+import com.dieti.dietiestates25.ui.components.UnsavedChangesAlertDialog
+import com.dieti.dietiestates25.ui.components.AppPrimaryButton
+import com.dieti.dietiestates25.ui.components.AppRedButton
+import com.dieti.dietiestates25.ui.model.ProfileData
+import com.dieti.dietiestates25.ui.model.ProfileViewModel
+import com.dieti.dietiestates25.ui.model.modelsource.PhonePrefix
 import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @Composable
 fun ProfileScreen(
@@ -103,7 +101,22 @@ fun ProfileScreen(
             )
         },
         bottomBar = {
-            AppBottomNavigation(navController = navController, idUtente = profileData.email)
+            // --- MODIFICA PER GESTIRE LA NAVIGAZIONE CON MODIFICHE NON SALVATE ---
+            // Nota: questo richiede di modificare il tuo componente AppBottomNavigation
+            // per accettare una nuova lambda `onNavigateAttempt` che restituisce un Boolean.
+            AppBottomNavigation(
+                navController = navController,
+                idUtente = profileData.email,
+                onNavigateAttempt = {
+                    // Controlla se la navigazione deve essere bloccata per mostrare il dialogo
+                    if (isEditMode && hasUnsavedChanges) {
+                        viewModel.triggerExitEditModeDialog() // Mostra il dialogo "Modifiche non salvate"
+                        false // Blocca la navigazione
+                    } else {
+                        true // Permetti la navigazione
+                    }
+                }
+            )
         }
     ) { scaffoldPaddingValues ->
         Column(
@@ -119,7 +132,7 @@ fun ProfileScreen(
         ) {
             ProfileContent(
                 profileData = profileData,
-                isEditMode = isEditMode,
+                isEditMode = isEditMode, // Passa lo stato di modifica
                 canSaveChanges = canSaveChanges,
                 availablePhonePrefixes = viewModel.availablePhonePrefixes,
                 onNameChange = viewModel::onNameChange,
@@ -157,7 +170,8 @@ fun ProfileScreen(
             hasUnsavedChanges = hasUnsavedChanges,
             canSaveChanges = canSaveChanges,
             colorScheme = colorScheme,
-            dimensions = dimensions
+            dimensions = dimensions,
+            typography = typography
         )
     }
 
@@ -172,8 +186,6 @@ fun ProfileScreen(
     }
 }
 
-
-
 @Composable
 private fun ProfileScreenHeader(
     isEditMode: Boolean,
@@ -183,33 +195,24 @@ private fun ProfileScreenHeader(
     typography: Typography,
     dimensions: Dimensions
 ) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-    ) {
-        // Status Bar con colore TealDeep fisso
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsTopHeight(WindowInsets.statusBars)
-                .background(colorScheme.primaryContainer)
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(colorScheme.primary)
-                .clip(
-                    RoundedCornerShape(
-                        bottomStart = dimensions.cornerRadiusLarge,
-                        bottomEnd = dimensions.cornerRadiusLarge
-                    )
+            .background(colorScheme.primary)
+            .clip(
+                RoundedCornerShape(
+                    bottomStart = dimensions.cornerRadiusLarge,
+                    bottomEnd = dimensions.cornerRadiusLarge
                 )
-                .padding(horizontal = dimensions.paddingLarge)
-                .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge),
-            contentAlignment = Alignment.CenterStart
-        ) {
+            )
+    ) {
+        Column {
+            Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = dimensions.paddingLarge)
+                    .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -246,8 +249,7 @@ private fun ProfileScreenHeader(
                     contentDescription = currentContentDescription,
                     backgroundColor = currentBackgroundColor,
                     iconTint = currentIconTint,
-                    iconSize = dimensions.iconSizeMedium,
-                    iconModifier = Modifier.size(dimensions.iconSizeMedium)
+                    iconSize = dimensions.iconSizeMedium
                 )
             }
         }
@@ -300,6 +302,7 @@ private fun ProfileContent(
         )
         Spacer(modifier = Modifier.height(dimensions.spacingLarge))
         ProfileOtherOptions(
+            isEditMode = isEditMode, // Passa lo stato di modifica
             typography = typography,
             colorScheme = colorScheme,
             navController = navController,
@@ -397,7 +400,7 @@ private fun ProfileDataFields(
 
     Row(verticalAlignment = Alignment.Top) {
         ExposedDropdownMenuBox(
-            expanded = prefixDropdownExpanded,
+            expanded = prefixDropdownExpanded && isEditMode, // Il menu si apre solo in edit mode
             onExpandedChange = { if (isEditMode) prefixDropdownExpanded = !prefixDropdownExpanded },
             modifier = Modifier.padding(end = dimensions.spacingSmall)
         ) {
@@ -451,6 +454,7 @@ private fun ProfileDataFields(
 
 @Composable
 private fun ProfileOtherOptions(
+    isEditMode: Boolean, // Aggiunto per disabilitare i pulsanti
     typography: Typography,
     colorScheme: ColorScheme,
     navController: NavController,
@@ -466,21 +470,33 @@ private fun ProfileOtherOptions(
         )
         ProfileOptionRow(
             text = "I tuoi immobili",
-            icon = Icons.Default.NightsStay,
-            onClick = { /* Naviga */ },
-            dimensions = dimensions
+            icon = Icons.Default.NightsStay, // Cambia con un'icona appropriata
+            onClick = { navController.navigate(Screen.YourPropertyScreen.route) },
+            enabled = !isEditMode, // Disabilitato se in edit mode
+            dimensions = dimensions,
+            colorScheme = colorScheme
         )
         ProfileOptionRow(
             text = "Immobili salvati",
-            icon = Icons.Default.NightsStay,
-            onClick = { navController.navigate(Screen.ApartmentListingScreen.route) },
-            dimensions = dimensions
+            icon = Icons.Default.NightsStay, // Cambia con un'icona appropriata
+            onClick = { navController.navigate(
+                Screen.ApartmentListingScreen.buildRoute(
+                    idUtentePath = "",
+                    comunePath = "",
+                    ricercaPath = ""
+                )
+            ) },
+            enabled = !isEditMode, // Disabilitato se in edit mode
+            dimensions = dimensions,
+            colorScheme = colorScheme
         )
         ProfileOptionRow(
             text = "Richieste appuntamenti",
-            icon = Icons.Default.NightsStay,
+            icon = Icons.Default.NightsStay, // Cambia con un'icona appropriata
             onClick = { /* Naviga */ },
-            dimensions = dimensions
+            enabled = !isEditMode, // Disabilitato se in edit mode
+            dimensions = dimensions,
+            colorScheme = colorScheme
         )
     }
 }
@@ -490,19 +506,25 @@ fun ProfileOptionRow(
     text: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit,
-    dimensions: Dimensions
+    enabled: Boolean, // Nuovo parametro per l'abilitazione
+    dimensions: Dimensions,
+    colorScheme: ColorScheme = MaterialTheme.colorScheme,
+    typography: Typography = MaterialTheme.typography
 ) {
+    val contentColor = if (enabled) colorScheme.onSurface else colorScheme.onSurface.copy(alpha = 0.38f)
+    val iconColor = if (enabled) colorScheme.primary else colorScheme.onSurface.copy(alpha = 0.38f)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick) // Applica lo stato enabled
             .padding(vertical = dimensions.paddingMedium),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Icon(icon, contentDescription = null, tint = iconColor)
         Spacer(modifier = Modifier.width(dimensions.spacingMedium))
-        Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-        Icon(Icons.AutoMirrored.Filled.ArrowRight, contentDescription = "Vai a $text", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text, style = typography.bodyLarge, modifier = Modifier.weight(1f), color = contentColor)
+        Icon(Icons.AutoMirrored.Filled.ArrowRight, contentDescription = "Vai a $text", tint = contentColor)
     }
 }
 
@@ -512,7 +534,7 @@ private fun ProfileActionButtons(
     canSaveChanges: Boolean,
     onSaveClick: () -> Unit,
     onLogoutClick: () -> Unit,
-    onDeleteProfileClick: () -> Unit, // Questa ora chiamerà triggerDeleteProfileDialog
+    onDeleteProfileClick: () -> Unit,
     dimensions: Dimensions
 ) {
     if (isEditMode) {
@@ -531,7 +553,7 @@ private fun ProfileActionButtons(
     )
     Spacer(modifier = Modifier.height(dimensions.spacingMedium))
     AppRedButton(
-        onClick = onDeleteProfileClick, // Questa azione ora triggera il dialogo
+        onClick = onDeleteProfileClick,
         text = "Elimina Profilo",
         enabled = !isEditMode,
         modifier = Modifier.fillMaxWidth()
@@ -542,5 +564,8 @@ private fun ProfileActionButtons(
 @Composable
 fun ProfileScreenPreview() {
     val navController = rememberNavController()
-    ProfileScreen(navController = navController)
+    DietiEstatesTheme {
+        ProfileScreen(navController = navController)
+    }
 }
+

@@ -171,4 +171,8 @@ class ProfileViewModel : ViewModel() {
         exitEditModeGracefully()
         // TODO: Eseguire il logout effettivo o navigare via
     }
+
+    fun triggerExitEditModeDialog() {
+        _showExitEditModeConfirmDialog.value = true
+    }
 }
