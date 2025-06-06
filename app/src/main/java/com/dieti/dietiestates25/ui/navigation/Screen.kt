@@ -174,4 +174,6 @@ sealed class Screen(val route: String) {
     data object AppointmentDetailScreen : Screen("appointment_detail_screen")
 
     data object YourPropertyScreen : Screen("your_property_screen")
+
+    data object EditPropertyScreen : Screen("edit_property_screen")
 }

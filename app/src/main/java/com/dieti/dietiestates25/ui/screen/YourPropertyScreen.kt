@@ -20,6 +20,7 @@ import com.dieti.dietiestates25.ui.components.AppPropertyCard
 import com.dieti.dietiestates25.ui.components.AppPropertyViewButton
 import com.dieti.dietiestates25.ui.model.modelsource.sampleListingProperties // Using sample data
 import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,94 +33,104 @@ fun YourPropertyScreen(
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
 
-    // Properties to display - in a real app, you'd fetch properties for 'idUtente'
-    val userProperties = sampleListingProperties() // Using sample data for now
+    // CORREZIONE: Rimosse le parentesi. 'sampleListingProperties' è una lista, non una funzione.
+    val userProperties = sampleListingProperties
 
     val gradientColors = arrayOf(
         0.0f to colorScheme.primary, 0.20f to colorScheme.background,
         0.60f to colorScheme.background, 1.0f to colorScheme.primary
     )
 
+    // CORREZIONE STRUTTURALE: La TopAppBar va nel parametro topBar dello Scaffold
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(colorStops = gradientColors))
-    ) {
-        // Simple TopAppBar for this screen
-        TopAppBar(
-            title = {
-                Text(
-                    "Le Tue Proprietà",
-                    style = typography.titleLarge,
-                    color = colorScheme.onPrimary
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Le Tue Proprietà",
+                        style = typography.titleLarge,
+                        color = colorScheme.onPrimary
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Indietro",
+                            tint = colorScheme.onPrimary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorScheme.primary
                 )
-            },
-            navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Indietro",
-                        tint = colorScheme.onPrimary
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding) // Applica i padding forniti dallo Scaffold
+                .background(Brush.verticalGradient(colorStops = gradientColors))
+        ) {
+            if (userProperties.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f) // Usa weight per occupare lo spazio rimanente
+                        .fillMaxWidth()
+                        .padding(dimensions.paddingLarge),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Non hai nessuna proprietà al momento.",
+                        style = typography.bodyLarge,
+                        color = colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
                     )
                 }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = colorScheme.primary
-            ),
-            modifier = Modifier.statusBarsPadding() // Apply padding for the status bar
-        )
-
-        if (userProperties.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(dimensions.paddingLarge),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Non hai nessuna proprietà al momento.",
-                    style = typography.bodyLarge,
-                    color = colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-            }
-        } else {
-            LazyColumn(
-                contentPadding = PaddingValues(
-                    start = dimensions.paddingMedium,
-                    end = dimensions.paddingMedium,
-                    top = dimensions.paddingMedium, // Adjusted top padding
-                    bottom = dimensions.paddingLarge
-                ),
-                verticalArrangement = Arrangement.spacedBy(dimensions.paddingMedium)
-            ) {
-                items(items = userProperties, key = { it.id }) { property ->
-                    AppPropertyCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(250.dp), // Same height as in ApartmentListingScreen
-                        price = property.price,
-                        imageResId = property.imageRes,
-                        address = property.location,
-                        details = listOfNotNull(
-                            property.type,
-                            property.areaMq?.let { "$it mq" },
-                            property.bathrooms?.let { numBagni ->
-                                if (numBagni == 1) "$numBagni bagno" else "$numBagni bagni"
-                            }
-                        ).filter { it.isNotBlank() },
-                        onClick = { },
-                        actionButton = {
-                            AppPropertyViewButton(
-                                onClick = {
-                                    navController.navigate(Screen.PropertyScreen.route)
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f), // Usa weight per occupare lo spazio rimanente
+                    contentPadding = PaddingValues(
+                        start = dimensions.paddingMedium,
+                        end = dimensions.paddingMedium,
+                        top = dimensions.paddingMedium,
+                        bottom = dimensions.paddingLarge
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(dimensions.paddingMedium)
+                ) {
+                    items(items = userProperties, key = { it.id }) { property ->
+                        AppPropertyCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(250.dp),
+                            price = property.price,
+                            imageResId = property.imageRes,
+                            address = property.location,
+                            details = listOfNotNull(
+                                property.type,
+                                property.areaMq?.let { "$it mq" },
+                                property.bathrooms?.let { numBagni ->
+                                    if (numBagni == 1) "$numBagni bagno" else "$numBagni bagni"
                                 }
-                            )
-                        },
-                        horizontalMode = false,
-                        imageHeightVerticalRatio = 0.50f,
-                        elevationDp = Dimensions.elevationSmall
-                    )
+                            ).filter { it.isNotBlank() },
+                            onClick = {
+                                navController.navigate(Screen.PropertyScreen.route)
+                            },
+                            actionButton = {
+                                AppPropertyViewButton(
+                                    text = "Modifica",
+                                    onClick = {
+                                        navController.navigate(Screen.EditPropertyScreen.route)
+                                    }
+                                )
+                            },
+                            horizontalMode = false,
+                            imageHeightVerticalRatio = 0.50f,
+                            elevationDp = Dimensions.elevationSmall
+                        )
+                    }
                 }
             }
         }
@@ -130,8 +141,10 @@ fun YourPropertyScreen(
 @Composable
 fun YourPropertyScreenPreview() {
     val navController = rememberNavController()
-    YourPropertyScreen(
-        navController = navController,
-        idUtente = "previewUser"
-    )
+    DietiEstatesTheme {
+        YourPropertyScreen(
+            navController = navController,
+            idUtente = "previewUser"
+        )
+    }
 }

@@ -4,13 +4,13 @@ import com.dieti.dietiestates25.R // Assicurati che R sia importabile da questo 
 import com.dieti.dietiestates25.ui.model.PropertyModel // Importa il modello Property
 
 val sampleListingProperties = listOf(
-    PropertyModel(1, "450.000 €", "Appartamento", R.drawable.property1, "Napoli, Vomero", 50, 3,2),
-    PropertyModel(2, "380.000 €", "Appartamento", R.drawable.property2, "Napoli, Chiaia", 60,2,2),
-    PropertyModel(3, "520.000 €", "Villa", R.drawable.property1, "Posillipo, Napoli", 100, 5,3),
-    PropertyModel(4, "290.000 €", "Attico", R.drawable.property2, "Napoli, Centro Storico", 30, 1,1),
-    PropertyModel(5, "210.000 €", "Bilocale", R.drawable.property1, "Napoli, Fuorigrotta", 40, 2,1),
-    PropertyModel(6, "600.000 €", "Appartamento", R.drawable.property2, "Napoli, San Ferdinando", 80, 4,3),
-    PropertyModel(7, "310.000 €", "Trivano", R.drawable.property1, "Napoli, Arenella", 25, 1,1),
+    PropertyModel(1, "450.000 €", "Appartamento", R.drawable.property1, "Napoli, Vomero", 50, 3, 2, "Affitto"),
+    PropertyModel(2, "380.000 €", "Appartamento", R.drawable.property2, "Napoli, Chiaia", 60,2, 2, "Vendita"),
+    PropertyModel(3, "520.000 €", "Villa", R.drawable.property1, "Posillipo, Napoli", 100, 5, 3, "Affitto"),
+    PropertyModel(4, "290.000 €", "Attico", R.drawable.property2, "Napoli, Centro Storico", 30, 1, 1, "Vendita"),
+    PropertyModel(5, "210.000 €", "Bilocale", R.drawable.property1, "Napoli, Fuorigrotta", 40, 2, 1, "Affitto"),
+    PropertyModel(6, "600.000 €", "Appartamento", R.drawable.property2, "Napoli, San Ferdinando", 80, 4, 3, "Vendita"),
+    PropertyModel(7, "310.000 €", "Trivano", R.drawable.property1, "Napoli, Arenella", 25, 1, 1, "Affitto"),
 )
 
 // Potresti mettere questo in un file di utilità o costanti

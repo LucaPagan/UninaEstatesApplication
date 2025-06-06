@@ -1,4 +1,3 @@
-// File: ui/components/AppBottomNavigation.kt
 package com.dieti.dietiestates25.ui.components
 
 import androidx.compose.foundation.background
@@ -22,7 +21,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dieti.dietiestates25.ui.navigation.Screen
 
-// Definisci i tuoi elementi di navigazione
+// Sealed class for navigation items remains the same
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
     object Home : BottomNavItem(Screen.HomeScreen.route, Icons.Default.Home, "Esplora")
     object Notifications : BottomNavItem(Screen.NotificationScreen.route, Icons.Default.Notifications, "Notifiche")
@@ -30,12 +29,17 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
 }
 
 @Composable
-fun AppBottomNavigation(navController: NavController, idUtente: String = "sconosciuto") {
+fun AppBottomNavigation(
+    navController: NavController,
+    idUtente: String = "sconosciuto",
+    // New lambda to intercept navigation attempts. Defaults to 'true' to avoid breaking other screens.
+    onNavigateAttempt: () -> Boolean = { true }
+) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
     NavigationBar(
-        containerColor = Color(0xFF009688), // Teal color to match the image
+        containerColor = Color(0xFF009688), // Teal color
         contentColor = Color.White
     ) {
         val items = listOf(
@@ -48,28 +52,28 @@ fun AppBottomNavigation(navController: NavController, idUtente: String = "sconos
             val selected = isRouteSelected(currentRoute, item.route)
             AddItem(
                 item = item,
-                currentRoute = currentRoute,
                 navController = navController,
-                selected = selected
+                selected = selected,
+                onNavigateAttempt = onNavigateAttempt // Pass the lambda down
             )
         }
     }
 }
 
-// Funzione per verificare la corrispondenza della route
 fun isRouteSelected(currentRoute: String?, itemRoute: String): Boolean {
-    // Se la route contiene argomenti (come home_screen/{idUtente}),
-    // verifica che inizi con la route base
     return currentRoute?.startsWith(itemRoute) == true
 }
 
 @Composable
 fun RowScope.AddItem(
     item: BottomNavItem,
-    currentRoute: String?,
     navController: NavController,
-    selected: Boolean
+    selected: Boolean,
+    onNavigateAttempt: () -> Boolean // Receive the lambda
 ) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     Box(
         modifier = Modifier
             .weight(1f)
@@ -99,14 +103,23 @@ fun RowScope.AddItem(
             },
             selected = selected,
             onClick = {
+                // Check if the destination is not the current one
                 if (!isRouteSelected(currentRoute, item.route)) {
-                    // Se siamo nella home, potremmo dover gestire l'argomento idUtente
-                    if (item.route == Screen.HomeScreen.route) {
-                        // Passa un valore di default per idUtente
-                        navController.navigate("${item.route}/utente")
-                    } else {
-                        navController.navigate(item.route)
+                    // Call the interceptor lambda first
+                    if (onNavigateAttempt()) {
+                        // If it returns true, proceed with navigation
+                        val route = if (item.route == Screen.HomeScreen.route) {
+                            "${item.route}/utente" // Handle user argument for home
+                        } else {
+                            item.route
+                        }
+                        navController.navigate(route) {
+                            // Standard navigation logic to avoid building up a large back stack
+                            popUpTo(navController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
                     }
+                    // If onNavigateAttempt() returns false, do nothing.
                 }
             },
             colors = NavigationBarItemDefaults.colors(
