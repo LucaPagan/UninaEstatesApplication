@@ -3,21 +3,16 @@ package com.dieti.dietiestates25.ui.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -45,23 +40,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
-import com.dieti.dietiestates25.ui.components.AppIconDisplay
-import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 import com.dieti.dietiestates25.ui.components.DeleteConfirmAlertDialog
 import com.dieti.dietiestates25.ui.components.LogoutConfirmAlertDialog
 import com.dieti.dietiestates25.ui.components.UnsavedChangesAlertDialog
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
+import com.dieti.dietiestates25.ui.components.AppTopBarProfileNotification
 import com.dieti.dietiestates25.ui.model.ProfileData
 import com.dieti.dietiestates25.ui.model.ProfileViewModel
 import com.dieti.dietiestates25.ui.model.modelsource.PhonePrefix
@@ -89,12 +82,33 @@ fun ProfileScreen(
     val showLogoutDialog by viewModel.showLogoutConfirmDialog.collectAsState()
     val showDeleteDialog by viewModel.showDeleteConfirmDialog.collectAsState()
 
+    // Calcolo del titolo dinamico
+    val baseTitle = if (isEditMode) "Modifica Profilo" else "Profilo Utente"
+    val screenTitle = if (isEditMode && hasUnsavedChanges) "$baseTitle*" else baseTitle
+
+    // Configurazione dell'action button
+    val actionIcon = if (isEditMode) Icons.Filled.Close else Icons.Filled.Edit
+    val actionContentDescription = if (isEditMode) "Annulla Modifiche" else "Modifica Dati"
+    val actionBackgroundColor = if (isEditMode) colorScheme.errorContainer else colorScheme.primaryContainer
+    val actionIconTint = if (isEditMode) colorScheme.onErrorContainer else colorScheme.onPrimaryContainer
+
+    val gradientColors = listOf(
+        colorScheme.primary.copy(alpha = 0.7f),
+        colorScheme.background,
+        colorScheme.background,
+        colorScheme.primary.copy(alpha = 0.6f)
+    )
+
     Scaffold(
         topBar = {
-            ProfileScreenHeader(
-                isEditMode = isEditMode,
-                hasUnsavedChanges = hasUnsavedChanges,
-                onToggleEditMode = viewModel::attemptToggleEditMode,
+            AppTopBarProfileNotification(
+                title = screenTitle,
+                actionIcon = actionIcon,
+                actionContentDescription = actionContentDescription,
+                onActionClick = viewModel::attemptToggleEditMode,
+                actionBackgroundColor = actionBackgroundColor,
+                actionIconTint = actionIconTint,
+                showAppIcon = true,
                 colorScheme = colorScheme,
                 typography = typography,
                 dimensions = dimensions
@@ -119,139 +133,75 @@ fun ProfileScreen(
             )
         }
     ) { scaffoldPaddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(scaffoldPaddingValues)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = { focusManager.clearFocus() }
-                )
-                .verticalScroll(rememberScrollState())
+                .background(Brush.verticalGradient(colors = gradientColors))
         ) {
-            ProfileContent(
-                profileData = profileData,
-                isEditMode = isEditMode, // Passa lo stato di modifica
-                canSaveChanges = canSaveChanges,
-                availablePhonePrefixes = viewModel.availablePhonePrefixes,
-                onNameChange = viewModel::onNameChange,
-                onEmailChange = viewModel::onEmailChange,
-                onPhonePrefixChange = viewModel::onPhonePrefixChange,
-                onPhoneNumberWithoutPrefixChange = viewModel::onPhoneNumberWithoutPrefixChange,
-                onSaveChanges = viewModel::saveChanges,
-                onLogout = viewModel::triggerLogoutDialog,
-                onDeleteProfile = viewModel::triggerDeleteProfileDialog,
-                typography = typography,
-                colorScheme = colorScheme,
-                navController = navController,
-                dimensions = dimensions
-            )
-        }
-    }
-
-    if (showExitEditModeDialog) {
-        UnsavedChangesAlertDialog(
-            onDismissRequest = viewModel::closeExitEditModeConfirmDialog,
-            onSave = {
-                if (canSaveChanges) viewModel.confirmExitEditModeAndSave()
-            },
-            onDontSave = viewModel::confirmExitEditModeWithoutSaving,
-            canSave = canSaveChanges,
-            colorScheme = colorScheme
-        )
-    }
-
-    if (showLogoutDialog) {
-        LogoutConfirmAlertDialog(
-            onDismissRequest = viewModel::cancelLogoutDialog,
-            onLogoutConfirm = { save -> viewModel.confirmLogout(save) },
-            isEditMode = isEditMode,
-            hasUnsavedChanges = hasUnsavedChanges,
-            canSaveChanges = canSaveChanges,
-            colorScheme = colorScheme,
-            dimensions = dimensions,
-            typography = typography
-        )
-    }
-
-    if (showDeleteDialog) {
-        DeleteConfirmAlertDialog(
-            onDismissRequest = viewModel::cancelDeleteProfileDialog,
-            onConfirmDelete = {
-                viewModel.deleteProfile()
-            },
-            colorScheme = colorScheme
-        )
-    }
-}
-
-@Composable
-private fun ProfileScreenHeader(
-    isEditMode: Boolean,
-    hasUnsavedChanges: Boolean,
-    onToggleEditMode: () -> Unit,
-    colorScheme: ColorScheme,
-    typography: Typography,
-    dimensions: Dimensions
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colorScheme.primary)
-            .clip(
-                RoundedCornerShape(
-                    bottomStart = dimensions.cornerRadiusLarge,
-                    bottomEnd = dimensions.cornerRadiusLarge
-                )
-            )
-    ) {
-        Column {
-            Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.statusBars))
-            Row(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = dimensions.paddingLarge)
-                    .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .fillMaxSize()
+                    .padding(scaffoldPaddingValues)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = { focusManager.clearFocus() }
+                    )
+                    .verticalScroll(rememberScrollState())
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    AppIconDisplay(
-                        size = 60.dp,
-                        shapeRadius = dimensions.cornerRadiusMedium
-                    )
-                    Spacer(modifier = Modifier.width(dimensions.spacingMedium))
-                    val baseTitle = if (isEditMode) "Modifica Profilo" else "Profilo Utente"
-                    val screenTitle =
-                        if (isEditMode && hasUnsavedChanges) "$baseTitle*" else baseTitle
-                    Text(
-                        text = screenTitle,
-                        style = typography.titleLarge,
-                        color = colorScheme.onPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                val currentIconVector = if (isEditMode) Icons.Filled.Close else Icons.Filled.Edit
-                val currentContentDescription =
-                    if (isEditMode) "Annulla Modifiche" else "Modifica Dati"
-                val currentBackgroundColor =
-                    if (isEditMode) colorScheme.errorContainer else colorScheme.primaryContainer
-                val currentIconTint =
-                    if (isEditMode) colorScheme.onErrorContainer else colorScheme.onPrimaryContainer
-                CircularIconActionButton(
-                    onClick = onToggleEditMode,
-                    iconVector = currentIconVector,
-                    contentDescription = currentContentDescription,
-                    backgroundColor = currentBackgroundColor,
-                    iconTint = currentIconTint,
-                    iconSize = dimensions.iconSizeMedium
+                ProfileContent(
+                    profileData = profileData,
+                    isEditMode = isEditMode, // Passa lo stato di modifica
+                    canSaveChanges = canSaveChanges,
+                    availablePhonePrefixes = viewModel.availablePhonePrefixes,
+                    onNameChange = viewModel::onNameChange,
+                    onEmailChange = viewModel::onEmailChange,
+                    onPhonePrefixChange = viewModel::onPhonePrefixChange,
+                    onPhoneNumberWithoutPrefixChange = viewModel::onPhoneNumberWithoutPrefixChange,
+                    onSaveChanges = viewModel::saveChanges,
+                    onLogout = viewModel::triggerLogoutDialog,
+                    onDeleteProfile = viewModel::triggerDeleteProfileDialog,
+                    typography = typography,
+                    colorScheme = colorScheme,
+                    navController = navController,
+                    dimensions = dimensions
                 )
             }
+        }
+
+        if (showExitEditModeDialog) {
+            UnsavedChangesAlertDialog(
+                onDismissRequest = viewModel::closeExitEditModeConfirmDialog,
+                onSave = {
+                    if (canSaveChanges) viewModel.confirmExitEditModeAndSave()
+                },
+                onDontSave = viewModel::confirmExitEditModeWithoutSaving,
+                canSave = canSaveChanges,
+                colorScheme = colorScheme
+            )
+        }
+
+        if (showLogoutDialog) {
+            LogoutConfirmAlertDialog(
+                onDismissRequest = viewModel::cancelLogoutDialog,
+                onLogoutConfirm = { save -> viewModel.confirmLogout(save) },
+                isEditMode = isEditMode,
+                hasUnsavedChanges = hasUnsavedChanges,
+                canSaveChanges = canSaveChanges,
+                colorScheme = colorScheme,
+                dimensions = dimensions,
+                typography = typography
+            )
+        }
+
+        if (showDeleteDialog) {
+            DeleteConfirmAlertDialog(
+                onDismissRequest = viewModel::cancelDeleteProfileDialog,
+                onConfirmDelete = {
+                    viewModel.deleteProfile()
+                },
+                colorScheme = colorScheme
+            )
         }
     }
 }
@@ -335,6 +285,12 @@ private fun ProfileDataFields(
     typography: Typography,
     dimensions: Dimensions
 ) {
+    val gradientColors = listOf(
+        colorScheme.primary.copy(alpha = 0.7f),
+        colorScheme.background,
+        colorScheme.background,
+        colorScheme.primary.copy(alpha = 0.6f)
+    )
     var prefixDropdownExpanded by remember { mutableStateOf(false) }
 
     val commonTextFieldModifier = Modifier
