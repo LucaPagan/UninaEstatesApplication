@@ -1,23 +1,17 @@
 package com.dieti.dietiestates25.ui.screen
 
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
-import com.dieti.dietiestates25.ui.components.AppIconDisplay
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.ui.components.CircularIconActionButton
-
 import com.dieti.dietiestates25.ui.model.Notification
 import com.dieti.dietiestates25.ui.model.Appointment
 import com.dieti.dietiestates25.ui.model.NotificationsViewModel
-
 import com.dieti.dietiestates25.ui.components.AppNotificationDisplay
 import com.dieti.dietiestates25.ui.components.AppAppointmentDisplay
-
 import java.util.Locale
-
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable // Già presente in TabButton
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,19 +23,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color // Già presente in TabButton
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel // Già presente
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.ui.graphics.Brush
+import com.dieti.dietiestates25.ui.components.AppTopBarProfileNotification
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationScreen(
     navController: NavController,
@@ -57,14 +50,31 @@ fun NotificationScreen(
     val isShowingAppointments by viewModel.isShowingAppointments.collectAsState()
     val appointments by viewModel.appointments.collectAsState()
 
+    // Configurazione dell'action button dinamica
+    val actionIcon = if (isShowingAppointments) Icons.Filled.Notifications else Icons.Filled.CalendarToday
+    val actionContentDescription = if (isShowingAppointments) "Mostra Notifiche" else "Mostra Appuntamenti"
+    val screenTitle = if (isShowingAppointments) "Appuntamenti" else "Notifiche"
+
+    val gradientColors = listOf(
+        colorScheme.primary.copy(alpha = 0.7f),
+        colorScheme.background,
+        colorScheme.background,
+        colorScheme.primary.copy(alpha = 0.6f)
+    )
+
     Scaffold(
         topBar = {
-            NotificationScreenHeader(
+            AppTopBarProfileNotification(
+                title = screenTitle,
+                actionIcon = actionIcon,
+                actionContentDescription = actionContentDescription,
+                onActionClick = viewModel::toggleAppointmentsView,
+                actionBackgroundColor = colorScheme.primaryContainer,
+                actionIconTint = colorScheme.onPrimaryContainer,
+                showAppIcon = true,
                 colorScheme = colorScheme,
                 typography = typography,
-                dimensions = dimensions,
-                isShowingAppointments = isShowingAppointments,
-                onCalendarIconClick = viewModel::toggleAppointmentsView
+                dimensions = dimensions
             )
         },
         bottomBar = {
@@ -74,6 +84,7 @@ fun NotificationScreen(
         Box (
             modifier = Modifier
                 .fillMaxSize()
+                .background(Brush.verticalGradient(colors = gradientColors))
                 .padding(paddingValues)
         ) {
             if (isShowingAppointments) {
@@ -97,81 +108,6 @@ fun NotificationScreen(
                     colorScheme = colorScheme,
                     typography = typography,
 
-                )
-            }
-        }
-    }
-}
-
-
-@Composable
-private fun NotificationScreenHeader(
-    colorScheme: ColorScheme,
-    typography: Typography,
-    dimensions: Dimensions,
-    isShowingAppointments: Boolean,
-    onCalendarIconClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
-        // Status Bar con colore TealDeep fisso
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsTopHeight(WindowInsets.statusBars)
-                .background(colorScheme.primaryContainer)
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(colorScheme.primary)
-                .clip(
-                    RoundedCornerShape(
-                        bottomStart = dimensions.cornerRadiusLarge,
-                        bottomEnd = dimensions.cornerRadiusLarge
-                    )
-                )
-                .padding(horizontal = dimensions.paddingLarge)
-                .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge),
-            contentAlignment = Alignment.CenterStart
-        ) {
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    AppIconDisplay(
-                        size = 60.dp, // Valore specifico per questo design
-                        shapeRadius = dimensions.cornerRadiusMedium
-                    )
-                    Spacer(modifier = Modifier.width(dimensions.spacingMedium))
-                    Text(
-                        text = if (isShowingAppointments) "Appuntamenti" else "Notifiche",
-                        color = colorScheme.onPrimary,
-                        style = typography.titleLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                val iconVector =
-                    if (isShowingAppointments) Icons.Filled.Notifications else Icons.Filled.CalendarToday
-                val contentDesc =
-                    if (isShowingAppointments) "Mostra Notifiche" else "Mostra Appuntamenti"
-                CircularIconActionButton(
-                    onClick = onCalendarIconClick,
-                    iconVector = iconVector,
-                    contentDescription = contentDesc,
-                    backgroundColor = colorScheme.primaryContainer,
-                    iconTint = colorScheme.onPrimaryContainer,
-                    iconSize = dimensions.iconSizeMedium,
-                    iconModifier = Modifier.size(dimensions.iconSizeMedium)
                 )
             }
         }

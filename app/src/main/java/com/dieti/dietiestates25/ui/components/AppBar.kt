@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +28,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Badge
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +36,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -42,6 +46,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -300,6 +305,108 @@ fun ApartmentListingScreen_MapSearchScreen_HeaderBar(
                             containerColor = colorScheme.error
                         ) {}
                     }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Componente AppBar generale per le schermate dell'app
+ *
+ * @param title Titolo da mostrare nella barra
+ * @param actionIcon Icona del pulsante d'azione (opzionale)
+ * @param actionContentDescription Descrizione per l'accessibilità del pulsante d'azione
+ * @param onActionClick Callback per il click del pulsante d'azione
+ * @param actionBackgroundColor Colore di sfondo del pulsante d'azione (default: primaryContainer)
+ * @param actionIconTint Colore dell'icona del pulsante d'azione (default: onPrimaryContainer)
+ * @param showAppIcon Se mostrare l'icona dell'app a sinistra del titolo (default: true)
+ * @param statusBarColor Colore della status bar (default: primaryContainer)
+ * @param backgroundColor Colore di sfondo della barra principale (default: primary)
+ * @param titleColor Colore del titolo (default: onPrimary)
+ * @param colorScheme Schema di colori (default: MaterialTheme.colorScheme)
+ * @param typography Tipografia (default: MaterialTheme.typography)
+ * @param dimensions Dimensioni (default: Dimensions)
+ */
+@Composable
+fun AppTopBarProfileNotification(
+    title: String,
+    actionIcon: ImageVector? = null,
+    actionContentDescription: String = "",
+    onActionClick: (() -> Unit)? = null,
+    actionBackgroundColor: Color? = null,
+    actionIconTint: Color? = null,
+    showAppIcon: Boolean = true,
+    statusBarColor: Color? = null,
+    backgroundColor: Color? = null,
+    titleColor: Color? = null,
+    colorScheme: ColorScheme = MaterialTheme.colorScheme,
+    typography: Typography = MaterialTheme.typography,
+    dimensions: Dimensions = Dimensions
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Status Bar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(statusBarColor ?: colorScheme.primaryContainer)
+        )
+
+        // Main AppBar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(backgroundColor ?: colorScheme.primary)
+                .clip(
+                    RoundedCornerShape(
+                        bottomStart = dimensions.cornerRadiusLarge,
+                        bottomEnd = dimensions.cornerRadiusLarge
+                    )
+                )
+                .padding(horizontal = dimensions.paddingLarge)
+                .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Left side: App icon + Title
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    if (showAppIcon) {
+                        AppIconDisplay(
+                            size = 60.dp,
+                            shapeRadius = dimensions.cornerRadiusMedium
+                        )
+                        Spacer(modifier = Modifier.width(dimensions.spacingMedium))
+                    }
+                    Text(
+                        text = title,
+                        style = typography.titleLarge,
+                        color = titleColor ?: colorScheme.onPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                // Right side: Action button (if provided)
+                if (actionIcon != null && onActionClick != null) {
+                    CircularIconActionButton(
+                        onClick = onActionClick,
+                        iconVector = actionIcon,
+                        contentDescription = actionContentDescription,
+                        backgroundColor = actionBackgroundColor ?: colorScheme.primaryContainer,
+                        iconTint = actionIconTint ?: colorScheme.onPrimaryContainer,
+                        iconSize = dimensions.iconSizeMedium,
+                        iconModifier = Modifier.size(dimensions.iconSizeMedium)
+                    )
                 }
             }
         }
