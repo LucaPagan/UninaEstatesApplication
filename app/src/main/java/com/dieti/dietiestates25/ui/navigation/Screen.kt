@@ -2,9 +2,6 @@ package com.dieti.dietiestates25.ui.navigation
 
 import android.net.Uri // <<-- IMPORT AGGIUNTO
 import com.dieti.dietiestates25.ui.model.FilterModel
-// Rimosso URLEncoder se non più usato o usato solo per query params specifici
-// import java.net.URLEncoder
-// import java.nio.charset.StandardCharsets
 
 sealed class Screen(val route: String) {
     data object WelcomeScreen : Screen("welcome_screen")
@@ -12,6 +9,13 @@ sealed class Screen(val route: String) {
     data object HomeScreen : Screen("home_screen") {
         fun withIdUtente(idUtente: String): String {
             return "$route/${Uri.encode(idUtente)}" // Usa Uri.encode per path params
+        }
+    }
+
+    // Nuova rotta per HomeScreenManager
+    data object HomeScreenManager : Screen("home_screen_manager") {
+        fun withIdUtente(idUtente: String): String {
+            return "$route/${Uri.encode(idUtente)}"
         }
     }
 
@@ -176,4 +180,17 @@ sealed class Screen(val route: String) {
     data object YourPropertyScreen : Screen("your_property_screen")
 
     data object EditPropertyScreen : Screen("edit_property_screen")
+
+    // Nuove rotte per le schermate del manager
+    data object OfferManagerScreen : Screen("offer_manager_screen") {
+        fun withIdUtente(idUtente: String): String {
+            return "$route/${Uri.encode(idUtente)}"
+        }
+    }
+
+    data object ReportManagerScreen : Screen("report_manager_screen") {
+        fun withIdUtente(idUtente: String): String {
+            return "$route/${Uri.encode(idUtente)}"
+        }
+    }
 }
