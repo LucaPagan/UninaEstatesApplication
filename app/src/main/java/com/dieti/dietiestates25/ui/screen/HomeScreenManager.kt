@@ -46,7 +46,7 @@ fun HomeScreenManager(navController: NavController, idUtente: String = "manager"
 
     Scaffold(
         topBar = {
-            HomeScreenHeader(
+            HomeScreenManagerHeader(
                 idUtente = idUtente,
                 dimensions = dimensions,
                 typography = typography,
@@ -128,7 +128,7 @@ fun HomeScreenManager(navController: NavController, idUtente: String = "manager"
 }
 
 @Composable
-fun HomeScreenHeader(
+fun HomeScreenManagerHeader(
     idUtente: String,
     dimensions: Dimensions,
     typography: Typography,
