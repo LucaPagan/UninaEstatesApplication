@@ -285,12 +285,6 @@ private fun ProfileDataFields(
     typography: Typography,
     dimensions: Dimensions
 ) {
-    val gradientColors = listOf(
-        colorScheme.primary.copy(alpha = 0.7f),
-        colorScheme.background,
-        colorScheme.background,
-        colorScheme.primary.copy(alpha = 0.6f)
-    )
     var prefixDropdownExpanded by remember { mutableStateOf(false) }
 
     val commonTextFieldModifier = Modifier
