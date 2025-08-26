@@ -193,4 +193,11 @@ sealed class Screen(val route: String) {
             return "$route/${Uri.encode(idUtente)}"
         }
     }
+
+    // NUOVA ROTTA: ManagerScreen
+    data object ManagerScreen : Screen("manager_screen") {
+        fun withIdUtente(idUtente: String): String {
+            return "$route/${Uri.encode(idUtente)}"
+        }
+    }
 }

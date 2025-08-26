@@ -29,6 +29,9 @@ import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.theme.TealDeep
+import com.dieti.dietiestates25.ui.components.AppTopBarProfileNotification // Import aggiunto
+import androidx.compose.material.icons.Icons // Import aggiunto
+import androidx.compose.material.icons.filled.Shield // Import aggiunto
 
 @Composable
 fun HomeScreenManager(navController: NavController, idUtente: String = "manager") {
@@ -46,11 +49,20 @@ fun HomeScreenManager(navController: NavController, idUtente: String = "manager"
 
     Scaffold(
         topBar = {
-            HomeScreenManagerHeader(
-                idUtente = idUtente,
-                dimensions = dimensions,
+            // Sostituzione di HomeScreenManagerHeader con AppTopBarProfileNotification
+            AppTopBarProfileNotification(
+                title = "Bentornato $idUtente",
+                actionIcon = Icons.Filled.Shield,
+                actionContentDescription = "Mostra funzionalità manager",
+                onActionClick = {
+                    navController.navigate(Screen.ManagerScreen.withIdUtente(idUtente))
+                },
+                actionBackgroundColor = colorScheme.primaryContainer,
+                actionIconTint = colorScheme.onPrimaryContainer,
+                showAppIcon = true,
+                colorScheme = colorScheme,
                 typography = typography,
-                colorScheme = colorScheme
+                dimensions = dimensions
             )
         },
         bottomBar = {
@@ -113,8 +125,10 @@ fun HomeScreenManager(navController: NavController, idUtente: String = "manager"
 
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
-                // Sezione per la pubblicazione dell'annuncio E i pulsanti per il manager
-                ManagerActionsSection(
+                // La sezione per la pubblicazione dell'annuncio viene mantenuta,
+                // ma le funzionalità manager specifiche vengono rimosse da qui
+                // per essere spostate nella schermata dedicata.
+                PublishAdSection(
                     navController = navController,
                     idUtente = idUtente,
                     dimensions = dimensions,
@@ -127,69 +141,9 @@ fun HomeScreenManager(navController: NavController, idUtente: String = "manager"
     }
 }
 
-@Composable
-fun HomeScreenManagerHeader(
-    idUtente: String,
-    dimensions: Dimensions,
-    typography: Typography,
-    colorScheme: ColorScheme
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        // Status Bar con colore TealDeep fisso
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsTopHeight(WindowInsets.statusBars)
-                .background(TealDeep)
-        )
-
-        // Header content con primary color e angoli arrotondati
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(colorScheme.primary)
-                .clip(
-                    RoundedCornerShape(
-                        bottomStart = dimensions.cornerRadiusLarge,
-                        bottomEnd = dimensions.cornerRadiusLarge
-                    )
-                )
-                .padding(horizontal = dimensions.paddingLarge)
-                .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AppIconDisplay(
-                    size = 60.dp,
-                    shapeRadius = dimensions.cornerRadiusMedium
-                )
-                Spacer(modifier = Modifier.width(dimensions.spacingMedium))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Bentornato",
-                        color = colorScheme.onPrimary.copy(alpha = 0.8f),
-                        style = typography.titleSmall
-                    )
-                    Text(
-                        text = idUtente.ifEmpty { "Utente" },
-                        color = colorScheme.onPrimary,
-                        style = typography.titleLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-        }
-    }
-}
 
 @Composable
-fun ManagerActionsSection(
+fun PublishAdSection(
     navController: NavController,
     idUtente: String,
     dimensions: Dimensions,
@@ -203,7 +157,6 @@ fun ManagerActionsSection(
             .padding(vertical = dimensions.paddingLarge),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Sezione per la pubblicazione dell'annuncio
         Text(
             text = "Vuoi vendere o affittare il tuo immobile?",
             color = colorScheme.onBackground,
@@ -227,42 +180,9 @@ fun ManagerActionsSection(
             },
             modifier = Modifier.fillMaxWidth()
         )
-
-        // --- Sezioni specifiche per il Manager ---
-        Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
-
-        Text(
-            text = "Funzionalità Manager",
-            color = colorScheme.onBackground,
-            style = typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = dimensions.spacingMedium)
-        )
-
-        // Pulsante per monitorare le offerte
-        AppSecondaryButton(
-            text = "Monitora Offerte",
-            onClick = {
-                // Naviga alla schermata di monitoraggio delle offerte
-                navController.navigate(Screen.OfferManagerScreen.withIdUtente(idUtente))
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(dimensions.spacingMedium))
-
-        // Pulsante per gestire le segnalazioni
-        AppSecondaryButton(
-            text = "Gestisci Segnalazioni",
-            onClick = {
-                // Naviga alla schermata di gestione delle segnalazioni
-                navController.navigate(Screen.ReportManagerScreen.withIdUtente(idUtente))
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
     }
 }
+
 
 @Preview(showBackground = true, device = "id:pixel_4")
 @Composable

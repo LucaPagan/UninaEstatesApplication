@@ -28,8 +28,7 @@ import com.dieti.dietiestates25.ui.screen.NotificationDetailScreen // Import man
 import com.dieti.dietiestates25.ui.screen.ProfileScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.SearchTypeSelectionScreen
 import com.dieti.dietiestates25.ui.screen.YourPropertyScreen
-
-
+import com.dieti.dietiestates25.ui.screen.ManagerScreen
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
@@ -65,8 +64,16 @@ fun Navigation() {
             PropertySellScreen(navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente")
         }
 
+        // ManagerScreen - NUOVA ROTTA
         composable(
-            // La rotta di SearchFilterScreen usa i nomi dei path parameters come definiti qui
+            route = Screen.ManagerScreen.route + "/{idUtente}",
+            arguments = listOf(navArgument("idUtente") { type = NavType.StringType; defaultValue = "utente" })
+        ) { entry ->
+            ManagerScreen(navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente")
+        }
+
+        // La rotta di SearchFilterScreen usa i nomi dei path parameters come definiti qui
+        composable(
             route = Screen.SearchFilterScreen.route + "/{idUtente}/{comune}/{ricercaQueryText}",
             arguments = listOf(
                 navArgument("idUtente") { type = NavType.StringType; defaultValue = "utente" },
