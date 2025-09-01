@@ -2,44 +2,71 @@ package com.dieti.dietiestates25.ui.model
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dieti.dietiestates25.ui.screen.ManagerTab
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalTime
 
 class ManagerViewModel : ViewModel() {
 
+    enum class ManagerTab {
+        OFFERS, APPOINTMENTS, REPORTS
+    }
+
     private val _currentTab = MutableStateFlow(ManagerTab.OFFERS)
-    val currentTab: StateFlow<ManagerTab> = _currentTab
+    val currentTab: StateFlow<ManagerTab> = _currentTab.asStateFlow()
 
-    private val _offers = MutableStateFlow<List<String>>(emptyList())
-    val offers: StateFlow<List<String>> = _offers
+    private val _offers = MutableStateFlow<List<Offer>>(emptyList())
+    val offers: StateFlow<List<Offer>> = _offers.asStateFlow()
 
-    private val _appointments = MutableStateFlow<List<String>>(emptyList())
-    val appointments: StateFlow<List<String>> = _appointments
+    private val _appointments = MutableStateFlow<List<Appointment>>(emptyList())
+    val appointments: StateFlow<List<Appointment>> = _appointments.asStateFlow()
 
-    private val _reports = MutableStateFlow<List<String>>(emptyList())
-    val reports: StateFlow<List<String>> = _reports
+    private val _reports = MutableStateFlow<List<Report>>(emptyList())
+    val reports: StateFlow<List<Report>> = _reports.asStateFlow()
+
+    val filteredItems: StateFlow<List<Any>> =
+        combine(_currentTab, _offers, _appointments, _reports) { tab, offers, appointments, reports ->
+            when (tab) {
+                ManagerTab.OFFERS -> offers
+                ManagerTab.APPOINTMENTS -> appointments
+                ManagerTab.REPORTS -> reports
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000L),
+            initialValue = emptyList()
+        )
 
     init {
-
         loadInitialData()
     }
-    private fun loadInitialData() {
 
+    private fun loadInitialData() {
         viewModelScope.launch {
             _offers.value = listOf(
-                "Offerta 1",
-                "Offerta 2",
-                "Offerta 3"
+                Offer(1, "Mario Rossi", 120000.0, "Via Roma 10", LocalDate.now().minusDays(1), "In attesa"),
+                Offer(2, "Giulia Verdi", 118500.0, "Via Milano 22", LocalDate.now(), "Accettata"),
+                Offer(3, "Luca Bianchi", 121000.0, "Via Napoli 5", LocalDate.now().minusDays(2), "Rifiutata")
             )
+
             _appointments.value = listOf(
-                "Appuntamento del 25/12",
-                "Appuntamento del 30/12"
+                Appointment(1, "Luca Neri", "Appartamento in Via Firenze 7",
+                    LocalDate.of(2025, 9, 3), LocalTime.of(15, 0), "Conferma in attesa"),
+                Appointment(2, "Sara Blu", "Appartamento in Via Torino 21",
+                    LocalDate.of(2025, 9, 5), LocalTime.of(10, 30), "Confermato")
             )
+
             _reports.value = listOf(
-                "Report Q1 2025",
-                "Report Q2 2025"
+                Report(1, "Report vendite Agosto 2025", "Analisi vendite immobiliari",
+                    LocalDate.of(2025, 8, 31), "Vendite in crescita del 12%"),
+                Report(2, "Report manutenzione Q2 2025", "Controlli e riparazioni completati",
+                    LocalDate.of(2025, 6, 30), "Tutte le manutenzioni completate in tempo")
             )
         }
     }
@@ -49,3 +76,29 @@ class ManagerViewModel : ViewModel() {
     }
 }
 
+// --- Models ---
+data class Offer(
+    val id: Int,
+    val buyerName: String,
+    val price: Double,
+    val propertyAddress: String,
+    val date: LocalDate,
+    val status: String
+)
+
+data class Appointment(
+    val id: Int,
+    val clientName: String,
+    val propertyAddress: String,
+    val date: LocalDate,
+    val time: LocalTime,
+    val notes: String
+)
+
+data class Report(
+    val id: Int,
+    val title: String,
+    val description: String,
+    val date: LocalDate,
+    val summary: String
+)

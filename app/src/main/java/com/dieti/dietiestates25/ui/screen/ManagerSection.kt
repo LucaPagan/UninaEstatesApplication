@@ -2,30 +2,14 @@ package com.dieti.dietiestates25.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.Typography
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.collectAsState
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,11 +23,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
 import com.dieti.dietiestates25.ui.components.AppTopBarProfileNotification
+import com.dieti.dietiestates25.ui.model.*
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.ui.model.ManagerViewModel
 import java.util.Locale
-import androidx.compose.foundation.layout.PaddingValues
 
 @Composable
 fun ManagerScreen(
@@ -73,7 +56,7 @@ fun ManagerScreen(
                 title = "Manager",
                 actionIcon = Icons.Filled.Shield,
                 actionContentDescription = "Mostra opzioni manager",
-                onActionClick = { /* Gestisci il click dell'icona dello scudo */ },
+                onActionClick = { /* Gestisci click */ },
                 actionBackgroundColor = colorScheme.primaryContainer,
                 actionIconTint = colorScheme.onPrimaryContainer,
                 showAppIcon = true,
@@ -91,14 +74,13 @@ fun ManagerScreen(
                 .fillMaxSize()
                 .background(Brush.verticalGradient(colors = gradientColors))
                 .padding(paddingValues)
-
         ) {
             ManagerScreenContent(
                 currentTab = currentTab,
                 onTabSelected = { viewModel.setCurrentTab(it) },
-                dimensions = dimensions,
                 colorScheme = colorScheme,
                 typography = typography,
+                dimensions = dimensions,
                 offers = offers,
                 appointments = appointments,
                 reports = reports
@@ -109,14 +91,14 @@ fun ManagerScreen(
 
 @Composable
 private fun ManagerScreenContent(
-    currentTab: ManagerTab,
-    onTabSelected: (ManagerTab) -> Unit,
+    currentTab: ManagerViewModel.ManagerTab,
+    onTabSelected: (ManagerViewModel.ManagerTab) -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions,
-    offers: List<String>,
-    appointments: List<String>,
-    reports: List<String>
+    offers: List<Offer>,
+    appointments: List<Appointment>,
+    reports: List<Report>
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -130,7 +112,7 @@ private fun ManagerScreenContent(
         )
 
         when (currentTab) {
-            ManagerTab.OFFERS -> {
+            ManagerViewModel.ManagerTab.OFFERS -> {
                 if (offers.isEmpty()) {
                     EmptyDisplayView(
                         modifier = Modifier.weight(1f),
@@ -140,7 +122,7 @@ private fun ManagerScreenContent(
                         typography = typography
                     )
                 } else {
-                    DataList(
+                    OffersList(
                         modifier = Modifier.weight(1f),
                         data = offers,
                         dimensions = dimensions,
@@ -149,7 +131,7 @@ private fun ManagerScreenContent(
                     )
                 }
             }
-            ManagerTab.APPOINTMENTS -> {
+            ManagerViewModel.ManagerTab.APPOINTMENTS -> {
                 if (appointments.isEmpty()) {
                     EmptyDisplayView(
                         modifier = Modifier.weight(1f),
@@ -159,7 +141,7 @@ private fun ManagerScreenContent(
                         typography = typography
                     )
                 } else {
-                    DataList(
+                    AppointmentsList(
                         modifier = Modifier.weight(1f),
                         data = appointments,
                         dimensions = dimensions,
@@ -168,7 +150,7 @@ private fun ManagerScreenContent(
                     )
                 }
             }
-            ManagerTab.REPORTS -> {
+            ManagerViewModel.ManagerTab.REPORTS -> {
                 if (reports.isEmpty()) {
                     EmptyDisplayView(
                         modifier = Modifier.weight(1f),
@@ -178,7 +160,7 @@ private fun ManagerScreenContent(
                         typography = typography
                     )
                 } else {
-                    DataList(
+                    ReportsList(
                         modifier = Modifier.weight(1f),
                         data = reports,
                         dimensions = dimensions,
@@ -192,9 +174,9 @@ private fun ManagerScreenContent(
 }
 
 @Composable
-private fun DataList(
-    modifier: Modifier = Modifier,
-    data: List<String>,
+private fun OffersList(
+    modifier: Modifier,
+    data: List<Offer>,
     dimensions: Dimensions,
     colorScheme: ColorScheme,
     typography: Typography
@@ -207,20 +189,83 @@ private fun DataList(
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(data) { item ->
+        items(data) { offer ->
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
                     .background(colorScheme.surfaceVariant)
-                    .padding(dimensions.paddingMedium),
-                contentAlignment = Alignment.Center
+                    .padding(dimensions.paddingMedium)
             ) {
-                Text(
-                    text = item,
-                    style = typography.bodyLarge,
-                    color = colorScheme.onSurfaceVariant
-                )
+                Column {
+                    Text("${offer.buyerName} offre €${offer.price}", style = typography.titleMedium)
+                    Text("Indirizzo: ${offer.propertyAddress}", style = typography.bodyMedium)
+                    Text("Stato: ${offer.status}", style = typography.bodySmall, color = colorScheme.primary)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppointmentsList(
+    modifier: Modifier,
+    data: List<Appointment>,
+    dimensions: Dimensions,
+    colorScheme: ColorScheme,
+    typography: Typography
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = dimensions.paddingMedium, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(data) { appointment ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
+                    .background(colorScheme.surfaceVariant)
+                    .padding(dimensions.paddingMedium)
+            ) {
+                Column {
+                    Text("Cliente: ${appointment.clientName}", style = typography.titleMedium)
+                    Text("Immobile: ${appointment.propertyAddress}", style = typography.bodyMedium)
+                    Text("Data: ${appointment.date} ore ${appointment.time}", style = typography.bodyMedium)
+                    Text("Note: ${appointment.notes}", style = typography.bodySmall)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReportsList(
+    modifier: Modifier,
+    data: List<Report>,
+    dimensions: Dimensions,
+    colorScheme: ColorScheme,
+    typography: Typography
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = dimensions.paddingMedium, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(data) { report ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
+                    .background(colorScheme.surfaceVariant)
+                    .padding(dimensions.paddingMedium)
+            ) {
+                Column {
+                    Text(report.title, style = typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(report.description, style = typography.bodyMedium)
+                    Text("Data: ${report.date}", style = typography.bodySmall)
+                    Text("Sintesi: ${report.summary}", style = typography.bodySmall, color = colorScheme.primary)
+                }
             }
         }
     }
@@ -228,8 +273,8 @@ private fun DataList(
 
 @Composable
 private fun ManagerTabs(
-    currentTab: ManagerTab,
-    onTabSelected: (ManagerTab) -> Unit,
+    currentTab: ManagerViewModel.ManagerTab,
+    onTabSelected: (ManagerViewModel.ManagerTab) -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions
@@ -237,10 +282,7 @@ private fun ManagerTabs(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(
-                horizontal = dimensions.paddingMedium,
-                vertical = dimensions.paddingMedium
-            )
+            .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingMedium)
             .height(52.dp)
             .clip(RoundedCornerShape(dimensions.cornerRadiusLarge))
             .background(colorScheme.surfaceVariant)
@@ -248,7 +290,7 @@ private fun ManagerTabs(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val tabs = ManagerTab.entries.toTypedArray()
+        val tabs = ManagerViewModel.ManagerTab.entries.toTypedArray()
         tabs.forEach { tab ->
             ManagerTabButton(
                 text = tab.name.lowercase(Locale.getDefault())
@@ -303,9 +345,7 @@ private fun EmptyDisplayView(
     typography: Typography
 ) {
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(dimensions.paddingMedium),
+        modifier = modifier.fillMaxWidth().padding(dimensions.paddingMedium),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -314,10 +354,6 @@ private fun EmptyDisplayView(
             color = colorScheme.onBackground.copy(alpha = 0.7f)
         )
     }
-}
-
-enum class ManagerTab {
-    OFFERS, APPOINTMENTS, REPORTS
 }
 
 @Preview(showBackground = true, name = "Manager Screen Light")
