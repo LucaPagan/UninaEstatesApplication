@@ -120,6 +120,21 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                     typography = typography,
                     colorScheme = colorScheme
                 )
+
+                // Rimuovere dato che è il pulsante per vedere le funzionalità manager
+                Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
+                TextButton(
+                    onClick = { navController.navigate(Screen.ManagerScreen.withIdUtente(idUtente)) },
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(horizontal = dimensions.paddingLarge)
+                ) {
+                    Text(
+                        text = "Vai alla Home del Manager",
+                        color = colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
             }
         }
