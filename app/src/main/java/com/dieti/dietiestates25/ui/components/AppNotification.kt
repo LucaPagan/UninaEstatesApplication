@@ -194,8 +194,8 @@ fun AppAppointmentDisplay(
     AppInfoItemCard(
         onClick = onClick,
         icon = appointmentIconImageVector,
-        iconBackgroundColor = colorScheme.secondaryContainer, // Colore diverso per appuntamenti
-        iconTint = colorScheme.onSecondaryContainer,
+        iconBackgroundColor = colorScheme.primaryContainer, // Colore diverso per appuntamenti
+        iconTint = colorScheme.onPrimaryContainer,
         title = appointment.title,
         subtitle = appointment.description,
         trailingTopText = appointment.date?.format(dateFormatter) ?: "",

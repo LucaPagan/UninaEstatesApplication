@@ -89,7 +89,7 @@ fun NotificationScreen(
                 .padding(paddingValues)
         ) {
             if (isShowingAppointments) {
-                AppointmentsView(
+                AppointmentsScreenContent(
                     appointments = appointments,
                     onAppointmentClick = { appointment ->
                         navController.navigate(Screen.AppointmentDetailScreen.route)
@@ -161,7 +161,7 @@ private fun NotificationScreenContent(
 }
 
 @Composable
-private fun AppointmentsView(
+private fun AppointmentsScreenContent(
     appointments: List<Appointment>,
     onAppointmentClick: (Appointment) -> Unit,
     dimensions: Dimensions,

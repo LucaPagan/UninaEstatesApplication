@@ -409,15 +409,19 @@ private fun EditPropertyTopAppBar(
             }
         },
         actions = {
-            CircularIconActionButton(
-                onClick = onEditToggle,
-                iconVector = if (isEditing) Icons.Default.Close else Icons.Default.Edit,
-                contentDescription = if (isEditing) "Annulla Modifiche" else "Modifica",
-                backgroundColor = colorScheme.primaryContainer,
-                iconTint = if (isEditing) colorScheme.error else colorScheme.onPrimary,
-                iconSize = dimensions.iconSizeMedium,
-                iconModifier = Modifier.size(dimensions.iconSizeMedium)
-            )
+            Box(
+                modifier = Modifier.padding(end = dimensions.paddingMedium)
+            ){
+                CircularIconActionButton(
+                    onClick = onEditToggle,
+                    iconVector = if (isEditing) Icons.Default.Close else Icons.Default.Edit,
+                    contentDescription = if (isEditing) "Annulla Modifiche" else "Modifica",
+                    backgroundColor = colorScheme.primaryContainer,
+                    iconTint = if (isEditing) colorScheme.error else colorScheme.onPrimary,
+                    iconSize = dimensions.iconSizeMedium,
+                    iconModifier = Modifier.size(dimensions.iconSizeMedium)
+                )
+            }
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = colorScheme.primary,

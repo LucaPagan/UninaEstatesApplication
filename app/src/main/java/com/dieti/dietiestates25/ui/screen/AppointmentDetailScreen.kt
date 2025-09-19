@@ -427,22 +427,22 @@ private fun AppointmentHeaderCard(
         Box(
             modifier = Modifier
                 .size(dimensions.iconSizeExtraLarge)
-                .clip(RoundedCornerShape(dimensions.cornerRadiusSmall))
-                .background(colorScheme.secondaryContainer),
+                .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
+                .background(colorScheme.primaryContainer),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = "Icona Appuntamento",
-                modifier = Modifier.size(dimensions.iconSizeLarge),
-                tint = colorScheme.onSecondaryContainer
+                modifier = Modifier.size(dimensions.iconSizeMedium),
+                tint = colorScheme.onPrimaryContainer
             )
         }
         Spacer(modifier = Modifier.width(dimensions.spacingMedium))
         Text(
             text = title,
             style = typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            color = colorScheme.onSurface,
+            color = colorScheme.onPrimary,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
