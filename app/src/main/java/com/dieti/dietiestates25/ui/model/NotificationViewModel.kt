@@ -94,10 +94,49 @@ class NotificationsViewModel : ViewModel() {
     private fun loadInitialAppointments() {
         val today = LocalDate.now()
         _appointments.value = listOf(
-            Appointment(1, "Visita Via Toledo", "Cliente: Paolo Bianchi", AppointmentIconType.VISIT, today.plusDays(1), TimeSlots[0]),
-            Appointment(2, "Incontro con Agenzia", "Discussione nuove proposte", AppointmentIconType.MEETING, today.plusDays(2), TimeSlots[2]),
-            Appointment(3, "Sopralluogo tecnico", "Viale Kennedy, 100", AppointmentIconType.GENERIC, today.plusDays(1), TimeSlots[1]),
-            Appointment(4, "Chiamata con Notaio", "Definizione contratto", AppointmentIconType.MEETING, today.plusDays(3), TimeSlots[3])
+            Appointment(
+                1,
+                "Visita Via Toledo",
+                "Cliente: Paolo Bianchi",
+                AppointmentIconType.VISIT,
+                today.plusDays(1),
+                "Confermato",
+                TimeSlots[0],
+                clientName = "Paolo Bianchi",
+                propertyAddress = "Via Toleso",
+                isFavorite = false,
+                notes = ""
+            ),
+            Appointment(2, "Incontro con Agenzia",
+                "Discussione nuove proposte",
+                AppointmentIconType.MEETING,
+                today.plusDays(2),
+                "Confermato",
+                TimeSlots[2],
+                clientName = "Paolo Bianchi",
+                propertyAddress = "Via Toleso",
+                isFavorite = false,
+                notes = ""),
+            Appointment(3, "Sopralluogo tecnico",
+                "Viale Kennedy, 100",
+                AppointmentIconType.GENERIC,
+                today.plusDays(1),
+                "Confermato",
+                TimeSlots[1],
+                clientName = "Paolo Bianchi",
+                propertyAddress = "Via Toleso",
+                isFavorite = false,
+                notes = ""),
+            Appointment(4, "Chiamata con Notaio",
+                "Definizione contratto",
+                AppointmentIconType.MEETING,
+                today.plusDays(3),
+                "Confermato",
+                TimeSlots[3],
+                clientName = "Paolo Bianchi",
+                propertyAddress = "Via Toleso",
+                isFavorite = false,
+                notes = "")
         ).sortedBy { it.date }
     }
 }

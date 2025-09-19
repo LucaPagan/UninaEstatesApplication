@@ -29,6 +29,7 @@ import com.dieti.dietiestates25.ui.screen.ProfileScreen // Import mancante
 import com.dieti.dietiestates25.ui.screen.SearchTypeSelectionScreen
 import com.dieti.dietiestates25.ui.screen.YourPropertyScreen
 import com.dieti.dietiestates25.ui.screen.ManagerScreen
+import com.dieti.dietiestates25.ui.screen.RequestsScreen
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
@@ -296,6 +297,12 @@ fun Navigation() {
 
         composable(route = Screen.EditPropertyScreen.route) {
             EditPropertyScreen(
+                navController = navController
+            )
+        }
+
+        composable(route = Screen.RequestsScreen.route + "/{idUtente}") {
+            RequestsScreen(
                 navController = navController
             )
         }

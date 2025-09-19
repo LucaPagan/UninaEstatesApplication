@@ -28,6 +28,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -45,6 +46,7 @@ import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.components.AppOutlinedTextField
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
+import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
@@ -126,6 +128,11 @@ fun EditPropertyScreen(
         exitEditMode()
     }
 
+    val gradientColors = arrayOf(
+        0.0f to colorScheme.primary, 0.10f to colorScheme.background,
+        0.70f to colorScheme.background, 1.0f to colorScheme.primary
+    )
+
     Scaffold(
         topBar = {
             EditPropertyTopAppBar(
@@ -149,6 +156,7 @@ fun EditPropertyScreen(
                     }
                 },
                 colorScheme = colorScheme,
+                dimensions = dimensions,
                 typography = typography
             )
         }
@@ -158,7 +166,7 @@ fun EditPropertyScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(colorScheme.background)
+                .background(Brush.verticalGradient(colorStops = gradientColors))
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null, // No ripple effect
@@ -381,26 +389,38 @@ private fun EditPropertyTopAppBar(
     isEditing: Boolean,
     onEditToggle: () -> Unit,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions
 ) {
     TopAppBar(
-        title = { Text("Modifica Immobile") },
+        title = {
+            Text(
+                text="Modifica Immobile",
+                style = typography.titleLarge,
+                color = colorScheme.onPrimary
+            ) },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
-            }
-        },
-        actions = {
-            IconButton(onClick = onEditToggle) {
                 Icon(
-                    imageVector = if (isEditing) Icons.Default.Close else Icons.Default.Edit,
-                    contentDescription = if (isEditing) "Annulla Modifiche" else "Modifica",
-                    tint = if (isEditing) colorScheme.error else colorScheme.primary
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Indietro",
+                    tint = colorScheme.onPrimary
                 )
             }
         },
+        actions = {
+            CircularIconActionButton(
+                onClick = onEditToggle,
+                iconVector = if (isEditing) Icons.Default.Close else Icons.Default.Edit,
+                contentDescription = if (isEditing) "Annulla Modifiche" else "Modifica",
+                backgroundColor = colorScheme.primaryContainer,
+                iconTint = if (isEditing) colorScheme.error else colorScheme.onPrimary,
+                iconSize = dimensions.iconSizeMedium,
+                iconModifier = Modifier.size(dimensions.iconSizeMedium)
+            )
+        },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = colorScheme.surface,
+            containerColor = colorScheme.primary,
             scrolledContainerColor = colorScheme.surface
         )
     )

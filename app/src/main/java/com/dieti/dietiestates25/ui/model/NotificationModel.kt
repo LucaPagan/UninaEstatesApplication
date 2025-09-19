@@ -1,6 +1,7 @@
 package com.dieti.dietiestates25.ui.model
 
 import java.time.LocalDate
+import java.time.LocalTime
 
 data class Notification(
     val id: Int,
@@ -19,10 +20,16 @@ data class Appointment(
     val id: Int,
     val title: String,
     val description: String?,
-    val iconType: AppointmentIconType,
-    val date: LocalDate,
+    val iconType: AppointmentIconType?,
+    val date: LocalDate?,
+    val status: String?,
     val timeSlot: String,
-)
+    val clientName: String?,
+    val propertyAddress: String?,
+    var isFavorite: Boolean = false,
+    val notes: String?,
+
+    )
 
 enum class AppointmentIconType {
     VISIT, MEETING, GENERIC

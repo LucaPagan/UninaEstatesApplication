@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.LocalTime
 
 class ManagerViewModel : ViewModel() {
 
@@ -56,10 +55,30 @@ class ManagerViewModel : ViewModel() {
             )
 
             _appointments.value = listOf(
-                Appointment(1, "Luca Neri", "Appartamento in Via Firenze 7",
-                    LocalDate.of(2025, 9, 3), LocalTime.of(15, 0), "Conferma in attesa"),
-                Appointment(2, "Sara Blu", "Appartamento in Via Torino 21",
-                    LocalDate.of(2025, 9, 5), LocalTime.of(10, 30), "Confermato")
+                Appointment(
+                    1,
+                    "Visita",
+                    "Appartamento in Via Firenze 7",
+                    AppointmentIconType.VISIT,
+                    LocalDate.of(2025, 9, 3),
+                    "Conferma in attesa",
+                    "9-12",
+                    "Mario Rossi",
+                    "Via Roma 10",
+                    false,
+                    ""
+                ),
+                Appointment(
+                    2, "Appuntamento",
+                    "Appartamento in Via Torino 21",
+                    AppointmentIconType.MEETING,
+                    LocalDate.of(2025, 9, 5), "Confermato",
+                    timeSlot = "12-14",
+                    clientName = "Giulia Verdi",
+                    propertyAddress = "Via Milano 22",
+                    isFavorite = true,
+                    notes = ""
+                )
             )
 
             _reports.value = listOf(
@@ -84,15 +103,6 @@ data class Offer(
     val propertyAddress: String,
     val date: LocalDate,
     val status: String
-)
-
-data class Appointment(
-    val id: Int,
-    val clientName: String,
-    val propertyAddress: String,
-    val date: LocalDate,
-    val time: LocalTime,
-    val notes: String
 )
 
 data class Report(

@@ -33,7 +33,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.ui.graphics.Brush
-import com.dieti.dietiestates25.ui.components.AppTopBarProfileNotification
+import com.dieti.dietiestates25.ui.components.AppEmptyDisplayView
+import com.dieti.dietiestates25.ui.components.AppTopBar
 
 @Composable
 fun NotificationScreen(
@@ -64,7 +65,7 @@ fun NotificationScreen(
 
     Scaffold(
         topBar = {
-            AppTopBarProfileNotification(
+            AppTopBar(
                 title = screenTitle,
                 actionIcon = actionIcon,
                 actionContentDescription = actionContentDescription,
@@ -136,7 +137,7 @@ private fun NotificationScreenContent(
             dimensions = dimensions
         )
         if (notifications.isEmpty()) {
-            EmptyDisplayView(
+            AppEmptyDisplayView(
                 modifier = Modifier.weight(1f),
                 message = "Nessuna notifica da mostrare.",
                 dimensions = dimensions,
@@ -173,8 +174,10 @@ private fun AppointmentsView(
             .padding(top = dimensions.paddingMedium)
     ) {
         if (appointments.isEmpty()) {
-            EmptyDisplayView( // Riutilizza EmptyDisplayView
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+            AppEmptyDisplayView( // Riutilizza EmptyDisplayView
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
                 message = "Nessun appuntamento programmato.",
                 dimensions = dimensions,
                 colorScheme = colorScheme,
@@ -182,7 +185,9 @@ private fun AppointmentsView(
             )
         } else {
             LazyColumn(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
                 contentPadding = PaddingValues(
                     horizontal = dimensions.paddingMedium,
                     vertical = 12.dp // Lasciato 12.dp (non in Dimensions)
@@ -200,28 +205,6 @@ private fun AppointmentsView(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun EmptyDisplayView( // Rinominato da EmptyNotificationsView
-    modifier: Modifier = Modifier,
-    message: String,
-    dimensions: Dimensions,
-    colorScheme: ColorScheme,
-    typography: Typography
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(dimensions.paddingMedium),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = message,
-            style = typography.bodyLarge,
-            color = colorScheme.onBackground.copy(alpha = 0.7f)
-        )
     }
 }
 
@@ -332,11 +315,9 @@ fun NotificationScreenPreview() {
     val previewViewModel = remember {
         NotificationsViewModel().apply {}
     }
-    DietiEstatesTheme {
-        NotificationScreen(
-            navController = navController,
-            idUtente = "previewUser123",
-            viewModel = previewViewModel
-        )
-    }
+    NotificationScreen(
+        navController = navController,
+        idUtente = "previewUser123",
+        viewModel = previewViewModel
+    )
 }

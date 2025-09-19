@@ -200,4 +200,10 @@ sealed class Screen(val route: String) {
             return "$route/${Uri.encode(idUtente)}"
         }
     }
+
+    data object RequestsScreen : Screen("requests_screen") {
+        fun withIdUtente(idUtente: String): String {
+            return "$route/${Uri.encode(idUtente)}"
+        }
+    }
 }
