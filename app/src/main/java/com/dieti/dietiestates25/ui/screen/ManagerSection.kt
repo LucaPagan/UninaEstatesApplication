@@ -22,7 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
-import com.dieti.dietiestates25.ui.components.AppTopBarProfileNotification
+import com.dieti.dietiestates25.ui.components.AppTopBar
 import com.dieti.dietiestates25.ui.model.*
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
@@ -52,7 +52,7 @@ fun ManagerScreen(
 
     Scaffold(
         topBar = {
-            AppTopBarProfileNotification(
+            AppTopBar(
                 title = "Manager",
                 actionIcon = Icons.Filled.Shield,
                 actionContentDescription = "Mostra opzioni manager",
@@ -231,7 +231,7 @@ private fun AppointmentsList(
                 Column {
                     Text("Cliente: ${appointment.clientName}", style = typography.titleMedium)
                     Text("Immobile: ${appointment.propertyAddress}", style = typography.bodyMedium)
-                    Text("Data: ${appointment.date} ore ${appointment.time}", style = typography.bodyMedium)
+                    Text("Data: ${appointment.date} ore ${appointment.status}", style = typography.bodyMedium)
                     Text("Note: ${appointment.notes}", style = typography.bodySmall)
                 }
             }

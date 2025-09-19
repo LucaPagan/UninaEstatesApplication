@@ -329,7 +329,7 @@ fun ApartmentListingScreen_MapSearchScreen_HeaderBar(
  * @param dimensions Dimensioni (default: Dimensions)
  */
 @Composable
-fun AppTopBarProfileNotification(
+fun AppTopBar(
     title: String,
     actionIcon: ImageVector? = null,
     actionContentDescription: String = "",

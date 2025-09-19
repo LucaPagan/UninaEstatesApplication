@@ -109,4 +109,6 @@ dependencies {
     implementation(libs.androidx.core.ktx.v1100)
     implementation(libs.androidx.activity.ktx)
     implementation(libs.accompanist.permissions)
+
+    implementation(libs.androidx.material.icons.extended)
 }

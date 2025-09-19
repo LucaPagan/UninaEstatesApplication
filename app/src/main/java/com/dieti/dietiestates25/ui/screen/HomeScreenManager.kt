@@ -29,7 +29,7 @@ import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.theme.TealDeep
-import com.dieti.dietiestates25.ui.components.AppTopBarProfileNotification // Import aggiunto
+import com.dieti.dietiestates25.ui.components.AppTopBar // Import aggiunto
 import androidx.compose.material.icons.Icons // Import aggiunto
 import androidx.compose.material.icons.filled.Shield // Import aggiunto
 
@@ -50,7 +50,7 @@ fun HomeScreenManager(navController: NavController, idUtente: String = "manager"
     Scaffold(
         topBar = {
             // Sostituzione di HomeScreenManagerHeader con AppTopBarProfileNotification
-            AppTopBarProfileNotification(
+            AppTopBar(
                 title = "Bentornato $idUtente",
                 actionIcon = Icons.Filled.Shield,
                 actionContentDescription = "Mostra funzionalità manager",

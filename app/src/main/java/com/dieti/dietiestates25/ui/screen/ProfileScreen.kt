@@ -54,7 +54,7 @@ import com.dieti.dietiestates25.ui.components.LogoutConfirmAlertDialog
 import com.dieti.dietiestates25.ui.components.UnsavedChangesAlertDialog
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
-import com.dieti.dietiestates25.ui.components.AppTopBarProfileNotification
+import com.dieti.dietiestates25.ui.components.AppTopBar
 import com.dieti.dietiestates25.ui.model.ProfileData
 import com.dieti.dietiestates25.ui.model.ProfileViewModel
 import com.dieti.dietiestates25.ui.model.modelsource.PhonePrefix
@@ -101,7 +101,7 @@ fun ProfileScreen(
 
     Scaffold(
         topBar = {
-            AppTopBarProfileNotification(
+            AppTopBar(
                 title = screenTitle,
                 actionIcon = actionIcon,
                 actionContentDescription = actionContentDescription,
@@ -443,7 +443,9 @@ private fun ProfileOtherOptions(
         ProfileOptionRow(
             text = "Richieste appuntamenti",
             icon = Icons.Default.NightsStay, // Cambia con un'icona appropriata
-            onClick = { /* Naviga */ },
+            onClick = { navController.navigate(
+                Screen.RequestsScreen.withIdUtente("")
+            ) },
             enabled = !isEditMode, // Disabilitato se in edit mode
             dimensions = dimensions,
             colorScheme = colorScheme

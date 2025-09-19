@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.More // Per BADGE notifica
 import androidx.compose.material.icons.filled.BusinessCenter // Per MEETING appuntamento
 import androidx.compose.material.icons.filled.Build // Per GENERIC appuntamento
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Event // Per VISIT appuntamento
 import androidx.compose.material.icons.filled.Person // Per PERSON notifica
 import androidx.compose.material.icons.filled.Phone // Per PHONE notifica
@@ -186,6 +187,8 @@ fun AppAppointmentDisplay(
         AppointmentIconType.VISIT -> Icons.Filled.Event
         AppointmentIconType.MEETING -> Icons.Filled.BusinessCenter
         AppointmentIconType.GENERIC -> Icons.Filled.Build
+        // Add an else branch to handle any other cases
+        else -> Icons.Filled.Error // Or some other default/fallback icon
     }
 
     AppInfoItemCard(
@@ -195,7 +198,7 @@ fun AppAppointmentDisplay(
         iconTint = colorScheme.onSecondaryContainer,
         title = appointment.title,
         subtitle = appointment.description,
-        trailingTopText = appointment.date.format(dateFormatter),
+        trailingTopText = appointment.date?.format(dateFormatter) ?: "",
         trailingBottomContent = {
             Text(
                 text = appointment.timeSlot,
