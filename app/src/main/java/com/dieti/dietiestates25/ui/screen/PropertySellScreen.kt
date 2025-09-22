@@ -35,6 +35,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.platform.LocalFocusManager
+import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 
 @Composable
 fun PropertySellScreen(navController: NavController, idUtente: String) {
@@ -102,11 +103,9 @@ fun PropertySellScreen(navController: NavController, idUtente: String) {
                     .systemBarsPadding()
             ) {
                 // Top Header
-                HeaderBar(
-                    navController = navController,
-                    colorScheme = colorScheme,
-                    typography = typography,
-                    title = "Inserimento Proprietà"
+                GeneralHeaderBar(
+                    title = "Inserimento Propietà",
+                    onBackClick = { navController.popBackStack() }
                 )
 
                 // Form content
@@ -579,51 +578,6 @@ fun PropertySellScreen(navController: NavController, idUtente: String) {
                 }
             }
         }
-}
-
-@Composable
-fun HeaderBar(
-    navController: NavController,
-    colorScheme: ColorScheme,
-    typography: Typography,
-    title: String
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp),
-        color = colorScheme.primary,
-        shape = RoundedCornerShape(bottomStart = 15.dp, bottomEnd = 15.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = {
-                    navController.popBackStack()
-                },
-                modifier = Modifier.size(36.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Indietro",
-                    tint = colorScheme.onPrimary
-                )
-            }
-
-            Text(
-                text = title,
-                color = colorScheme.onPrimary,
-                style = typography.titleMedium,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 8.dp)
-            )
-        }
-    }
 }
 
 @Composable

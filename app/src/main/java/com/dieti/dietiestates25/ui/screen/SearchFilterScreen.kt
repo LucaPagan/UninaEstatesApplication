@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppSecondaryButton
 import com.dieti.dietiestates25.ui.components.FilterSection
+import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 import com.dieti.dietiestates25.ui.components.PredefinedRange
 import com.dieti.dietiestates25.ui.components.RangeFilterInput
 import com.dieti.dietiestates25.ui.components.SelectableOptionButton
@@ -198,16 +199,29 @@ fun SearchFilterScreen(
                 })
             }
     ) {
-        // Custom TopBar
-        SearchFilterTopBar(
+        GeneralHeaderBar(
             title = "FILTRI RICERCA",
-            onNavigateBack = onNavigateBack,
-            onReset = { resetAllFilters() },
-            isFullScreenContext = isFullScreenContext,
-            hasActiveFilters = hasActiveFilters(),
-            colorScheme = colorScheme,
-            typography = typography,
-            dimensions = dimensions
+            onBackClick = onNavigateBack,
+            actions = {
+                // Logica per il pulsante RESET e per il mantenimento del layout
+                if (hasActiveFilters()) {
+                    TextButton(
+                        onClick = { resetAllFilters() },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = colorScheme.onPrimary // Tinta adatta allo sfondo primary
+                        )
+                    ) {
+                        Text(
+                            "RESET",
+                            style = typography.labelLarge.copy(fontWeight = FontWeight.Medium)
+                        )
+                    }
+                } else {
+                    // Placeholder per mantenere il titolo perfettamente centrato
+                    // quando il pulsante RESET non c'è.
+                    Spacer(modifier = Modifier.width(64.dp))
+                }
+            }
         )
 
         // Content
