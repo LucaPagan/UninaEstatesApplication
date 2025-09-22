@@ -40,4 +40,9 @@ object Dimensions {
     val cardDefaultElevation = 4.dp
     val searchBarHeight = 56.dp
     val bottomNavHeight = 64.dp
+
+    // Logo
+    val logoSmall = 25.dp
+    val logoMedium = 60.dp
+    val logoLarge = 100.dp
 }

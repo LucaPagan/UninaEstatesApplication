@@ -71,7 +71,7 @@ fun WelcomeScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
                 AppIconDisplay(
-                    size = 100.dp,
+                    size = dimensions.logoLarge,
                     shapeRadius = dimensions.cornerRadiusLarge,
                     internalPadding = dimensions.paddingExtraSmall,
                     imageClipRadius = dimensions.cornerRadiusMedium
