@@ -149,10 +149,6 @@ fun PropertyScreen(
                     // La sezione delle caratteristiche ora mostra tutto con le icone
                     PropertyFeaturesRow(colorScheme, typography, dimensions)
                 }
-                // --- RIMOSSA LA SEZIONE "CARATTERISTICHE" ---
-                // item {
-                //     PropertyCharacteristicsSection(listOf("115 m²", "2 Camere da letto", "1 Bagno", "3 Locali"), colorScheme, typography, dimensions)
-                // }
                 item {
                     PropertyDescriptionSection("Scopri questo accogliente appartamento situato nel cuore di Napoli, ideale per chi cerca comfort e comodità. L’immobile, situato al terzo piano di un edificio con ascensore, è perfetto per famiglie o coppie alla ricerca di uno spazio ben organizzato e luminoso.", colorScheme, typography, dimensions)
                 }
@@ -291,7 +287,7 @@ private fun MiniMapSection(
                     // Assumendo che AppCustomMapMarker sia il Composable UI per l'icona
                     AppCustomMapMarker(
                         tint = colorScheme.primary,
-                        iconSize = 36.dp,
+                        iconSize = dimensions.logoSmall,
                         dimensions = dimensions
                     )
                 }
