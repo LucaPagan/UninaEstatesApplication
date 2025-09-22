@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.defaultMinSize
@@ -49,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -212,100 +214,72 @@ fun ClickableSearchBar(
     }
 
 @Composable
-fun ApartmentListingScreen_MapSearchScreen_HeaderBar(
-    navController: NavController,
-    comune: String,
-    onFilterClick: () -> Unit,
-    filtersApplied: Boolean,
-    modifier: Modifier = Modifier
+fun GeneralHeaderBar(
+    title: String,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {}
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
-    val dimensions = Dimensions
+    // val dimensions = Dimensions // Assuming Dimensions is a custom object for sizes
 
-    // Container che include la status bar
+    // Container that includes the status bar background
     Column(
-        modifier = modifier
-            .fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
+        // This Box draws the background behind the system status bar
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsTopHeight(WindowInsets.statusBars)
-                .background(TealDeep)
+                .background(colorScheme.primary) // Use the same color as the header
         )
-        // Header content con forma arrotondata
+        // Header content
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(dimensions.buttonHeight + dimensions.spacingSmall),
+                // A standard height for a top app bar is 56.dp
+                .height(56.dp),
             color = colorScheme.primary,
-            shape = RoundedCornerShape(
-                bottomStart = dimensions.cornerRadiusLarge,
-                bottomEnd = dimensions.cornerRadiusLarge
-            ),
-            shadowElevation = dimensions.elevationMedium
+            // No shape attribute means it will be rectangular
+            shadowElevation = 4.dp // Standard elevation for visual separation
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = dimensions.spacingSmall),
+                    .padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier.size(dimensions.iconSizeLarge + dimensions.spacingSmall)
-                ) {
+                // Back Button (Left)
+                IconButton(onClick = onBackClick) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Indietro",
-                        tint = colorScheme.onPrimary,
-                        modifier = Modifier.size(dimensions.iconSizeMedium)
+                        tint = colorScheme.onPrimary
                     )
                 }
 
-                Column(
+                // Title (Center)
+                Text(
+                    text = title.replaceFirstChar {
+                        if (it.isLowerCase()) it.titlecase() else it.toString()
+                    },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = dimensions.spacingSmall),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = comune.replaceFirstChar {
-                            if (it.isLowerCase()) it.titlecase() else it.toString()
-                        },
-                        color = colorScheme.onPrimary,
-                        style = typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+                        .padding(horizontal = 12.dp),
+                    color = colorScheme.onPrimary,
+                    style = typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-                Box {
-                    IconButton(
-                        onClick = onFilterClick,
-                        modifier = Modifier.size(dimensions.iconSizeLarge + dimensions.spacingSmall)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Tune,
-                            contentDescription = "Filtra",
-                            tint = colorScheme.onPrimary,
-                            modifier = Modifier.size(dimensions.iconSizeMedium)
-                        )
-                    }
-                    if (filtersApplied) {
-                        Badge(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .offset(
-                                    x = -(dimensions.spacingSmall),
-                                    y = dimensions.spacingExtraSmall
-                                ),
-                            containerColor = colorScheme.error
-                        ) {}
-                    }
-                }
+                // Optional Actions (Right)
+                // The content provided in the `actions` lambda will be placed here.
+                // RowScope allows the caller to use modifiers like `align`.
+                actions()
             }
         }
     }

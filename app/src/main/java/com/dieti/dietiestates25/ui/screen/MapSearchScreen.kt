@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,13 +17,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
-import com.dieti.dietiestates25.ui.components.ApartmentListingScreen_MapSearchScreen_HeaderBar
 import com.dieti.dietiestates25.ui.components.PropertyPreviewInfoWindow
 import com.dieti.dietiestates25.ui.components.CustomPriceMarker
+import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 import com.dieti.dietiestates25.ui.model.FilterModel
 import com.dieti.dietiestates25.ui.model.FilterOriginScreen
 import com.dieti.dietiestates25.ui.model.PropertyMarker
@@ -242,11 +244,29 @@ fun MapSearchScreen(
     ) {
         Scaffold(
             topBar = {
-                ApartmentListingScreen_MapSearchScreen_HeaderBar(
-                    navController = navController,
-                    comune = comune,
-                    onFilterClick = { showFilterSheet = true },
-                    filtersApplied = appliedFilters != null
+                GeneralHeaderBar(
+                    title = comune,
+                    onBackClick = { navController.popBackStack() },
+                    actions = {
+                        //Il pulsante per i filtri e il badge sono ora inseriti nello slot "actions".
+                        Box {
+                            IconButton(onClick = { showFilterSheet = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Tune,
+                                    contentDescription = "Filtra",
+                                    tint = colorScheme.onPrimary
+                                )
+                            }
+                            if (appliedFilters != null) {
+                                Badge(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(top = 4.dp, end = 4.dp),
+                                    containerColor = colorScheme.error
+                                )
+                            }
+                        }
+                    }
                 )
             },
             floatingActionButton = {
