@@ -22,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @Composable
@@ -106,7 +105,7 @@ fun TitledSection(
     seeAllText: String = "See all",
     titleStyle: TextStyle = MaterialTheme.typography.titleMedium,
     seeAllTextStyle: TextStyle = MaterialTheme.typography.labelLarge,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
+    contentPadding: PaddingValues = PaddingValues(Dimensions.paddingNone),
     content: @Composable () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme

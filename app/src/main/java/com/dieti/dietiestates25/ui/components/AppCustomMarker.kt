@@ -44,8 +44,10 @@ fun CustomPriceMarker(
     val borderColor = if (isSelected) {
         colorScheme.primary
     } else {
-        Color.Transparent
+        colorScheme.surfaceDim
     }
+
+    val dimensions = Dimensions
 
     Box(
         modifier = modifier
@@ -58,23 +60,23 @@ fun CustomPriceMarker(
                 } else Modifier
             )
             .shadow(
-                elevation = if (isSelected) 8.dp else 4.dp,
-                shape = RoundedCornerShape(12.dp),
+                elevation = if (isSelected) dimensions.elevationLarge else dimensions.elevationMedium,
+                shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
                 ambientColor = Color.Black.copy(alpha = 0.2f),
                 spotColor = Color.Black.copy(alpha = 0.2f)
             )
             .background(
                 color = backgroundColor,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(dimensions.cornerRadiusMedium)
             )
             .border(
-                width = if (isSelected) 2.dp else 0.dp,
+                width = if (isSelected) dimensions.elevationSmall else dimensions.elevationNone,
                 color = borderColor,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(dimensions.cornerRadiusMedium)
             )
             .padding(
-                horizontal = 12.dp,
-                vertical = 8.dp
+                horizontal = dimensions.paddingMedium,
+                vertical = dimensions.paddingSmall
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -103,7 +105,7 @@ fun CustomPriceMarker(
 fun AppCustomMapMarker(
     modifier: Modifier = Modifier,
     tint: Color = MaterialTheme.colorScheme.primary,
-    iconSize: Dp = 48.dp, // Dimensione base, puoi renderla "molto grande"
+    iconSize: Dp = Dimensions.customMarker, // Dimensione base, puoi renderla "molto grande"
     scale: Float = 1f,
     dimensions: Dimensions
 ) {
@@ -121,7 +123,7 @@ fun AppCustomMapMarker(
         contentAlignment = Alignment.Center
     ) {
         AppIconDisplay(
-            size = 100.dp,
+            size = dimensions.logoLarge,
             shapeRadius = dimensions.cornerRadiusLarge,
             internalPadding = dimensions.paddingExtraSmall,
             imageClipRadius = dimensions.cornerRadiusMedium

@@ -14,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
@@ -75,7 +74,7 @@ fun AppOutlinedTextField(
         )
     } else {
         Modifier.border(
-            width = 1.dp,
+            width = Dimensions.borderStrokeSmall,
             color = colorScheme.outline.copy(alpha = 0.5f),
             shape = RoundedCornerShape(Dimensions.cornerRadiusExtraSmall)
         )

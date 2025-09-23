@@ -1,5 +1,6 @@
 package com.dieti.dietiestates25.ui.components
 
+import android.R
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.SquareFoot
@@ -175,17 +175,17 @@ fun PropertyPreviewInfoWindow(
     Card(
         modifier = modifier
             .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(16.dp),
+                elevation = dimensions.elevationLarge,
+                shape = RoundedCornerShape(dimensions.cornerRadiusLarge),
                 ambientColor = Color.Black.copy(alpha = 0.15f),
                 spotColor = Color.Black.copy(alpha = 0.15f)
             )
             .fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(dimensions.cornerRadiusLarge),
         colors = CardDefaults.cardColors(
             containerColor = colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensions.elevationNone)
     ) {
         Column {
             Box {
@@ -194,7 +194,7 @@ fun PropertyPreviewInfoWindow(
                     contentDescription = "Immagine proprietà",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp)
+                        .height(dimensions.imagePrewiev)
                         .clip(RoundedCornerShape(topStart = dimensions.cornerRadiusLarge, topEnd = dimensions.cornerRadiusLarge)),
                     contentScale = ContentScale.Crop
                 )
@@ -206,14 +206,14 @@ fun PropertyPreviewInfoWindow(
                         .padding(dimensions.paddingSmall)
                         .size(dimensions.spacingExtraLarge)
                         .background(
-                            color = Color.Black.copy(alpha = 0.5f),
+                            color = colorScheme.onBackground.copy(alpha = 0.5f),
                             shape = RoundedCornerShape(50)
                         )
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Chiudi",
-                        tint = Color.White,
+                        tint = colorScheme.background,
                         modifier = Modifier.size(dimensions.iconSizeSmall)
                     )
                 }
@@ -221,7 +221,7 @@ fun PropertyPreviewInfoWindow(
                 Surface(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .padding(12.dp),
+                        .padding(dimensions.paddingMedium),
                     shape = RoundedCornerShape(dimensions.cornerRadiusSmall),
                     color = colorScheme.primary,
                     shadowElevation = dimensions.elevationSmall
@@ -233,15 +233,15 @@ fun PropertyPreviewInfoWindow(
                             fontSize = 13.sp
                         ),
                         color = colorScheme.onPrimary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = dimensions.paddingSmall, vertical = dimensions.paddingExtraSmall)
                     )
                 }
             }
 
             // Contenuto della card
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.padding(dimensions.paddingMedium),
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
             ) {
                 // Titolo e tipo
                 Text(
@@ -273,7 +273,7 @@ fun PropertyPreviewInfoWindow(
 
                 // Caratteristiche
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (property.surface.isNotEmpty()) {
@@ -281,7 +281,8 @@ fun PropertyPreviewInfoWindow(
                             icon = Icons.Default.SquareFoot,
                             text = property.surface,
                             colorScheme = colorScheme,
-                            typography = typography
+                            typography = typography,
+                            dimensions = dimensions
                         )
                     }
 
@@ -290,7 +291,8 @@ fun PropertyPreviewInfoWindow(
                             icon = Icons.Default.Bathtub,
                             text = "${property.bathrooms}",
                             colorScheme = colorScheme,
-                            typography = typography
+                            typography = typography,
+                            dimensions = dimensions
                         )
                     }
 
@@ -299,7 +301,8 @@ fun PropertyPreviewInfoWindow(
                             icon = Icons.Default.Home,
                             text = "${property.bedrooms}",
                             colorScheme = colorScheme,
-                            typography = typography
+                            typography = typography,
+                            dimensions = dimensions
                         )
                     }
                 }
@@ -308,7 +311,7 @@ fun PropertyPreviewInfoWindow(
                 AppPrimaryButton(
                     text = "Visualizza dettagli",
                     onClick = onClick,
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                    modifier = Modifier.fillMaxWidth().padding(top = dimensions.paddingMedium)
                 )
             }
         }
@@ -321,18 +324,19 @@ private fun PropertyFeature(
     text: String,
     colorScheme: ColorScheme,
     typography: Typography,
+    dimensions: Dimensions,
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingExtraSmall)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = colorScheme.primary,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(dimensions.iconSizeSmall)
         )
         Text(
             text = text,
@@ -349,7 +353,6 @@ fun PropertyPreviewInfoWindowPreview() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
         ) {
             PropertyPreviewInfoWindow(
                 property = PropertyMarker(

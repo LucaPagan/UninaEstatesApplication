@@ -71,7 +71,7 @@ private fun StatusBadge(
             modifier = modifier
                 .clip(RoundedCornerShape(50)) // Forma a pillola
                 .background(backgroundColor)
-                .padding(horizontal = 10.dp, vertical = 4.dp),
+                .padding(horizontal = dimensions.statusBadgePadding, vertical = dimensions.paddingExtraSmall),
             contentAlignment = Alignment.Center
         ) {
             Text(
