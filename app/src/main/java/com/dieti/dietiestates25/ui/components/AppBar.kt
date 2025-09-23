@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -27,8 +26,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.Badge
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,10 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.ui.theme.TealDeep
 
 @Composable
 fun ClickableSearchBar(
@@ -75,7 +69,7 @@ fun ClickableSearchBar(
         shape = CircleShape,
         color = colorScheme.surface,
         shadowElevation = Dimensions.elevationSmall,
-        border = BorderStroke(1.dp, colorScheme.outline.copy(alpha = 0.3f)),
+        border = BorderStroke(dimensions.borderStrokeSmall, colorScheme.outline.copy(alpha = 0.3f)),
         onClick = onClick
     ) {
         Row(
@@ -169,15 +163,15 @@ fun ClickableSearchBar(
                         .background(colorScheme.surface.copy(alpha = 0.15f))
                         .focusRequester(focusRequester)
                         .onFocusChanged { focusState -> onFocusChanged(focusState.isFocused) },
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
+                        colors = TextFieldDefaults.colors(
+                        focusedContainerColor = colorScheme.surfaceDim,
+                        unfocusedContainerColor = colorScheme.surfaceDim,
+                        disabledContainerColor = colorScheme.surfaceDim,
                         cursorColor = colorScheme.onPrimary,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                        errorIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = colorScheme.surfaceDim,
+                        unfocusedIndicatorColor = colorScheme.surfaceDim,
+                        disabledIndicatorColor = colorScheme.surfaceDim,
+                        errorIndicatorColor = colorScheme.surfaceDim,
                         focusedTextColor = colorScheme.onPrimary,
                         unfocusedTextColor = colorScheme.onPrimary,
                         disabledTextColor = colorScheme.onPrimary.copy(alpha = 0.38f),
@@ -222,7 +216,7 @@ fun GeneralHeaderBar(
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
-    // val dimensions = Dimensions // Assuming Dimensions is a custom object for sizes
+    val dimensions = Dimensions // Assuming Dimensions is a custom object for sizes
 
     // Container that includes the status bar background
     Column(
@@ -240,15 +234,15 @@ fun GeneralHeaderBar(
             modifier = Modifier
                 .fillMaxWidth()
                 // A standard height for a top app bar is 56.dp
-                .height(56.dp),
+                .height(dimensions.headerBarHeight),
             color = colorScheme.primary,
             // No shape attribute means it will be rectangular
-            shadowElevation = 4.dp // Standard elevation for visual separation
+            shadowElevation = dimensions.elevationMedium // Standard elevation for visual separation
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 4.dp),
+                    .padding(horizontal = dimensions.paddingExtraSmall),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Back Button (Left)
@@ -267,7 +261,7 @@ fun GeneralHeaderBar(
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 12.dp),
+                        .padding(horizontal = dimensions.paddingMedium),
                     color = colorScheme.onPrimary,
                     style = typography.titleLarge,
                     fontWeight = FontWeight.Bold,
@@ -356,7 +350,7 @@ fun AppTopBar(
                 ) {
                     if (showAppIcon) {
                         AppIconDisplay(
-                            size = 60.dp,
+                            size = dimensions.logoMedium,
                             shapeRadius = dimensions.cornerRadiusMedium
                         )
                         Spacer(modifier = Modifier.width(dimensions.spacingMedium))
@@ -379,7 +373,6 @@ fun AppTopBar(
                         backgroundColor = actionBackgroundColor ?: colorScheme.primaryContainer,
                         iconTint = actionIconTint ?: colorScheme.onPrimaryContainer,
                         iconSize = dimensions.iconSizeMedium,
-                        iconModifier = Modifier.size(dimensions.iconSizeMedium)
                     )
                 }
             }

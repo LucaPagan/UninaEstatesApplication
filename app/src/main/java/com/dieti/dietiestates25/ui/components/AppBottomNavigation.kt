@@ -14,12 +14,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.theme.Dimensions
 
 // Sealed class for navigation items remains the same
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
@@ -37,10 +36,12 @@ fun AppBottomNavigation(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val colorScheme = MaterialTheme.colorScheme
+    val dimension = Dimensions
 
     NavigationBar(
-        containerColor = Color(0xFF009688), // Teal color
-        contentColor = Color.White
+        containerColor = colorScheme.primary,
+        contentColor = colorScheme.onPrimary
     ) {
         val items = listOf(
             BottomNavItem.Home,
@@ -54,7 +55,9 @@ fun AppBottomNavigation(
                 item = item,
                 navController = navController,
                 selected = selected,
-                onNavigateAttempt = onNavigateAttempt // Pass the lambda down
+                onNavigateAttempt = onNavigateAttempt, // Pass the lambda down
+                colorScheme = colorScheme,
+                dimension = dimension
             )
         }
     }
@@ -69,7 +72,9 @@ fun RowScope.AddItem(
     item: BottomNavItem,
     navController: NavController,
     selected: Boolean,
-    onNavigateAttempt: () -> Boolean // Receive the lambda
+    onNavigateAttempt: () -> Boolean, // Receive the lambda
+    colorScheme: ColorScheme,
+    dimension: Dimensions
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -79,9 +84,9 @@ fun RowScope.AddItem(
             .weight(1f)
             .then(if (selected) {
                 Modifier
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White.copy(alpha = 0.2f))
+                    .padding(horizontal = dimension.paddingSmall, vertical = dimension.paddingExtraSmall)
+                    .clip(RoundedCornerShape(dimension.cornerRadiusLarge))
+                    .background(colorScheme.onPrimary.copy(alpha = 0.2f))
             } else {
                 Modifier
             })
@@ -91,13 +96,13 @@ fun RowScope.AddItem(
                 Icon(
                     imageVector = item.icon,
                     contentDescription = item.label,
-                    tint = if (selected) Color.White else Color.White.copy(alpha = 0.6f)
+                    tint = if (selected) colorScheme.onPrimary else colorScheme.onPrimary.copy(alpha = 0.6f)
                 )
             },
             label = {
                 Text(
                     text = item.label,
-                    color = if (selected) Color.White else Color.White.copy(alpha = 0.6f),
+                    color = if (selected) colorScheme.onPrimary else colorScheme.onPrimary.copy(alpha = 0.6f),
                     style = MaterialTheme.typography.labelSmall
                 )
             },
@@ -119,11 +124,10 @@ fun RowScope.AddItem(
                             launchSingleTop = true
                         }
                     }
-                    // If onNavigateAttempt() returns false, do nothing.
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                indicatorColor = Color.Transparent // Remove the indicator
+                indicatorColor = colorScheme.surfaceDim // Remove the indicator
             )
         )
     }
