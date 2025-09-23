@@ -1,5 +1,3 @@
-@file:Suppress("DEPRECATION")
-
 package com.dieti.dietiestates25.ui.screen
 
 import android.annotation.SuppressLint
@@ -10,18 +8,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.components.AppIconDisplay
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.theme.AppGradients
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.theme.TealDeep
@@ -36,13 +33,6 @@ fun WelcomeScreen(navController: NavController) {
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
     val idUtente = "Danilo Scala"
-
-    val gradientColors = listOf(
-        colorScheme.primary.copy(alpha = 0.7f),
-        colorScheme.background,
-        colorScheme.background,
-        colorScheme.primary.copy(alpha = 0.6f)
-    )
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -59,7 +49,7 @@ fun WelcomeScreen(navController: NavController) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(colors = gradientColors))
+                .background(AppGradients.primaryToBackground)
         ) {
             Column(
                 modifier = Modifier
