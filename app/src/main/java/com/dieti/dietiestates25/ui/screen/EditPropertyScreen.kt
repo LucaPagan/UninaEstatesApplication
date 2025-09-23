@@ -418,8 +418,7 @@ private fun EditPropertyTopAppBar(
                     contentDescription = if (isEditing) "Annulla Modifiche" else "Modifica",
                     backgroundColor = colorScheme.primaryContainer,
                     iconTint = if (isEditing) colorScheme.error else colorScheme.onPrimary,
-                    iconSize = dimensions.iconSizeMedium,
-                    iconModifier = Modifier.size(dimensions.iconSizeMedium)
+                    iconSize = dimensions.iconSizeMedium
                 )
             }
         },

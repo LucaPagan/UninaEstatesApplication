@@ -123,8 +123,7 @@ fun FullScreenMapScreen(
                         backgroundColor = colorScheme.primaryContainer,
                         iconTint = colorScheme.onPrimary,
                         buttonSize = dimensions.iconSizeExtraLarge,
-                        iconSize = dimensions.iconSizeMedium,
-                        iconModifier = Modifier.size(dimensions.iconSizeMedium)
+                        iconSize = dimensions.iconSizeMedium
                     )
 
                     Text("Mappa Proprietà", color = colorScheme.onPrimary)
