@@ -251,7 +251,7 @@ private fun MiniMapSection(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(dimensions.circularIconSize)
                 .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
         ) {
             GoogleMap(
@@ -307,7 +307,7 @@ private fun MiniMapSection(
                 ) {
                     Text(
                         text = "Clicca per interagire con la mappa",
-                        color = Color.White,
+                        color = colorScheme.onPrimary,
                         style = typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(dimensions.paddingMedium)

@@ -70,7 +70,7 @@ fun AppInfoItemCard( // Nome più generico
             // Icona
             Box(
                 modifier = Modifier
-                    .size(dimensions.iconSizeExtraLarge) // Usa dimensions (48.dp)
+                    .size(dimensions.iconSizeExtraLarge)
                     .clip(RoundedCornerShape(dimensions.cornerRadiusMedium)) // Usa dimensions
                     .background(iconBackgroundColor),
                 contentAlignment = Alignment.Center
@@ -78,7 +78,7 @@ fun AppInfoItemCard( // Nome più generico
                 Icon(
                     imageVector = icon,
                     contentDescription = "$title Icon",
-                    modifier = Modifier.size(dimensions.iconSizeMedium), // Usa dimensions (24.dp)
+                    modifier = Modifier.size(dimensions.iconSizeMedium),
                     tint = iconTint
                 )
             }

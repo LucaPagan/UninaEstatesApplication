@@ -12,6 +12,7 @@ object Dimensions {
     val spacingExtraLarge = 32.dp
 
     // Padding
+    val paddingNone = 0.dp
     val paddingExtraSmall = 4.dp
     val paddingSmall = 8.dp
     val paddingMedium = 16.dp
@@ -33,10 +34,11 @@ object Dimensions {
     val iconSizeExtraLarge = 48.dp
 
     // Elevations
+    val elevationNone = 0.dp
     val elevationSmall = 2.dp
     val elevationMedium = 4.dp
     val elevationLarge = 8.dp
-    val elevationNone = 0.dp
+
 
     // Component specific
     val buttonHeight = 56.dp
@@ -46,6 +48,9 @@ object Dimensions {
     val bottomNavHeight = 64.dp
     val buttonSize = 40.dp
     val circularIconSize = 200.dp
+    val customMarker = 48.dp
+    val imagePrewiev = 120.dp
+    val statusBadgePadding = 10.dp
 
     // Logo
     val logoSmall = 25.dp
