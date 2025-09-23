@@ -71,13 +71,13 @@ fun AppOutlinedTextField(
         Modifier.border(
             width = borderWidth.dp,
             color = colorScheme.primary,
-            shape = RoundedCornerShape(Dimensions.cornerRadiusSmall)
+            shape = RoundedCornerShape(Dimensions.cornerRadiusExtraSmall)
         )
     } else {
         Modifier.border(
             width = 1.dp,
             color = colorScheme.outline.copy(alpha = 0.5f),
-            shape = RoundedCornerShape(Dimensions.cornerRadiusSmall)
+            shape = RoundedCornerShape(Dimensions.cornerRadiusExtraSmall)
         )
     }
 
@@ -99,6 +99,6 @@ fun AppOutlinedTextField(
         keyboardActions = keyboardActions,
         colors = colors,
         textStyle = typography.bodyLarge, // <-- Usa il typography passato per definire lo stile
-        shape = RoundedCornerShape(Dimensions.cornerRadiusSmall)
+        shape = RoundedCornerShape(Dimensions.cornerRadiusExtraSmall)
     )
 }

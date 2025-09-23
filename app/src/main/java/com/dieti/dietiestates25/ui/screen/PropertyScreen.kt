@@ -366,17 +366,17 @@ fun PropertyTopAppBar(
                 backgroundColor = colorScheme.primaryContainer,
                 iconTint = colorScheme.onPrimaryContainer, // Modificato per contrasto
                 buttonSize = dimensions.iconSizeExtraLarge,
-                iconSize = dimensions.iconSizeMedium
+                iconSize = dimensions.iconSizeMedium,
             )
             val isFavorite = remember { mutableStateOf(false) }
             CircularIconActionButton(
                 onClick = { isFavorite.value = !isFavorite.value },
                 iconVector = if (isFavorite.value) Icons.Filled.Star else Icons.Outlined.Star,
-                iconTint = if (isFavorite.value) colorScheme.tertiary else colorScheme.onPrimaryContainer,
                 contentDescription = "Favorite",
                 backgroundColor = colorScheme.primaryContainer,
+                iconTint = if (isFavorite.value) colorScheme.tertiary else colorScheme.onPrimaryContainer,
                 buttonSize = dimensions.iconSizeExtraLarge,
-                iconSize = dimensions.iconSizeMedium
+                iconSize = dimensions.iconSizeMedium,
             )
         }
     }
@@ -421,7 +421,8 @@ fun PropertyImagePager(
             CircularIconActionButton(
                 onClick = {
                     coroutineScope.launch {
-                        val targetPage = if (pagerState.currentPage > 0) pagerState.currentPage - 1 else totalImages - 1
+                        val targetPage =
+                            if (pagerState.currentPage > 0) pagerState.currentPage - 1 else totalImages - 1
                         pagerState.animateScrollToPage(targetPage)
                     }
                 },
@@ -455,7 +456,7 @@ fun PropertyImagePager(
                 backgroundColor = colorScheme.onBackground.copy(alpha = 0.6f),
                 iconTint = colorScheme.background,
                 buttonSize = dimensions.iconSizeExtraLarge,
-                iconSize = dimensions.iconSizeMedium
+                iconSize = dimensions.iconSizeMedium,
             )
         }
     }
@@ -648,7 +649,7 @@ fun ReportAdSection(colorScheme: ColorScheme, typography: Typography, dimensions
             modifier = Modifier
                 .height(dimensions.buttonHeight)
                 .fillMaxWidth(),
-            shape = RoundedCornerShape(dimensions.cornerRadiusSmall),
+            shape = RoundedCornerShape(dimensions.cornerRadiusExtraSmall),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorScheme.surface,
                 contentColor = colorScheme.error

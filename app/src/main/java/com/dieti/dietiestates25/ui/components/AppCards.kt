@@ -84,7 +84,8 @@ fun AppPropertyCard(
                     address?.let {
                         Text(
                             text = it, style = typography.bodySmall,
-                            color = colorScheme.onSurfaceVariant, maxLines = 1,
+                            color = colorScheme.onSurfaceVariant,
+                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(top = Dimensions.spacingExtraSmall)
                         )
@@ -194,7 +195,7 @@ fun PropertyPreviewInfoWindow(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(120.dp)
-                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                        .clip(RoundedCornerShape(topStart = dimensions.cornerRadiusLarge, topEnd = dimensions.cornerRadiusLarge)),
                     contentScale = ContentScale.Crop
                 )
 
@@ -202,8 +203,8 @@ fun PropertyPreviewInfoWindow(
                     onClick = onClose,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(32.dp)
+                        .padding(dimensions.paddingSmall)
+                        .size(dimensions.spacingExtraLarge)
                         .background(
                             color = Color.Black.copy(alpha = 0.5f),
                             shape = RoundedCornerShape(50)
@@ -213,7 +214,7 @@ fun PropertyPreviewInfoWindow(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Chiudi",
                         tint = Color.White,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(dimensions.iconSizeSmall)
                     )
                 }
 
@@ -221,9 +222,9 @@ fun PropertyPreviewInfoWindow(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .padding(12.dp),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(dimensions.cornerRadiusSmall),
                     color = colorScheme.primary,
-                    shadowElevation = 2.dp
+                    shadowElevation = dimensions.elevationSmall
                 ) {
                     Text(
                         text = property.price,

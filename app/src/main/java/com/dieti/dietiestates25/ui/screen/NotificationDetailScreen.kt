@@ -145,8 +145,7 @@ private fun NotificationDetailTopAppBar(
                     iconVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Indietro",
                     backgroundColor = colorScheme.primaryContainer,
-                    iconTint = colorScheme.onPrimaryContainer,
-                    iconModifier = Modifier.size(dimensions.iconSizeMedium)
+                    iconTint = colorScheme.onPrimaryContainer
                 )
                 Spacer(modifier = Modifier.width(dimensions.spacingSmall))
                 Text(
@@ -163,8 +162,7 @@ private fun NotificationDetailTopAppBar(
                     iconVector = if (detail.isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
                     contentDescription = if (detail.isFavorite) "Rimuovi dai preferiti" else "Aggiungi ai preferiti",
                     backgroundColor = colorScheme.primaryContainer,
-                    iconTint = if (detail.isFavorite) colorScheme.tertiary else colorScheme.onPrimaryContainer,
-                    iconModifier = Modifier.size(dimensions.iconSizeMedium)
+                    iconTint = if (detail.isFavorite) colorScheme.tertiary else colorScheme.onPrimaryContainer
                 )
             }
         }
@@ -258,7 +256,7 @@ private fun NotificationHeaderCard(
         Box(
             modifier = Modifier
                 .size(dimensions.iconSizeExtraLarge)
-                .clip(RoundedCornerShape(dimensions.cornerRadiusSmall))
+                .clip(RoundedCornerShape(dimensions.cornerRadiusExtraSmall))
                 .background(colorScheme.primaryContainer),
             contentAlignment = Alignment.Center
         ) {

@@ -204,7 +204,7 @@ private fun PriceProposalTopAppBar(
                 iconVector = Icons.Default.Close,
                 contentDescription = "Chiudi",
                 backgroundColor = colorScheme.primaryContainer,
-                iconTint = colorScheme.onPrimaryContainer
+                iconTint = colorScheme.onPrimaryContainer,
             )
             Spacer(modifier = Modifier.width(dimensions.spacingSmall))
             Text(
