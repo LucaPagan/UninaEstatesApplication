@@ -1,5 +1,7 @@
 package com.dieti.dietiestates25.ui.theme
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.ui.graphics.Color
 
 val TealDeep = Color(0xFF00796B) // Teal profondo

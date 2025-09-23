@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -146,6 +147,7 @@ fun DietiEstatesTheme(
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
+
     val selectedColorScheme = when {
         dynamicColor -> {
             val context = LocalContext.current
