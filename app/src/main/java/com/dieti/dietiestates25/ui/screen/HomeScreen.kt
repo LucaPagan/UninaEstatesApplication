@@ -26,6 +26,7 @@ import com.dieti.dietiestates25.ui.components.AppPropertyCard
 import com.dieti.dietiestates25.ui.components.PropertyShowcaseSection
 import com.dieti.dietiestates25.ui.model.modelsource.sampleListingProperties
 import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.theme.AppGradients
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.theme.TealDeep
@@ -36,13 +37,6 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
     val comune = "Napoli"
-
-    val gradientColors = listOf(
-        colorScheme.primary.copy(alpha = 0.7f),
-        colorScheme.background,
-        colorScheme.background,
-        colorScheme.primary.copy(alpha = 0.6f)
-    )
 
     Scaffold(
         topBar = {
@@ -60,7 +54,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(colors = gradientColors))
+                .background(AppGradients.primaryToBackground)
                 .padding(paddingValuesScaffold)
         ) {
             Column(
