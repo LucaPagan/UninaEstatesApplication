@@ -127,7 +127,7 @@ private fun AppointmentBookingTopAppBar(
                 backgroundColor = colorScheme.primaryContainer,
                 iconTint = colorScheme.onPrimaryContainer,
                 buttonSize = dimensions.iconSizeLarge, // Coerenza con altre TopAppBar
-                iconSize = dimensions.iconSizeMedium
+                iconSize = dimensions.iconSizeMedium,
             )
             Spacer(modifier = Modifier.width(dimensions.spacingSmall))
             Text(

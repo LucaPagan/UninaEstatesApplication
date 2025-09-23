@@ -20,7 +20,8 @@ object Dimensions {
 
     // Corner Radius
     val cornerRadiusNone = 0.dp
-    val cornerRadiusSmall = 4.dp
+    val cornerRadiusExtraSmall = 4.dp
+    val cornerRadiusSmall = 8.dp
     val cornerRadiusMedium = 12.dp
     val cornerRadiusLarge = 16.dp
     val cornerRadiusExtraLarge = 24.dp

@@ -284,9 +284,15 @@ private fun CalendarGrid(
 
 @Composable
 private fun RowScope.DayCell(
-    day: String, isSelected: Boolean, isHighlighted: Boolean, isDisabled: Boolean,
-    textColor: Color, backgroundColor: Color, typography: Typography,
-    onClick: () -> Unit, dimensions: Dimensions
+    day: String,
+    isSelected: Boolean,
+    isHighlighted: Boolean,
+    isDisabled: Boolean,
+    textColor: Color,
+    backgroundColor: Color,
+    typography: Typography,
+    onClick: () -> Unit,
+    dimensions: Dimensions
 ) {
     Box(
         modifier = Modifier
@@ -405,7 +411,7 @@ fun TimeSlotSelector(
                     modifier = Modifier
                         .width(dimensions.borderStrokeSmall)
                         .height(dimensions.spacingLarge * 0.6f)
-                        .background(color = colorScheme.outline.copy(alpha = 0.3f)) // Meno opaco
+                        .background(color = colorScheme.outline.copy(alpha = 0.3f))
                         .align(Alignment.CenterVertically)
                 )
             }

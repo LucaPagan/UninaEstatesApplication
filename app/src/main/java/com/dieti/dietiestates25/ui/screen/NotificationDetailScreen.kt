@@ -256,7 +256,7 @@ private fun NotificationHeaderCard(
         Box(
             modifier = Modifier
                 .size(dimensions.iconSizeExtraLarge)
-                .clip(RoundedCornerShape(dimensions.cornerRadiusSmall))
+                .clip(RoundedCornerShape(dimensions.cornerRadiusExtraSmall))
                 .background(colorScheme.primaryContainer),
             contentAlignment = Alignment.Center
         ) {

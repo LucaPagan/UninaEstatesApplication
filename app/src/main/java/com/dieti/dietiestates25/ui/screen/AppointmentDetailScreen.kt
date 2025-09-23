@@ -186,7 +186,7 @@ private fun AppointmentDetailTopAppBar(
                     backgroundColor = colorScheme.primaryContainer,
                     iconTint = colorScheme.onPrimaryContainer,
                     buttonSize = dimensions.iconSizeLarge,
-                    iconSize = dimensions.iconSizeMedium
+                    iconSize = dimensions.iconSizeMedium,
                 )
                 Spacer(modifier = Modifier.width(dimensions.spacingSmall))
                 Text(
@@ -206,7 +206,7 @@ private fun AppointmentDetailTopAppBar(
                     backgroundColor = colorScheme.primaryContainer,
                     iconTint = colorScheme.onPrimaryContainer,
                     buttonSize = dimensions.iconSizeLarge,
-                    iconSize = dimensions.iconSizeMedium
+                    iconSize = dimensions.iconSizeMedium,
                 )
                 DropdownMenu(
                     expanded = showMenu,
