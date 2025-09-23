@@ -34,6 +34,7 @@ import com.dieti.dietiestates25.ui.components.defaultOutlineTextFieldColors
 import com.dieti.dietiestates25.ui.model.FilterModel
 import com.dieti.dietiestates25.ui.model.FilterOriginScreen
 import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.theme.AppGradients
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.theme.TealDeep
@@ -193,6 +194,7 @@ fun SearchFilterScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(AppGradients.primaryToBackground)
             .pointerInput(Unit) {
                 detectTapGestures(onTap = {
                     focusManager.clearFocus()
@@ -224,7 +226,6 @@ fun SearchFilterScreen(
             }
         )
 
-        // Content
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -234,7 +235,6 @@ fun SearchFilterScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .background(colorScheme.background)
                     .padding(
                         start = dimensions.paddingMedium,
                         end = dimensions.paddingMedium,
@@ -414,8 +414,7 @@ fun SearchFilterScreen(
         // Bottom Bar
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shadowElevation = if (isFullScreenContext) dimensions.elevationMedium else 0.dp,
-            color = colorScheme.surface
+            color = colorScheme.surfaceDim
         ) {
             AppSecondaryButton(
                 text = "Mostra risultati",
@@ -487,89 +486,6 @@ fun SearchFilterScreen(
                     .padding(dimensions.paddingMedium)
                     .height(dimensions.buttonHeight),
             )
-        }
-    }
-}
-
-@Composable
-private fun SearchFilterTopBar(
-    title: String,
-    onNavigateBack: () -> Unit,
-    onReset: () -> Unit,
-    isFullScreenContext: Boolean,
-    hasActiveFilters: Boolean,
-    colorScheme: ColorScheme,
-    typography: Typography,
-    dimensions: Dimensions
-) {
-    Column {
-        // Status Bar Spacer solo se fullscreen
-        if (isFullScreenContext) {
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsTopHeight(WindowInsets.statusBars)
-                    .background(TealDeep)
-            )
-        }
-
-        // TopBar Content
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = if (isFullScreenContext) colorScheme.primary else colorScheme.surface,
-            shadowElevation = if (!isFullScreenContext) dimensions.elevationSmall else 0.dp
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp) // Standard TopAppBar height
-                    .padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Navigation Icon
-                IconButton(
-                    onClick = onNavigateBack,
-                    modifier = Modifier.size(dimensions.iconSizeLarge + dimensions.spacingSmall)
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Indietro",
-                        tint = if (isFullScreenContext) colorScheme.onPrimary else colorScheme.onSurface
-                    )
-                }
-
-                // Title - Centered
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = title,
-                        style = typography.titleMedium.copy(letterSpacing = 0.5.sp),
-                        color = if (isFullScreenContext) colorScheme.onPrimary else colorScheme.onSurface,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1
-                    )
-                }
-
-                // Reset Button - Mostra solo se ci sono filtri attivi
-                if (hasActiveFilters) {
-                    TextButton(
-                        onClick = onReset,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = if (isFullScreenContext) colorScheme.onPrimary else colorScheme.primary
-                        )
-                    ) {
-                        Text(
-                            "RESET",
-                            style = typography.labelLarge.copy(fontWeight = FontWeight.Medium)
-                        )
-                    }
-                } else {
-                    // Placeholder per mantenere il layout centrato
-                    Spacer(modifier = Modifier.width(64.dp))
-                }
-            }
         }
     }
 }
