@@ -19,13 +19,15 @@ object Dimensions {
     val paddingExtraLarge = 32.dp
 
     // Corner Radius
+    val cornerRadiusNone = 0.dp
     val cornerRadiusSmall = 4.dp
     val cornerRadiusMedium = 12.dp
-    val cornerRadiusLarge = 24.dp
+    val cornerRadiusLarge = 16.dp
+    val cornerRadiusExtraLarge = 24.dp
 
     // Icon sizes
     val iconSizeSmall = 16.dp
-    val iconSizeMedium = 24.dp
+    val iconSizeMedium = 22.dp
     val iconSizeLarge = 36.dp
     val iconSizeExtraLarge = 48.dp
 
@@ -39,10 +41,16 @@ object Dimensions {
     val buttonHeight = 56.dp
     val cardDefaultElevation = 4.dp
     val searchBarHeight = 56.dp
+    val headerBarHeight = 56.dp
     val bottomNavHeight = 64.dp
+    val buttonSize = 40.dp
+    val circularIconSize = 200.dp
 
     // Logo
     val logoSmall = 25.dp
     val logoMedium = 60.dp
     val logoLarge = 100.dp
+
+    // Borders Stroke
+    val borderStrokeSmall = 1.dp
 }

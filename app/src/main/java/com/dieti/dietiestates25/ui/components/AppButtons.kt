@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import androidx.compose.ui.Modifier.Companion as Modifier1
@@ -165,7 +164,7 @@ fun AppIconDisplay(
     modifier: Modifier = Modifier,
     iconResId: Int = R.drawable.appicon1,
     contentDescription: String = "App Icon",
-    size: Dp = 60.dp,
+    size: Dp = Dimensions.iconSizeMedium,
     shapeRadius: Dp = Dimensions.spacingMedium,
     internalPadding: Dp = Dimensions.paddingSmall,
     imageClipRadius: Dp = Dimensions.spacingSmall,
@@ -210,11 +209,11 @@ fun SelectableOptionButton(
         modifier = modifier.heightIn(min = dimensions.iconSizeLarge + dimensions.paddingExtraSmall),
         shape = RoundedCornerShape(dimensions.spacingSmall),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = if (isSelected) colorScheme.primaryContainer else Color.Transparent,
+            containerColor = if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceDim,
             contentColor = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurface
         ),
         border = BorderStroke(
-            1.dp,
+            dimensions.borderStrokeSmall,
             if (isSelected) colorScheme.primaryContainer else colorScheme.outline.copy(alpha = 0.5f)
         ),
         elevation = if (isSelected) ButtonDefaults.buttonElevation(dimensions.elevationSmall) else null,
@@ -263,10 +262,10 @@ fun SingleChoiceToggleGroup(
                     .height(dimensions.iconSizeLarge + dimensions.paddingExtraSmall),
                 shape = RoundedCornerShape(dimensions.spacingSmall - dimensions.spacingExtraSmall),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = if (isSelected) colorScheme.primaryContainer else Color.Transparent,
+                    containerColor = if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceDim,
                     contentColor = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant
                 ),
-                border = if (isSelected) null else BorderStroke(1.dp, colorScheme.outline),
+                border = if (isSelected) null else BorderStroke(dimensions.borderStrokeSmall, colorScheme.outline),
                 elevation = if (isSelected) ButtonDefaults.buttonElevation(dimensions.elevationSmall) else null,
                 contentPadding = PaddingValues(horizontal = dimensions.paddingSmall)
             ) {
@@ -299,12 +298,12 @@ fun CustomFilterChip(
         enabled = enabled,
         shape = RoundedCornerShape(dimensions.spacingSmall),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = if (isSelected) colorScheme.secondaryContainer else Color.Transparent,
+            containerColor = if (isSelected) colorScheme.secondaryContainer else colorScheme.surfaceDim,
             contentColor = if (isSelected) colorScheme.onSecondaryContainer else colorScheme.onSurfaceVariant,
             disabledContentColor = colorScheme.onSurface.copy(alpha = 0.38f)
         ),
         border = BorderStroke(
-            width = 1.dp,
+            width = dimensions.borderStrokeSmall,
             color = when {
                 !enabled && isSelected -> colorScheme.outline.copy(alpha = 0.12f)
                 !enabled && !isSelected -> colorScheme.outline.copy(alpha = 0.12f)
@@ -496,10 +495,9 @@ fun CircularIconActionButton(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer,
     iconTint: Color = MaterialTheme.colorScheme.onPrimaryContainer,
-    buttonSize: Dp = 40.dp,
-    circleSize: Dp = 200.dp,
-    iconSize: Dp = 22.dp,
-    iconModifier: Modifier? = null
+    buttonSize: Dp = Dimensions.buttonSize,
+    circleSize: Dp = Dimensions.circularIconSize,
+    iconSize: Dp = Dimensions.iconSizeMedium
 ) {
     IconButton(
         onClick = onClick,

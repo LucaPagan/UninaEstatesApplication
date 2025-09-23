@@ -364,9 +364,9 @@ fun TimeSlotSelector(
             val isDisabled = disabledTimeSlotIndices.contains(index)
 
             val shape = when (index) {
-                0 -> RoundedCornerShape(topStart = dimensions.cornerRadiusMedium, bottomStart = dimensions.cornerRadiusMedium, topEnd = 0.dp, bottomEnd = 0.dp)
-                timeSlots.size - 1 -> RoundedCornerShape(topStart = 0.dp, bottomStart = 0.dp, topEnd = dimensions.cornerRadiusMedium, bottomEnd = dimensions.cornerRadiusMedium)
-                else -> RoundedCornerShape(0.dp)
+                0 -> RoundedCornerShape(topStart = dimensions.cornerRadiusMedium, bottomStart = dimensions.cornerRadiusMedium, topEnd = dimensions.cornerRadiusNone, bottomEnd = dimensions.cornerRadiusNone)
+                timeSlots.size - 1 -> RoundedCornerShape(topStart = dimensions.cornerRadiusNone, bottomStart = dimensions.cornerRadiusNone, topEnd = dimensions.cornerRadiusMedium, bottomEnd = dimensions.cornerRadiusMedium)
+                else -> RoundedCornerShape(dimensions.cornerRadiusNone)
             }
             val backgroundColor = when {
                 isDisabled -> colorScheme.surfaceContainerLowest.copy(alpha = 0.5f) // Più trasparente se disabilitato
@@ -403,7 +403,7 @@ fun TimeSlotSelector(
             if (index < timeSlots.size - 1) {
                 Box(
                     modifier = Modifier
-                        .width(1.dp)
+                        .width(dimensions.borderStrokeSmall)
                         .height(dimensions.spacingLarge * 0.6f)
                         .background(color = colorScheme.outline.copy(alpha = 0.3f)) // Meno opaco
                         .align(Alignment.CenterVertically)
