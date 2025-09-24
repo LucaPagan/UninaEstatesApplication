@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,555 +28,584 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.platform.LocalFocusManager
+import com.dieti.dietiestates25.ui.components.AppSecondaryButton
 import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
+import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @Composable
 fun PropertySellScreen(navController: NavController, idUtente: String) {
-        val colorScheme = MaterialTheme.colorScheme
-        val typography = MaterialTheme.typography
-        val scrollState = rememberScrollState()
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val dimensions = Dimensions
+    val scrollState = rememberScrollState()
 
-        val focusManager = LocalFocusManager.current
+    val focusManager = LocalFocusManager.current
 
-        // Stato per tutti i campi del form
-        var propertyType by remember { mutableStateOf("Vendita") }
-        var category by remember { mutableStateOf("") }
-        var propertySubType by remember { mutableStateOf("") }
-        var location by remember { mutableStateOf("") }
-        var squareMeters by remember { mutableStateOf("") }
-        var floor by remember { mutableStateOf("") }
-        var price by remember { mutableStateOf("") }
-        var condoFees by remember { mutableStateOf("") }
-        var description by remember { mutableStateOf("") }
-        var rooms by remember { mutableIntStateOf(0) }
-        var bedrooms by remember { mutableIntStateOf(0) }
-        var kitchens by remember { mutableIntStateOf(0) }
-        var bathrooms by remember { mutableIntStateOf(0) }
-        var hasBasement by remember { mutableStateOf(false) }
-        var hasGarage by remember { mutableStateOf(false) }
-        var hasTerrace by remember { mutableStateOf(false) }
-        var furnishingState by remember { mutableStateOf("") }
-        var airConditioningType by remember { mutableStateOf("") }
-        var exposure by remember { mutableStateOf("") }
-        var ownershipType by remember { mutableStateOf("") }
-        var propertyCondition by remember { mutableStateOf("") }
-        var constructionYear by remember { mutableStateOf("") }
-        var availability by remember { mutableStateOf("") }
+    // Stato per tutti i campi del form
+    var propertyType by remember { mutableStateOf("Vendita") }
+    var category by remember { mutableStateOf("") }
+    var propertySubType by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+    var squareMeters by remember { mutableStateOf("") }
+    var floor by remember { mutableStateOf("") }
+    var price by remember { mutableStateOf("") }
+    var condoFees by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var rooms by remember { mutableIntStateOf(0) }
+    var bedrooms by remember { mutableIntStateOf(0) }
+    var kitchens by remember { mutableIntStateOf(0) }
+    var bathrooms by remember { mutableIntStateOf(0) }
+    var hasBasement by remember { mutableStateOf(false) }
+    var hasGarage by remember { mutableStateOf(false) }
+    var hasTerrace by remember { mutableStateOf(false) }
+    var furnishingState by remember { mutableStateOf("") }
+    var airConditioningType by remember { mutableStateOf("") }
+    var exposure by remember { mutableStateOf("") }
+    var ownershipType by remember { mutableStateOf("") }
+    var propertyCondition by remember { mutableStateOf("") }
+    var constructionYear by remember { mutableStateOf("") }
+    var availability by remember { mutableStateOf("") }
 
-        // Lista delle immagini (in una app reale si gestirebbe in modo diverso)
-        var imageCount by remember { mutableIntStateOf(0) }
+    // Lista delle immagini (in una app reale si gestirebbe in modo diverso)
+    var imageCount by remember { mutableIntStateOf(0) }
 
-        val requiredFieldMark = buildAnnotatedString {
-            append("*")
-            withStyle(style = SpanStyle(color = Color.Red)) {
-                append(" ")
-            }
+    val requiredFieldMark = buildAnnotatedString {
+        append("*")
+        withStyle(style = SpanStyle(color = Color.Red)) {
+            append(" ")
         }
+    }
 
-        // Gradient background
-        val gradientColors = arrayOf(
-            0.0f to colorScheme.primary,
-            0.15f to colorScheme.background,
-            1.0f to colorScheme.background
-        )
+    // Gradient background
+    val gradientColors = arrayOf(
+        0.0f to colorScheme.primary,
+        0.15f to colorScheme.background,
+        1.0f to colorScheme.background
+    )
 
-        Box(
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(colorStops = gradientColors))
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            }
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(colorStops = gradientColors))
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
-                        focusManager.clearFocus()
-                    })
-                }
+                .systemBarsPadding()
         ) {
+            // Top Header
+            GeneralHeaderBar(
+                title = "Inserimento Propietà",
+                onBackClick = { navController.popBackStack() }
+            )
+
+            // Form content
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .systemBarsPadding()
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(scrollState)
+                    .padding(dimensions.paddingMedium),
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
             ) {
-                // Top Header
-                GeneralHeaderBar(
-                    title = "Inserimento Propietà",
-                    onBackClick = { navController.popBackStack() }
+                // Sezione tipo di annuncio (Vendita/Affitto)
+                Text(
+                    text = "Tipo di annuncio $requiredFieldMark",
+                    style = typography.titleMedium,
+                    color = colorScheme.primary
                 )
 
-                // Form content
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .verticalScroll(scrollState)
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
                 ) {
-                    // Sezione tipo di annuncio (Vendita/Affitto)
-                    Text(
-                        text = "Tipo di annuncio $requiredFieldMark",
-                        style = typography.titleMedium,
-                        color = colorScheme.primary
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        SegmentedButton(
-                            text = "Vendita",
-                            selected = propertyType == "Vendita",
-                            onClick = { propertyType = "Vendita" },
-                            modifier = Modifier.weight(1f),
-                            colorScheme = colorScheme
-                        )
-
-                        SegmentedButton(
-                            text = "Affitto",
-                            selected = propertyType == "Affitto",
-                            onClick = { propertyType = "Affitto" },
-                            modifier = Modifier.weight(1f),
-                            colorScheme = colorScheme
-                        )
-                    }
-
-                    Divider()
-
-                    // Categoria e tipologia
-                    Text(
-                        text = "Categoria e tipologia $requiredFieldMark",
-                        style = typography.titleMedium,
-                        color = colorScheme.primary
-                    )
-
-                    DropdownMenuField(
-                        label = "Categoria",
-                        value = category,
-                        onValueChange = { category = it },
-                        options = listOf("Residenziale", "Commerciale", "Industriale", "Terreno"),
+                    SegmentedButton(
+                        text = "Vendita",
+                        selected = propertyType == "Vendita",
+                        onClick = { propertyType = "Vendita" },
+                        modifier = Modifier.weight(1f),
                         colorScheme = colorScheme,
-                        typography = typography,
-                        required = true
+                        dimensions = dimensions
                     )
 
-                    DropdownMenuField(
-                        label = "Tipologia",
-                        value = propertySubType,
-                        onValueChange = { propertySubType = it },
-                        options = listOf("Appartamento", "Attico", "Villa", "Casa indipendente", "Villetta a schiera", "Loft"),
+                    SegmentedButton(
+                        text = "Affitto",
+                        selected = propertyType == "Affitto",
+                        onClick = { propertyType = "Affitto" },
+                        modifier = Modifier.weight(1f),
                         colorScheme = colorScheme,
-                        typography = typography,
-                        required = true
+                        dimensions = dimensions
                     )
+                }
 
-                    Divider()
+                Divider()
 
-                    // Localizzazione
-                    Text(
-                        text = "Localizzazione $requiredFieldMark",
-                        style = typography.titleMedium,
-                        color = colorScheme.primary
-                    )
+                // Categoria e tipologia
+                Text(
+                    text = "Categoria e tipologia $requiredFieldMark",
+                    style = typography.titleMedium,
+                    color = colorScheme.primary
+                )
 
-                    OutlinedTextField(
-                        value = location,
-                        onValueChange = { location = it },
-                        label = { Text("Indirizzo completo") },
-                        placeholder = { Text("Via, numero civico, città, CAP") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = colorScheme.primary,
-                            unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
-                        ),
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = "Indirizzo",
-                                tint = colorScheme.primary
-                            )
-                        }
-                    )
+                DropdownMenuField(
+                    label = "Categoria",
+                    value = category,
+                    onValueChange = { category = it },
+                    options = listOf("Residenziale", "Commerciale", "Industriale", "Terreno"),
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    required = true
+                )
 
-                    Divider()
+                DropdownMenuField(
+                    label = "Tipologia",
+                    value = propertySubType,
+                    onValueChange = { propertySubType = it },
+                    options = listOf(
+                        "Appartamento",
+                        "Attico",
+                        "Villa",
+                        "Casa indipendente",
+                        "Villetta a schiera",
+                        "Loft"
+                    ),
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    required = true
+                )
 
-                    // Caratteristiche principali
-                    // Modifica completa della sezione "Caratteristiche principali"
-                    Text(
-                        text = "Caratteristiche principali $requiredFieldMark",
-                        style = typography.titleMedium,
-                        color = colorScheme.primary
-                    )
+                Divider()
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = squareMeters,
-                            onValueChange = { squareMeters = it },
-                            label = { Text("Metri quadri") },
-                            modifier = Modifier.weight(1.2f),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = colorScheme.primary,
-                                unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
-                            ),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            trailingIcon = {
-                                Text(
-                                    text = "mq",
-                                    style = typography.bodyMedium,
-                                    color = colorScheme.onSurfaceVariant
-                                )
-                            }
-                        )
+                // Localizzazione
+                Text(
+                    text = "Localizzazione $requiredFieldMark",
+                    style = typography.titleMedium,
+                    color = colorScheme.primary
+                )
 
-                        OutlinedTextField(
-                            value = floor,
-                            onValueChange = { floor = it },
-                            label = { Text("Piano") },
-                            modifier = Modifier.weight(0.8f),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = colorScheme.primary,
-                                unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
-                            ),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                OutlinedTextField(
+                    value = location,
+                    onValueChange = { location = it },
+                    label = { Text("Indirizzo completo") },
+                    placeholder = { Text("Via, numero civico, città, CAP") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colorScheme.primary,
+                        unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Indirizzo",
+                            tint = colorScheme.primary
                         )
                     }
+                )
 
-                    Divider()
+                Divider()
 
-                    // Locali
-                    Text(
-                        text = "Locali $requiredFieldMark",
-                        style = typography.titleMedium,
-                        color = colorScheme.primary
-                    )
+                // Caratteristiche principali
+                // Modifica completa della sezione "Caratteristiche principali"
+                Text(
+                    text = "Caratteristiche principali $requiredFieldMark",
+                    style = typography.titleMedium,
+                    color = colorScheme.primary
+                )
 
-                    RoomCounter(
-                        icon = Icons.Default.Hotel,
-                        title = "Camere da letto",
-                        count = bedrooms,
-                        onIncrement = { bedrooms++ },
-                        onDecrement = { if (bedrooms > 0) bedrooms-- },
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-
-                    RoomCounter(
-                        icon = Icons.Default.Kitchen,
-                        title = "Cucine",
-                        count = kitchens,
-                        onIncrement = { kitchens++ },
-                        onDecrement = { if (kitchens > 0) kitchens-- },
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-
-                    RoomCounter(
-                        icon = Icons.Default.Bathroom,
-                        title = "Bagni",
-                        count = bathrooms,
-                        onIncrement = { bathrooms++ },
-                        onDecrement = { if (bathrooms > 0) bathrooms-- },
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-
-                    Text(
-                        text = "Totale locali: ${bedrooms + kitchens + bathrooms}",
-                        style = typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = colorScheme.primary
-                    )
-
-                    Divider()
-
-                    // Caratteristiche aggiuntive
-                    Text(
-                        text = "Caratteristiche aggiuntive",
-                        style = typography.titleMedium,
-                        color = colorScheme.primary
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            CheckboxField(
-                                text = "Cantina",
-                                checked = hasBasement,
-                                onCheckedChange = { hasBasement = it },
-                                colorScheme = colorScheme,
-                                typography = typography
-                            )
-
-                            CheckboxField(
-                                text = "Box/Garage",
-                                checked = hasGarage,
-                                onCheckedChange = { hasGarage = it },
-                                colorScheme = colorScheme,
-                                typography = typography
-                            )
-                        }
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            CheckboxField(
-                                text = "Terrazzo",
-                                checked = hasTerrace,
-                                onCheckedChange = { hasTerrace = it },
-                                colorScheme = colorScheme,
-                                typography = typography
-                            )
-                        }
-                    }
-
-                    Divider()
-
-                    // Dettagli proprietà
-                    Text(
-                        text = "Dettagli proprietà",
-                        style = typography.titleMedium,
-                        color = colorScheme.primary
-                    )
-
-                    DropdownMenuField(
-                        label = "Arredamento",
-                        value = furnishingState,
-                        onValueChange = { furnishingState = it },
-                        options = listOf("Non arredato", "Parzialmente arredato", "Arredato"),
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-
-                    DropdownMenuField(
-                        label = "Climatizzazione",
-                        value = airConditioningType,
-                        onValueChange = { airConditioningType = it },
-                        options = listOf("Nessuna", "Aria condizionata", "Climatizzatore", "Pompa di calore"),
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-
-                    DropdownMenuField(
-                        label = "Esposizione",
-                        value = exposure,
-                        onValueChange = { exposure = it },
-                        options = listOf("Nord", "Sud", "Est", "Ovest", "Nord-Est", "Nord-Ovest", "Sud-Est", "Sud-Ovest"),
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-
-                    Divider()
-
-                    // Informazioni legali
-                    Text(
-                        text = "Informazioni legali",
-                        style = typography.titleMedium,
-                        color = colorScheme.primary
-                    )
-
-                    DropdownMenuField(
-                        label = "Tipo di proprietà",
-                        value = ownershipType,
-                        onValueChange = { ownershipType = it },
-                        options = listOf("Piena proprietà", "Nuda proprietà", "Usufrutto", "Multiproprietà"),
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-
-                    DropdownMenuField(
-                        label = "Stato proprietà",
-                        value = propertyCondition,
-                        onValueChange = { propertyCondition = it },
-                        options = listOf("Nuovo", "Ristrutturato", "Da ristrutturare", "Buono stato", "Ottimo stato"),
-                        colorScheme = colorScheme,
-                        typography = typography,
-                        required = true
-                    )
-
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
+                ) {
                     OutlinedTextField(
-                        value = constructionYear,
-                        onValueChange = { constructionYear = it },
-                        label = { Text("Anno di costruzione") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = colorScheme.primary,
-                            unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
-                        ),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-
-                    DropdownMenuField(
-                        label = "Disponibilità",
-                        value = availability,
-                        onValueChange = { availability = it },
-                        options = listOf("Libero", "Occupato", "Libero al rogito"),
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-
-                    Divider()
-
-                    // Informazioni economiche
-                    Text(
-                        text = "Informazioni economiche $requiredFieldMark",
-                        style = typography.titleMedium,
-                        color = colorScheme.primary
-                    )
-
-                    OutlinedTextField(
-                        value = price,
-                        onValueChange = { price = it },
-                        label = { Text("Prezzo") },
-                        modifier = Modifier.fillMaxWidth(),
+                        value = squareMeters,
+                        onValueChange = { squareMeters = it },
+                        label = { Text("Metri quadri") },
+                        modifier = Modifier.weight(1.2f),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = colorScheme.primary,
                             unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
                         ),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Euro,
-                                contentDescription = "Prezzo",
-                                tint = colorScheme.primary
+                        trailingIcon = {
+                            Text(
+                                text = "mq",
+                                style = typography.bodyMedium,
+                                color = colorScheme.onSurfaceVariant
                             )
                         }
                     )
 
                     OutlinedTextField(
-                        value = condoFees,
-                        onValueChange = { condoFees = it },
-                        label = { Text("Spese condominiali €/mese") },
-                        modifier = Modifier.fillMaxWidth(),
+                        value = floor,
+                        onValueChange = { floor = it },
+                        label = { Text("Piano") },
+                        modifier = Modifier.weight(0.8f),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = colorScheme.primary,
                             unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
                         ),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
+                }
 
-                    Divider()
+                Divider()
 
-                    // Descrizione
-                    Text(
-                        text = "Descrizione $requiredFieldMark",
-                        style = typography.titleMedium,
-                        color = colorScheme.primary
-                    )
+                // Locali
+                Text(
+                    text = "Locali $requiredFieldMark",
+                    style = typography.titleMedium,
+                    color = colorScheme.primary
+                )
 
-                    OutlinedTextField(
-                        value = description,
-                        onValueChange = { description = it },
-                        label = { Text("Descrizione dettagliata") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(150.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = colorScheme.primary,
-                            unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
-                        ),
-                        maxLines = 6
-                    )
+                RoomCounter(
+                    icon = Icons.Default.Hotel,
+                    title = "Camere da letto",
+                    count = bedrooms,
+                    onIncrement = { bedrooms++ },
+                    onDecrement = { if (bedrooms > 0) bedrooms-- },
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
 
-                    Divider()
+                RoomCounter(
+                    icon = Icons.Default.Kitchen,
+                    title = "Cucine",
+                    count = kitchens,
+                    onIncrement = { kitchens++ },
+                    onDecrement = { if (kitchens > 0) kitchens-- },
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
 
-                    // Immagini
-                    Text(
-                        text = "Immagini $requiredFieldMark",
-                        style = typography.titleMedium,
-                        color = colorScheme.primary
-                    )
+                RoomCounter(
+                    icon = Icons.Default.Bathroom,
+                    title = "Bagni",
+                    count = bathrooms,
+                    onIncrement = { bathrooms++ },
+                    onDecrement = { if (bathrooms > 0) bathrooms-- },
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // Mostra le immagini selezionate (per demo mostra solo il numero)
-                        if (imageCount > 0) {
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(120.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(colorScheme.primary.copy(alpha = 0.1f))
-                                    .border(
-                                        width = 1.dp,
-                                        color = colorScheme.primary,
-                                        shape = RoundedCornerShape(12.dp)
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "$imageCount immagini selezionate",
-                                    style = typography.bodyMedium,
-                                    color = colorScheme.primary
-                                )
-                            }
-                        }
+                Text(
+                    text = "Totale locali: ${bedrooms + kitchens + bathrooms}",
+                    style = typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = colorScheme.primary
+                )
 
-                        // Bottone per aggiungere immagini
+                Divider()
+
+                // Caratteristiche aggiuntive
+                Text(
+                    text = "Caratteristiche aggiuntive",
+                    style = typography.titleMedium,
+                    color = colorScheme.primary
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        CheckboxField(
+                            text = "Cantina",
+                            checked = hasBasement,
+                            onCheckedChange = { hasBasement = it },
+                            colorScheme = colorScheme,
+                            typography = typography,
+                            dimensions = dimensions
+                        )
+
+                        CheckboxField(
+                            text = "Box/Garage",
+                            checked = hasGarage,
+                            onCheckedChange = { hasGarage = it },
+                            colorScheme = colorScheme,
+                            typography = typography,
+                            dimensions = dimensions
+                        )
+                    }
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        CheckboxField(
+                            text = "Terrazzo",
+                            checked = hasTerrace,
+                            onCheckedChange = { hasTerrace = it },
+                            colorScheme = colorScheme,
+                            typography = typography,
+                            dimensions = dimensions
+                        )
+                    }
+                }
+
+                Divider()
+
+                // Dettagli proprietà
+                Text(
+                    text = "Dettagli proprietà",
+                    style = typography.titleMedium,
+                    color = colorScheme.primary
+                )
+
+                DropdownMenuField(
+                    label = "Arredamento",
+                    value = furnishingState,
+                    onValueChange = { furnishingState = it },
+                    options = listOf("Non arredato", "Parzialmente arredato", "Arredato"),
+                    colorScheme = colorScheme,
+                    typography = typography
+                )
+
+                DropdownMenuField(
+                    label = "Climatizzazione",
+                    value = airConditioningType,
+                    onValueChange = { airConditioningType = it },
+                    options = listOf(
+                        "Nessuna",
+                        "Aria condizionata",
+                        "Climatizzatore",
+                        "Pompa di calore"
+                    ),
+                    colorScheme = colorScheme,
+                    typography = typography
+                )
+
+                DropdownMenuField(
+                    label = "Esposizione",
+                    value = exposure,
+                    onValueChange = { exposure = it },
+                    options = listOf(
+                        "Nord",
+                        "Sud",
+                        "Est",
+                        "Ovest",
+                        "Nord-Est",
+                        "Nord-Ovest",
+                        "Sud-Est",
+                        "Sud-Ovest"
+                    ),
+                    colorScheme = colorScheme,
+                    typography = typography
+                )
+
+                Divider()
+
+                // Informazioni legali
+                Text(
+                    text = "Informazioni legali",
+                    style = typography.titleMedium,
+                    color = colorScheme.primary
+                )
+
+                DropdownMenuField(
+                    label = "Tipo di proprietà",
+                    value = ownershipType,
+                    onValueChange = { ownershipType = it },
+                    options = listOf(
+                        "Piena proprietà",
+                        "Nuda proprietà",
+                        "Usufrutto",
+                        "Multiproprietà"
+                    ),
+                    colorScheme = colorScheme,
+                    typography = typography
+                )
+
+                DropdownMenuField(
+                    label = "Stato proprietà",
+                    value = propertyCondition,
+                    onValueChange = { propertyCondition = it },
+                    options = listOf(
+                        "Nuovo",
+                        "Ristrutturato",
+                        "Da ristrutturare",
+                        "Buono stato",
+                        "Ottimo stato"
+                    ),
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    required = true
+                )
+
+                OutlinedTextField(
+                    value = constructionYear,
+                    onValueChange = { constructionYear = it },
+                    label = { Text("Anno di costruzione") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colorScheme.primary,
+                        unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+
+                DropdownMenuField(
+                    label = "Disponibilità",
+                    value = availability,
+                    onValueChange = { availability = it },
+                    options = listOf("Libero", "Occupato", "Libero al rogito"),
+                    colorScheme = colorScheme,
+                    typography = typography
+                )
+
+                Divider()
+
+                // Informazioni economiche
+                Text(
+                    text = "Informazioni economiche $requiredFieldMark",
+                    style = typography.titleMedium,
+                    color = colorScheme.primary
+                )
+
+                OutlinedTextField(
+                    value = price,
+                    onValueChange = { price = it },
+                    label = { Text("Prezzo") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colorScheme.primary,
+                        unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Euro,
+                            contentDescription = "Prezzo",
+                            tint = colorScheme.primary
+                        )
+                    }
+                )
+
+                OutlinedTextField(
+                    value = condoFees,
+                    onValueChange = { condoFees = it },
+                    label = { Text("Spese condominiali €/mese") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colorScheme.primary,
+                        unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+
+                Divider()
+
+                // Descrizione
+                Text(
+                    text = "Descrizione $requiredFieldMark",
+                    style = typography.titleMedium,
+                    color = colorScheme.primary
+                )
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Descrizione dettagliata") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(dimensions.infoCardHeight),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colorScheme.primary,
+                        unfocusedBorderColor = colorScheme.onBackground.copy(alpha = 0.2f),
+                    ),
+                    maxLines = 6
+                )
+
+                Divider()
+
+                // Immagini
+                Text(
+                    text = "Immagini $requiredFieldMark",
+                    style = typography.titleMedium,
+                    color = colorScheme.primary
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
+                ) {
+                    // Mostra le immagini selezionate (per demo mostra solo il numero)
+                    if (imageCount > 0) {
                         Box(
                             modifier = Modifier
-                                .size(120.dp)
-                                .clip(RoundedCornerShape(12.dp))
+                                .weight(1f)
+                                .height(dimensions.imagePrewiev)
+                                .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
                                 .background(colorScheme.primary.copy(alpha = 0.1f))
                                 .border(
-                                    width = 1.dp,
+                                    width = dimensions.borderStrokeSmall,
                                     color = colorScheme.primary,
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                .clickable { imageCount++ },
+                                    shape = RoundedCornerShape(dimensions.cornerRadiusMedium)
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Aggiungi immagini",
-                                    tint = colorScheme.primary
-                                )
-
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                Text(
-                                    text = "Aggiungi",
-                                    style = typography.bodySmall,
-                                    color = colorScheme.primary
-                                )
-                            }
+                            Text(
+                                text = "$imageCount immagini selezionate",
+                                style = typography.bodyMedium,
+                                color = colorScheme.primary
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Bottone di invio form
-                    Button(
-                        onClick = {
-                            // Logica di invio form - qui andrebbe implementata la validazione
-                        },
+                    // Bottone per aggiungere immagini
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colorScheme.primary,
-                            contentColor = colorScheme.onPrimary
-                        ),
-                        shape = RoundedCornerShape(25.dp)
+                            .size(dimensions.imagePrewiev)
+                            .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
+                            .background(colorScheme.primary.copy(alpha = 0.1f))
+                            .border(
+                                width = dimensions.borderStrokeSmall,
+                                color = colorScheme.primary,
+                                shape = RoundedCornerShape(dimensions.cornerRadiusMedium)
+                            )
+                            .clickable { imageCount++ },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text("PUBBLICA ANNUNCIO")
-                    }
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Aggiungi immagini",
+                                tint = colorScheme.primary
+                            )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(dimensions.spacingExtraSmall))
+
+                            Text(
+                                text = "Aggiungi",
+                                style = typography.bodySmall,
+                                color = colorScheme.primary
+                            )
+                        }
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(dimensions.spacingMedium))
+
+                AppSecondaryButton(
+                    text = "Pubblica Annuncio",
+                    onClick = {},
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
+    }
 }
 
 @Composable
@@ -586,21 +614,22 @@ fun SegmentedButton(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    colorScheme: ColorScheme
+    colorScheme: ColorScheme,
+    dimensions: Dimensions,
 ) {
     Box(
         modifier = modifier
-            .height(45.dp)
+            .height(dimensions.buttonSize)
             .border(
-                width = 1.dp,
+                width = dimensions.borderStrokeSmall,
                 color = if (selected) colorScheme.primary else colorScheme.onBackground.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(25.dp)
+                shape = RoundedCornerShape(dimensions.cornerRadiusExtraLarge)
             )
             .background(
                 color = if (selected) colorScheme.primary else Color.Transparent,
-                shape = RoundedCornerShape(25.dp)
+                shape = RoundedCornerShape(dimensions.cornerRadiusExtraLarge)
             )
-            .clip(RoundedCornerShape(25.dp))
+            .clip(RoundedCornerShape(dimensions.cornerRadiusExtraLarge))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
@@ -622,7 +651,7 @@ fun DropdownMenuField(
     options: List<String>,
     colorScheme: ColorScheme,
     typography: Typography,
-    required: Boolean = false
+    required: Boolean = false,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -681,7 +710,8 @@ fun RoomCounter(
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -691,10 +721,10 @@ fun RoomCounter(
             imageVector = icon,
             contentDescription = title,
             tint = colorScheme.primary,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(dimensions.iconSizeMedium)
         )
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(dimensions.spacingSmall))
 
         Text(
             text = title,
@@ -705,12 +735,12 @@ fun RoomCounter(
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
         ) {
             IconButton(
                 onClick = onDecrement,
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(dimensions.iconSizeLarge)
                     .clip(CircleShape)
                     .background(colorScheme.primary.copy(alpha = 0.1f))
             ) {
@@ -718,15 +748,14 @@ fun RoomCounter(
                     imageVector = Icons.Default.Remove,
                     contentDescription = "Diminuisci",
                     tint = colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(dimensions.iconSizeSmall)
                 )
             }
 
             Text(
                 text = "$count",
-                style = typography.bodyLarge,
+                style = typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.width(24.dp),
                 textAlign = TextAlign.Center,
                 color = colorScheme.onBackground
 
@@ -735,7 +764,7 @@ fun RoomCounter(
             IconButton(
                 onClick = onIncrement,
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(dimensions.iconSizeLarge)
                     .clip(CircleShape)
                     .background(colorScheme.primary.copy(alpha = 0.1f))
             ) {
@@ -743,7 +772,7 @@ fun RoomCounter(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Aumenta",
                     tint = colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(dimensions.iconSizeSmall)
                 )
             }
         }
@@ -756,14 +785,15 @@ fun CheckboxField(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    dimensions: Dimensions,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onCheckedChange(!checked) }
-            .padding(vertical = 4.dp)
+            .padding(vertical = dimensions.paddingExtraSmall)
     ) {
         Checkbox(
             checked = checked,

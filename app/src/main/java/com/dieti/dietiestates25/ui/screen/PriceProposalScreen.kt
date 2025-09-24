@@ -33,7 +33,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -60,7 +59,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppOutlinedTextField
@@ -213,11 +211,6 @@ private fun PriceProposalTopAppBar(
                 color = colorScheme.onPrimary
             )
         }
-
-        HorizontalDivider(
-            color = colorScheme.onBackground,
-            thickness = 1.dp
-        )
     }
 }
 
@@ -235,10 +228,6 @@ private fun PriceProposalBottomBar(
             .fillMaxWidth()
             .navigationBarsPadding()
     ) {
-        HorizontalDivider(
-            color = colorScheme.onBackground,
-            thickness = 1.dp
-        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -272,8 +261,8 @@ private fun InformationCard(
             .fillMaxWidth()
             .padding(dimensions.paddingMedium),
         colors = CardDefaults.cardColors(containerColor = colorScheme.secondary),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, colorScheme.outline)
+        shape = RoundedCornerShape(dimensions.cornerRadiusSmall),
+        border = BorderStroke(dimensions.borderStrokeSmall, colorScheme.outline)
     ) {
         Text(
             text = text,
@@ -339,7 +328,7 @@ private fun YourProposalRow(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start,
-            modifier = Modifier.width(160.dp),
+            modifier = Modifier.width(dimensions.infoCardHeight),
         ) {
             AppOutlinedTextField(
                 value = proposedPrice,
@@ -433,7 +422,7 @@ private fun PriceDifferenceRow(
             modifier = Modifier
                 .clip(CircleShape)
                 .background(differenceColor)
-                .padding(horizontal = 12.dp, vertical = 6.dp),
+                .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingSmall),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -457,8 +446,8 @@ private fun InformationNoteCard(
             .fillMaxWidth()
             .padding(dimensions.paddingMedium),
         colors = CardDefaults.cardColors(containerColor = colorScheme.secondary),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, colorScheme.outline)
+        shape = RoundedCornerShape(dimensions.cornerRadiusSmall),
+        border = BorderStroke(dimensions.borderStrokeSmall, colorScheme.outline)
     ) {
         Text(
             text = text,

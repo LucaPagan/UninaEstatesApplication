@@ -1,4 +1,5 @@
 package com.dieti.dietiestates25.ui.screen
+
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
@@ -22,7 +23,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -33,12 +33,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.unit.dp
 import com.dieti.dietiestates25.ui.components.AppCustomMapMarker
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
@@ -168,7 +166,7 @@ fun FullScreenMapScreen(
                     ) {
                         AppCustomMapMarker(
                             tint = colorScheme.primary, // primaryColor definito in MiniMapSection
-                            iconSize = 36.dp,     // O la dimensione che preferisci
+                            iconSize = dimensions.iconSizeLarge,     // O la dimensione che preferisci
                             dimensions = dimensions
                         )
                     }
@@ -180,7 +178,7 @@ fun FullScreenMapScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("I permessi di localizzazione sono necessari per mostrare la tua posizione sulla mappa.")
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(dimensions.spacingSmall))
                     Button(onClick = { locationPermissionsState.launchMultiplePermissionRequest() }) {
                         Text("Richiedi Permessi")
                     }

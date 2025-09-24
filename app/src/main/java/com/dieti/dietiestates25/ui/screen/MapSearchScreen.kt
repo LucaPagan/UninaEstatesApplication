@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Tune
@@ -12,16 +11,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.components.PropertyPreviewInfoWindow
 import com.dieti.dietiestates25.ui.components.CustomPriceMarker
 import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
@@ -31,7 +26,6 @@ import com.dieti.dietiestates25.ui.model.PropertyMarker
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.ui.utils.capitalizeFirstLetter
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -261,7 +255,7 @@ fun MapSearchScreen(
                                 Badge(
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
-                                        .padding(top = 4.dp, end = 4.dp),
+                                        .padding(top = dimensions.paddingExtraSmall, end = dimensions.paddingExtraSmall),
                                     containerColor = colorScheme.error
                                 )
                             }

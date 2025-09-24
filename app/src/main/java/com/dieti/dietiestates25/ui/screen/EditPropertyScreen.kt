@@ -39,7 +39,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
@@ -265,7 +264,7 @@ fun EditPropertyScreen(
                                     onValueChange = { currentDescription = it },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .defaultMinSize(minHeight = 150.dp),
+                                        .defaultMinSize(minHeight = dimensions.infoCardHeight),
                                     enabled = true,
                                     singleLine = false,
                                     // --- MODIFICA TASTIERA ---
@@ -437,7 +436,7 @@ private fun EditableImageSection(
     isEditing: Boolean,
     dimensions: Dimensions
 ) {
-    val imageSize = 100.dp
+    val imageSize = dimensions.logoLarge
     LazyRow(
         contentPadding = PaddingValues(vertical = dimensions.paddingSmall),
         horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
@@ -460,14 +459,14 @@ private fun EditableImageSection(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(dimensions.paddingExtraSmall)
-                            .size(24.dp)
+                            .size(dimensions.cornerRadiusExtraLarge)
                             .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Rimuovi immagine",
                             tint = Color.White,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(dimensions.iconSizeSmall)
                         )
                     }
                 }
@@ -493,7 +492,7 @@ private fun AddImageButton(
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(Dimensions.cornerRadiusMedium),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+        border = BorderStroke(Dimensions.borderStrokeSmall, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Column(
@@ -535,7 +534,7 @@ private fun AttributeCounter(
             IconButton(
                 onClick = { onValueChange( (value - 1).coerceAtLeast(0) ) },
                 enabled = isEditing && value > 0,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(dimensions.iconSizeLarge)
             ) {
                 Icon(Icons.Default.Remove, contentDescription = "Diminuisci")
             }
@@ -547,7 +546,7 @@ private fun AttributeCounter(
             IconButton(
                 onClick = { onValueChange(value + 1) },
                 enabled = isEditing,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(dimensions.iconSizeLarge)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Aumenta")
             }
@@ -571,7 +570,7 @@ fun EditInfoCard(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(Dimensions.cornerRadiusMedium),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.elevationNone)
         ) {
             Column(modifier = Modifier.padding(Dimensions.paddingMedium)) {
                 content()

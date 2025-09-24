@@ -44,7 +44,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -289,7 +288,7 @@ private fun ProfileDataFields(
 
     val commonTextFieldModifier = Modifier
         .fillMaxWidth()
-        .padding(bottom = 12.dp)
+        .padding(bottom = dimensions.paddingMedium)
 
     val nameIsError = isEditMode && profileData.name.isBlank()
     val emailIsError = isEditMode && profileData.email.isBlank()
@@ -362,7 +361,7 @@ private fun ProfileDataFields(
                 enabled = isEditMode,
                 modifier = Modifier
                     .menuAnchor()
-                    .width(140.dp),
+                    .width(dimensions.prefixWidth),
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = prefixDropdownExpanded && isEditMode) },
                 colors = prefixTextFieldColors,
                 textStyle = typography.bodyLarge
