@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -185,9 +184,9 @@ private fun OffersList(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
             horizontal = dimensions.paddingMedium,
-            vertical = 12.dp
+            vertical = dimensions.paddingSmall
         ),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(dimensions.paddingMedium)
     ) {
         items(data) { offer ->
             Box(
@@ -217,8 +216,8 @@ private fun AppointmentsList(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = dimensions.paddingMedium, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingSmall),
+        verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
     ) {
         items(data) { appointment ->
             Box(
@@ -249,8 +248,8 @@ private fun ReportsList(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = dimensions.paddingMedium, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingSmall),
+        verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
     ) {
         items(data) { report ->
             Box(
@@ -283,7 +282,7 @@ private fun ManagerTabs(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingMedium)
-            .height(52.dp)
+            .height(dimensions.buttonHeight)
             .clip(RoundedCornerShape(dimensions.cornerRadiusLarge))
             .background(colorScheme.surfaceVariant)
             .padding(dimensions.paddingExtraSmall),
@@ -319,11 +318,11 @@ private fun ManagerTabButton(
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .padding(horizontal = 2.dp)
+            .padding(horizontal = dimensions.tabButtonPadding)
             .clip(RoundedCornerShape(dimensions.cornerRadiusLarge))
             .background(if (isSelected) colorScheme.primary else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = dimensions.paddingSmall),
         contentAlignment = Alignment.Center
     ) {
         Text(
