@@ -519,3 +519,33 @@ fun CircularIconActionButton(
         }
     }
 }
+
+@Composable
+fun SegmentedButton(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val dimensions = Dimensions
+
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.height(dimensions.buttonSize),
+        shape = RoundedCornerShape(dimensions.cornerRadiusExtraLarge),
+        border = BorderStroke(
+            width = dimensions.borderStrokeSmall,
+            color = if (selected) colorScheme.primary else colorScheme.onBackground.copy(alpha = 0.2f)
+        ),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = if (selected) colorScheme.primary else Color.Transparent,
+            contentColor = if (selected) colorScheme.onPrimary else colorScheme.onBackground
+        )
+    ) {
+        Text(
+            text = text,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+        )
+    }
+}
