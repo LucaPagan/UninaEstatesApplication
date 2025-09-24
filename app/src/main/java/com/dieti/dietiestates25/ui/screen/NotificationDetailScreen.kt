@@ -29,7 +29,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavController
@@ -293,7 +292,7 @@ private fun ProposalDetailsCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 100.dp)
+            .defaultMinSize(minHeight = dimensions.logoLarge)
             .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
             .background(colorScheme.surfaceVariant.copy(alpha = 0.5f))
             .padding(dimensions.paddingMedium)

@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -149,7 +148,7 @@ fun ApartmentListingScreen(
                         Badge(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
-                                .padding(top = 4.dp, end = 4.dp),
+                                .padding(top = dimensions.paddingExtraSmall, end = dimensions.paddingExtraSmall),
                             containerColor = colorScheme.error
                         )
                     }
@@ -256,7 +255,7 @@ fun ApartmentListingScreen(
                     AppPropertyCard(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(250.dp),
+                            .height(dimensions.propertyCardHeight),
                         price = property.price,
                         imageResId = property.imageRes,
                         address = property.location,

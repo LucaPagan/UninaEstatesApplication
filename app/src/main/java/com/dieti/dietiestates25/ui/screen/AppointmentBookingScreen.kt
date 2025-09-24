@@ -26,7 +26,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
@@ -136,11 +135,6 @@ private fun AppointmentBookingTopAppBar(
                 color = colorScheme.onPrimary // Assicura visibilità
             )
         }
-
-        HorizontalDivider(
-            color = colorScheme.outline, // Colore più standard per i divisori
-            thickness = 1.dp
-        )
     }
 }
 
@@ -158,14 +152,10 @@ private fun AppointmentBookingBottomBar(
             .fillMaxWidth()
             .navigationBarsPadding() // Padding per la navigation bar di sistema
     ) {
-        HorizontalDivider(
-            color = colorScheme.outline, // Colore più standard
-            thickness = 1.dp
-        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(colorScheme.surface) // Sfondo standard per bottom bar
+                .background(colorScheme.background) // Sfondo standard per bottom bar
                 .padding(dimensions.paddingMedium),
         ) {
             AppPrimaryButton(
@@ -271,7 +261,7 @@ fun NotificationBox(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
         color = colorScheme.secondaryContainer.copy(alpha = 0.4f), // Leggermente più trasparente
-        border = BorderStroke(1.dp, colorScheme.outline.copy(alpha = 0.6f)) // Bordo più leggero
+        border = BorderStroke(dimensions.borderStrokeSmall, colorScheme.outline.copy(alpha = 0.6f)) // Bordo più leggero
     ) {
         Column(
             modifier = Modifier.padding(dimensions.paddingMedium)

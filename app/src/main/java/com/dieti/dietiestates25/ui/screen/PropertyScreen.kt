@@ -43,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.pager.HorizontalPager
@@ -189,8 +188,8 @@ fun PropertyScreen(
                         itemContent = { property ->
                             AppPropertyCard(
                                 modifier = Modifier
-                                    .width(240.dp)
-                                    .height(210.dp),
+                                    .width(dimensions.propertyCardHeight)
+                                    .height(dimensions.circularIconSize),
                                 price = property.price,
                                 imageResId = property.imageRes,
                                 address = property.location,
@@ -397,7 +396,7 @@ fun PropertyImagePager(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(250.dp)
+            .height(dimensions.propertyCardHeight)
     ) {
         HorizontalPager(
             state = pagerState,
@@ -436,7 +435,7 @@ fun PropertyImagePager(
             Box(
                 modifier = Modifier
                     .background(colorScheme.onBackground.copy(alpha = 0.6f), RoundedCornerShape(dimensions.cornerRadiusMedium))
-                    .padding(horizontal = 12.dp, vertical = dimensions.paddingExtraSmall),
+                    .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingExtraSmall),
             ) {
                 Text(
                     text = "${pagerState.currentPage + 1}/$totalImages",
@@ -654,7 +653,7 @@ fun ReportAdSection(colorScheme: ColorScheme, typography: Typography, dimensions
                 containerColor = colorScheme.surface,
                 contentColor = colorScheme.error
             ),
-            border = BorderStroke(1.dp, colorScheme.error.copy(alpha = 0.5f)),
+            border = BorderStroke(dimensions.borderStrokeSmall, colorScheme.error.copy(alpha = 0.5f)),
             elevation = ButtonDefaults.buttonElevation(
                 defaultElevation = dimensions.elevationSmall,
                 pressedElevation = dimensions.elevationMedium

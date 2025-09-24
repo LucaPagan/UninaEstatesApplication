@@ -32,7 +32,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
@@ -45,7 +44,6 @@ import com.dieti.dietiestates25.ui.components.AppRedButton
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 import com.dieti.dietiestates25.ui.components.CalendarView
 import com.dieti.dietiestates25.ui.components.TimeSlotSelector
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme // Per la Preview
 import java.time.LocalDate
 import android.util.Log
 
@@ -293,7 +291,7 @@ private fun AppointmentDetailContent(
                         contentDescription = "Immagine proprietà",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
+                            .height(dimensions.circularIconSize)
                             .clip(RoundedCornerShape(dimensions.cornerRadiusMedium)),
                         contentScale = ContentScale.Crop
                     )
@@ -458,7 +456,7 @@ private fun InfoCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(Dimensions.cornerRadiusMedium),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.elevationNone)
     ) {
         Column(modifier = Modifier.padding(Dimensions.paddingMedium)) {
             title?.let {

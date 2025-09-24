@@ -2,7 +2,6 @@ package com.dieti.dietiestates25.ui.screen
 
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
 import com.dieti.dietiestates25.ui.navigation.Screen
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.model.Notification
 import com.dieti.dietiestates25.ui.model.Appointment
@@ -26,7 +25,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -190,9 +188,9 @@ private fun AppointmentsScreenContent(
                     .fillMaxWidth(),
                 contentPadding = PaddingValues(
                     horizontal = dimensions.paddingMedium,
-                    vertical = 12.dp // Lasciato 12.dp (non in Dimensions)
+                    vertical = dimensions.paddingSmall
                 ),
-                verticalArrangement = Arrangement.spacedBy(12.dp) // Lasciato 12.dp (non in Dimensions)
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
             ) {
                 items(appointments, key = { it.id }) { appointment ->
                     AppAppointmentDisplay( // Usa il nuovo componente da AppNotification.kt
@@ -222,9 +220,9 @@ private fun NotificationsList(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
             horizontal = dimensions.paddingMedium,
-            vertical = 12.dp
+            vertical = dimensions.paddingSmall
         ),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
     ) {
         items(notifications, key = { it.id }) { notification ->
             AppNotificationDisplay(
@@ -254,7 +252,7 @@ fun NotificationTabs(
                 horizontal = dimensions.paddingMedium,
                 vertical = dimensions.paddingMedium
             )
-            .height(52.dp)
+            .height(dimensions.buttonHeight)
             .clip(RoundedCornerShape(dimensions.cornerRadiusLarge))
             .background(colorScheme.surfaceVariant)
             .padding(dimensions.paddingExtraSmall),
@@ -290,11 +288,11 @@ fun TabButton(
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .padding(horizontal = 2.dp)
+            .padding(horizontal = dimensions.tabButtonPadding)
             .clip(RoundedCornerShape(dimensions.cornerRadiusLarge))
             .background(if (isSelected) colorScheme.primary else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = dimensions.paddingSmall),
         contentAlignment = Alignment.Center
     ) {
         Text(

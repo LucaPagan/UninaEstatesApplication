@@ -52,6 +52,9 @@ object Dimensions {
     val imagePrewiev = 120.dp
     val statusBadgePadding = 10.dp
     val tabButtonPadding = 2.dp
+    val propertyCardHeight = 250.dp
+    val infoCardHeight = 150.dp
+    val prefixWidth = 130.dp
 
     // Logo
     val logoSmall = 25.dp

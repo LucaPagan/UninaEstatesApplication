@@ -10,12 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppIconDisplay
@@ -78,8 +76,8 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                     itemContent = { property ->
                         AppPropertyCard(
                             modifier = Modifier
-                                .width(240.dp)
-                                .height(210.dp),
+                                .width(dimensions.propertyCardHeight)
+                                .height(dimensions.circularIconSize),
                             price = property.price,
                             imageResId = property.imageRes,
                             address = property.location,
@@ -173,7 +171,7 @@ fun HomeScreenHeader(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AppIconDisplay(
-                    size = 60.dp,
+                    size = dimensions.logoMedium,
                     shapeRadius = dimensions.cornerRadiusMedium
                 )
                 Spacer(modifier = Modifier.width(dimensions.spacingMedium))
