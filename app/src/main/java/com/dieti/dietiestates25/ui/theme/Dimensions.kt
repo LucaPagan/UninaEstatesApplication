@@ -51,6 +51,7 @@ object Dimensions {
     val customMarker = 48.dp
     val imagePrewiev = 120.dp
     val statusBadgePadding = 10.dp
+    val tabButtonPadding = 2.dp
 
     // Logo
     val logoSmall = 25.dp
