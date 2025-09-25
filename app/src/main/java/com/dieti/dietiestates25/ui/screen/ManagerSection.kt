@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,7 +17,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -26,6 +29,11 @@ import com.dieti.dietiestates25.ui.model.*
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import java.util.Locale
+
+// Enum per lo stato dell'offerta, necessario per il StatusBadge
+enum class StatoOfferta {
+    IN_ATTESA, ACCETTATA, RIFIUTATA
+}
 
 @Composable
 fun ManagerScreen(
@@ -41,6 +49,7 @@ fun ManagerScreen(
     val offers by viewModel.offers.collectAsState()
     val appointments by viewModel.appointments.collectAsState()
     val reports by viewModel.reports.collectAsState()
+    val selectedItem by viewModel.selectedItem.collectAsState()
 
     val gradientColors = listOf(
         colorScheme.primary.copy(alpha = 0.7f),
@@ -51,21 +60,38 @@ fun ManagerScreen(
 
     Scaffold(
         topBar = {
-            AppTopBar(
-                title = "Manager",
-                actionIcon = Icons.Filled.Shield,
-                actionContentDescription = "Mostra opzioni manager",
-                onActionClick = { /* Gestisci click */ },
-                actionBackgroundColor = colorScheme.primaryContainer,
-                actionIconTint = colorScheme.onPrimaryContainer,
-                showAppIcon = true,
-                colorScheme = colorScheme,
-                typography = typography,
-                dimensions = dimensions
-            )
+            if (selectedItem != null) {
+                AppTopBar(
+                    title = "Dettagli",
+                    actionIcon = Icons.Filled.ArrowBack,
+                    actionContentDescription = "Torna indietro",
+                    onActionClick = { viewModel.setSelectedItem(null) },
+                    actionBackgroundColor = colorScheme.primaryContainer,
+                    actionIconTint = colorScheme.onPrimaryContainer,
+                    showAppIcon = true,
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
+            } else {
+                AppTopBar(
+                    title = "Manager",
+                    actionIcon = Icons.Filled.Shield,
+                    actionContentDescription = "Mostra opzioni manager",
+                    onActionClick = { /* Gestisci click */ },
+                    actionBackgroundColor = colorScheme.primaryContainer,
+                    actionIconTint = colorScheme.onPrimaryContainer,
+                    showAppIcon = true,
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
+            }
         },
         bottomBar = {
-            AppBottomNavigation(navController = navController, idUtente = idUtente)
+            if (selectedItem == null) {
+                AppBottomNavigation(navController = navController, idUtente = idUtente)
+            }
         }
     ) { paddingValues ->
         Box(
@@ -74,16 +100,26 @@ fun ManagerScreen(
                 .background(Brush.verticalGradient(colors = gradientColors))
                 .padding(paddingValues)
         ) {
-            ManagerScreenContent(
-                currentTab = currentTab,
-                onTabSelected = { viewModel.setCurrentTab(it) },
-                colorScheme = colorScheme,
-                typography = typography,
-                dimensions = dimensions,
-                offers = offers,
-                appointments = appointments,
-                reports = reports
-            )
+            if (selectedItem != null) {
+                ItemDetailScreen(
+                    item = selectedItem,
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions
+                )
+            } else {
+                ManagerScreenContent(
+                    currentTab = currentTab,
+                    onTabSelected = { viewModel.setCurrentTab(it) },
+                    colorScheme = colorScheme,
+                    typography = typography,
+                    dimensions = dimensions,
+                    offers = offers,
+                    appointments = appointments,
+                    reports = reports,
+                    onItemClick = { item -> viewModel.setSelectedItem(item) }
+                )
+            }
         }
     }
 }
@@ -97,7 +133,8 @@ private fun ManagerScreenContent(
     dimensions: Dimensions,
     offers: List<Offer>,
     appointments: List<Appointment>,
-    reports: List<Report>
+    reports: List<Report>,
+    onItemClick: (Any) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -126,7 +163,8 @@ private fun ManagerScreenContent(
                         data = offers,
                         dimensions = dimensions,
                         colorScheme = colorScheme,
-                        typography = typography
+                        typography = typography,
+                        onItemClick = onItemClick
                     )
                 }
             }
@@ -145,7 +183,8 @@ private fun ManagerScreenContent(
                         data = appointments,
                         dimensions = dimensions,
                         colorScheme = colorScheme,
-                        typography = typography
+                        typography = typography,
+                        onItemClick = onItemClick
                     )
                 }
             }
@@ -164,7 +203,8 @@ private fun ManagerScreenContent(
                         data = reports,
                         dimensions = dimensions,
                         colorScheme = colorScheme,
-                        typography = typography
+                        typography = typography,
+                        onItemClick = onItemClick
                     )
                 }
             }
@@ -178,7 +218,8 @@ private fun OffersList(
     data: List<Offer>,
     dimensions: Dimensions,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    onItemClick: (Offer) -> Unit
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
@@ -194,12 +235,14 @@ private fun OffersList(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
                     .background(colorScheme.surfaceVariant)
+                    .clickable { onItemClick(offer) }
                     .padding(dimensions.paddingMedium)
             ) {
                 Column {
                     Text("${offer.buyerName} offre €${offer.price}", style = typography.titleMedium)
                     Text("Indirizzo: ${offer.propertyAddress}", style = typography.bodyMedium)
-                    Text("Stato: ${offer.status}", style = typography.bodySmall, color = colorScheme.primary)
+                    Spacer(Modifier.height(dimensions.spacingSmall))
+                    StatusBadge(statoOfferta = stringToStatoOfferta(offer.status))
                 }
             }
         }
@@ -212,7 +255,8 @@ private fun AppointmentsList(
     data: List<Appointment>,
     dimensions: Dimensions,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    onItemClick: (Appointment) -> Unit
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
@@ -225,6 +269,7 @@ private fun AppointmentsList(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
                     .background(colorScheme.surfaceVariant)
+                    .clickable { onItemClick(appointment) }
                     .padding(dimensions.paddingMedium)
             ) {
                 Column {
@@ -244,7 +289,8 @@ private fun ReportsList(
     data: List<Report>,
     dimensions: Dimensions,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
+    onItemClick: (Report) -> Unit
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
@@ -257,6 +303,7 @@ private fun ReportsList(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
                     .background(colorScheme.surfaceVariant)
+                    .clickable { onItemClick(report) }
                     .padding(dimensions.paddingMedium)
             ) {
                 Column {
@@ -292,8 +339,11 @@ private fun ManagerTabs(
         val tabs = ManagerViewModel.ManagerTab.entries.toTypedArray()
         tabs.forEach { tab ->
             ManagerTabButton(
-                text = tab.name.lowercase(Locale.getDefault())
-                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+                text = when (tab) {
+                    ManagerViewModel.ManagerTab.OFFERS -> "Offerte"
+                    ManagerViewModel.ManagerTab.APPOINTMENTS -> "Appuntamenti"
+                    ManagerViewModel.ManagerTab.REPORTS -> "Report"
+                },
                 isSelected = currentTab == tab,
                 onClick = { onTabSelected(tab) },
                 modifier = Modifier.weight(1f),
@@ -352,6 +402,101 @@ private fun EmptyDisplayView(
             style = typography.bodyLarge,
             color = colorScheme.onBackground.copy(alpha = 0.7f)
         )
+    }
+}
+
+@Composable
+private fun StatusBadge(
+    statoOfferta: StatoOfferta,
+    modifier: Modifier = Modifier
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val dimensions = Dimensions
+
+    val (backgroundColor, text, textColor) = when (statoOfferta) {
+        StatoOfferta.ACCETTATA -> Triple(colorScheme.primary, "Accettata", colorScheme.onPrimary)
+        StatoOfferta.IN_ATTESA -> Triple(colorScheme.scrim, "In Attesa", colorScheme.onPrimary)
+        StatoOfferta.RIFIUTATA -> Triple(colorScheme.error, "Rifiutata", colorScheme.onError)
+    }
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(50))
+            .background(backgroundColor)
+            .padding(horizontal = dimensions.statusBadgePadding, vertical = dimensions.paddingExtraSmall),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+            color = textColor
+        )
+    }
+}
+
+fun stringToStatoOfferta(status: String): StatoOfferta {
+    return when (status.lowercase(Locale.ROOT)) {
+        "in attesa" -> StatoOfferta.IN_ATTESA
+        "accettata" -> StatoOfferta.ACCETTATA
+        "rifiutata" -> StatoOfferta.RIFIUTATA
+        else -> StatoOfferta.IN_ATTESA
+    }
+}
+
+@Composable
+fun ItemDetailScreen(
+    item: Any?,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(dimensions.paddingLarge)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
+                .background(colorScheme.surfaceVariant)
+                .padding(dimensions.paddingMedium)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                when (item) {
+                    is Offer -> {
+                        Text("Dettagli Offerta", style = typography.headlineSmall, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(dimensions.spacingMedium))
+                        Text("Acquirente: ${item.buyerName}", style = typography.titleMedium)
+                        Text("Prezzo: €${item.price}", style = typography.titleMedium)
+                        Text("Indirizzo: ${item.propertyAddress}", style = typography.titleMedium)
+                        Text("Data: ${item.date}", style = typography.titleMedium)
+                        StatusBadge(statoOfferta = stringToStatoOfferta(item.status))
+                    }
+                    is Appointment -> {
+                        Text("Dettagli Appuntamento", style = typography.headlineSmall, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(dimensions.spacingMedium))
+                        Text("Cliente: ${item.clientName}", style = typography.titleMedium)
+                        Text("Immobile: ${item.propertyAddress}", style = typography.titleMedium)
+                        Text("Data: ${item.date}", style = typography.titleMedium)
+                        Text("Slot orario: ${item.timeSlot}", style = typography.titleMedium)
+                        Text("Note: ${item.notes}", style = typography.titleMedium)
+                    }
+                    is Report -> {
+                        Text("Dettagli Report", style = typography.headlineSmall, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(dimensions.spacingMedium))
+                        Text("Titolo: ${item.title}", style = typography.titleMedium)
+                        Text("Descrizione: ${item.description}", style = typography.titleMedium)
+                        Text("Data: ${item.date}", style = typography.titleMedium)
+                        Text("Sintesi: ${item.summary}", style = typography.bodyMedium, textAlign = TextAlign.Center)
+                    }
+                }
+            }
+        }
     }
 }
 

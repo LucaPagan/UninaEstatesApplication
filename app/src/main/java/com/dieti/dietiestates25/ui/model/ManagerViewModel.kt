@@ -29,6 +29,9 @@ class ManagerViewModel : ViewModel() {
     private val _reports = MutableStateFlow<List<Report>>(emptyList())
     val reports: StateFlow<List<Report>> = _reports.asStateFlow()
 
+    private val _selectedItem = MutableStateFlow<Any?>(null)
+    val selectedItem: StateFlow<Any?> = _selectedItem.asStateFlow()
+
     val filteredItems: StateFlow<List<Any>> =
         combine(_currentTab, _offers, _appointments, _reports) { tab, offers, appointments, reports ->
             when (tab) {
@@ -92,6 +95,10 @@ class ManagerViewModel : ViewModel() {
 
     fun setCurrentTab(tab: ManagerTab) {
         _currentTab.value = tab
+    }
+
+    fun setSelectedItem(item: Any?) {
+        _selectedItem.value = item
     }
 }
 
