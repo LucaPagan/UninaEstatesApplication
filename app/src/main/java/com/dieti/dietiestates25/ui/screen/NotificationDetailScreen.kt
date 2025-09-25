@@ -32,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavController
+import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,6 +58,11 @@ fun NotificationDetailScreen(
 
     Scaffold(
         topBar = {
+            GeneralHeaderBar(
+                title = "Dettagli Notifica",
+                onBackClick = { navController.popBackStack() },
+                actions = {}
+            )
             NotificationDetailTopAppBar(
                 navController = navController,
                 notificationDetail = notificationDetail,
@@ -187,12 +193,6 @@ private fun NotificationDetailContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(
-                    RoundedCornerShape(
-                        topStart = dimensions.cornerRadiusMedium,
-                        topEnd = dimensions.cornerRadiusMedium
-                    )
-                )
                 .background(colorScheme.background)
                 .padding(dimensions.paddingMedium),
             verticalArrangement = Arrangement.SpaceBetween

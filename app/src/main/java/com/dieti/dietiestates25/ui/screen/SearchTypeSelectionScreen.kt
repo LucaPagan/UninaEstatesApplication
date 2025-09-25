@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -32,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -41,7 +39,6 @@ import com.dieti.dietiestates25.ui.model.FilterModel
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.ui.theme.TealDeep
 import com.dieti.dietiestates25.ui.utils.capitalizeFirstLetter
 
 @Composable
@@ -183,6 +180,7 @@ fun SearchTypeSelectionTopBar(
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
+    val dimensions = Dimensions
 
     // Container che include la status bar
     Column(
@@ -200,8 +198,8 @@ fun SearchTypeSelectionTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp) // Altezza standard della TopAppBar
-                .padding(horizontal = 4.dp),
+                .height(dimensions.headerBarHeight) // Altezza standard della TopAppBar
+                .padding(horizontal = dimensions.paddingExtraSmall),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onNavigationClick) {

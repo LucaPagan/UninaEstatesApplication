@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -48,12 +49,9 @@ fun AppointmentBookingScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            AppointmentBookingTopAppBar(
-                navController = navController,
-                haptic = haptic,
-                colorScheme = colorScheme,
-                typography = typography,
-                dimensions = dimensions
+            GeneralHeaderBar(
+                title = "Prenota una visita",
+                onBackClick = { navController.popBackStack() }
             )
         },
         bottomBar = {
@@ -84,60 +82,6 @@ fun AppointmentBookingScreen(
         )
     }
 }
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AppointmentBookingTopAppBar(
-    navController: NavController,
-    haptic: HapticFeedback,
-    colorScheme: ColorScheme,
-    typography: Typography,
-    dimensions: Dimensions
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsTopHeight(WindowInsets.statusBars)
-                .background(colorScheme.primaryContainer)
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(colorScheme.primary)
-                .padding(
-                    horizontal = dimensions.paddingMedium,
-                    vertical = dimensions.paddingMedium
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            CircularIconActionButton(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    navController.popBackStack()
-                },
-                iconVector = Icons.Default.Close,
-                contentDescription = "Chiudi",
-                backgroundColor = colorScheme.primaryContainer,
-                iconTint = colorScheme.onPrimaryContainer,
-                buttonSize = dimensions.iconSizeLarge, // Coerenza con altre TopAppBar
-                iconSize = dimensions.iconSizeMedium,
-            )
-            Spacer(modifier = Modifier.width(dimensions.spacingSmall))
-            Text(
-                text = "Prenota una visita",
-                style = typography.titleMedium, // Potrebbe essere titleLarge per coerenza
-                color = colorScheme.onPrimary // Assicura visibilità
-            )
-        }
-    }
-}
-
 
 @Composable
 private fun AppointmentBookingBottomBar(

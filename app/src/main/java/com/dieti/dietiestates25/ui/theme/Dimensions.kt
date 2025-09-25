@@ -45,7 +45,7 @@ object Dimensions {
     val cardDefaultElevation = 4.dp
     val searchBarHeight = 56.dp
     val headerBarHeight = 56.dp
-    val bottomNavHeight = 64.dp
+    val spacingGeneralTopBar = 64.dp
     val buttonSize = 40.dp
     val circularIconSize = 200.dp
     val customMarker = 48.dp

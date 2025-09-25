@@ -62,6 +62,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppOutlinedTextField
+import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,12 +83,9 @@ fun PriceProposalScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            PriceProposalTopAppBar(
-                navController = navController,
-                haptic = haptic,
-                dimensions = dimensions,
-                colorScheme = colorScheme,
-                typography = typography
+            GeneralHeaderBar(
+                title = "Proponi prezzo",
+                onBackClick = { navController.popBackStack() }
             )
         },
         bottomBar = {
@@ -161,55 +159,6 @@ fun PriceProposalScreen(
                     typography = typography
                 )
             }
-        }
-    }
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PriceProposalTopAppBar(
-    navController: NavController,
-    haptic: HapticFeedback,
-    dimensions: Dimensions,
-    colorScheme: ColorScheme = MaterialTheme.colorScheme,
-    typography: Typography = MaterialTheme.typography
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
-        // Status Bar con colore TealDeep fisso
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsTopHeight(WindowInsets.statusBars)
-                .background(colorScheme.primaryContainer)
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(colorScheme.primary)
-                .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingMedium),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start,
-        ) {
-            CircularIconActionButton(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    navController.popBackStack()
-                },
-                iconVector = Icons.Default.Close,
-                contentDescription = "Chiudi",
-                backgroundColor = colorScheme.primaryContainer,
-                iconTint = colorScheme.onPrimaryContainer,
-            )
-            Spacer(modifier = Modifier.width(dimensions.spacingSmall))
-            Text(
-                text = "Proponi prezzo",
-                style = typography.titleMedium,
-                color = colorScheme.onPrimary
-            )
         }
     }
 }

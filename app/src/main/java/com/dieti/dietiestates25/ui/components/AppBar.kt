@@ -55,7 +55,7 @@ import com.dieti.dietiestates25.ui.theme.Dimensions
 fun ClickableSearchBar(
     placeholderText: String = "Cerca...",
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
@@ -95,124 +95,124 @@ fun ClickableSearchBar(
     }
 }
 
-    @Composable
-    fun CustomSearchAppBar(
-        searchQuery: String,
-        onSearchQueryChange: (String) -> Unit,
-        onBackPressed: () -> Unit,
-        onClearSearch: () -> Unit,
-        placeholderText: String,
-        modifier: Modifier = Modifier,
-        focusRequester: FocusRequester = remember { FocusRequester() },
-        imeAction: ImeAction = ImeAction.Search,
-        onSearchKeyboardAction: (String) -> Unit = {},
-        onFocusChanged: (hasFocus: Boolean) -> Unit = {}
+@Composable
+fun CustomSearchAppBar(
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onBackPressed: () -> Unit,
+    onClearSearch: () -> Unit,
+    placeholderText: String,
+    modifier: Modifier = Modifier,
+    focusRequester: FocusRequester = remember { FocusRequester() },
+    imeAction: ImeAction = ImeAction.Search,
+    onSearchKeyboardAction: (String) -> Unit = {},
+    onFocusChanged: (hasFocus: Boolean) -> Unit = {},
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = colorScheme.primary,
+        shadowElevation = Dimensions.elevationMedium
     ) {
-        val colorScheme = MaterialTheme.colorScheme
-        val typography = MaterialTheme.typography
-
-        Surface(
-            modifier = modifier.fillMaxWidth(),
-            color = colorScheme.primary,
-            shadowElevation = Dimensions.elevationMedium
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                // Aggiungi padding verticale all'intera Row. Questo ingrandirà la barra.
+                .padding(
+                    horizontal = Dimensions.spacingSmall, // Padding ai lati della barra
+                    vertical = Dimensions.spacingSmall    // Padding sopra e sotto il contenuto (es. 8dp + 8dp)
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            // Spazio tra IconButton e TextField gestito da Arrangement.spacedBy
+            horizontalArrangement = Arrangement.spacedBy(Dimensions.spacingSmall)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    // Aggiungi padding verticale all'intera Row. Questo ingrandirà la barra.
-                    .padding(
-                        horizontal = Dimensions.spacingSmall, // Padding ai lati della barra
-                        vertical = Dimensions.spacingSmall    // Padding sopra e sotto il contenuto (es. 8dp + 8dp)
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                // Spazio tra IconButton e TextField gestito da Arrangement.spacedBy
-                horizontalArrangement = Arrangement.spacedBy(Dimensions.spacingSmall)
+            IconButton(
+                onClick = onBackPressed,
+                modifier = Modifier // Rimosso padding orizzontale specifico, gestito da Row
+                    .size(Dimensions.iconSizeLarge + Dimensions.spacingSmall) // Es. 44dp
+                    .background(colorScheme.primaryContainer.copy(alpha = 0.3f), CircleShape)
             ) {
-                IconButton(
-                    onClick = onBackPressed,
-                    modifier = Modifier // Rimosso padding orizzontale specifico, gestito da Row
-                        .size(Dimensions.iconSizeLarge + Dimensions.spacingSmall) // Es. 44dp
-                        .background(colorScheme.primaryContainer.copy(alpha = 0.3f), CircleShape)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Indietro",
-                        tint = colorScheme.onPrimary,
-                        modifier = Modifier.size(Dimensions.iconSizeMedium)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Indietro",
+                    tint = colorScheme.onPrimary,
+                    modifier = Modifier.size(Dimensions.iconSizeMedium)
+                )
+            }
 
-                TextField(
-                    value = searchQuery,
-                    onValueChange = onSearchQueryChange,
-                    placeholder = {
-                        Text(
-                            text = placeholderText,
-                            style = typography.bodyLarge,
-                            color = colorScheme.onPrimary.copy(alpha = 0.7f)
-                        )
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        // Rimuoviamo l'altezza fissa dal TextField.
-                        // La sua altezza sarà determinata intrinsecamente dal testo e dal padding interno di TextField,
-                        // e sarà centrata verticalmente dalla Row.
-                        // Per assicurare che non sia troppo "schiacciato" se la Row è molto bassa:
-                        .defaultMinSize(minHeight = Dimensions.buttonHeight - Dimensions.spacingMedium) // Es. 40dp altezza minima desiderata per il TextField
-                        .clip(CircleShape) // O RoundedCornerShape(Dimensions.cornerRadiusLarge) per un aspetto più da "pillola"
-                        .background(colorScheme.surface.copy(alpha = 0.15f))
-                        .focusRequester(focusRequester)
-                        .onFocusChanged { focusState -> onFocusChanged(focusState.isFocused) },
-                        colors = TextFieldDefaults.colors(
-                        focusedContainerColor = colorScheme.surfaceDim,
-                        unfocusedContainerColor = colorScheme.surfaceDim,
-                        disabledContainerColor = colorScheme.surfaceDim,
-                        cursorColor = colorScheme.onPrimary,
-                        focusedIndicatorColor = colorScheme.surfaceDim,
-                        unfocusedIndicatorColor = colorScheme.surfaceDim,
-                        disabledIndicatorColor = colorScheme.surfaceDim,
-                        errorIndicatorColor = colorScheme.surfaceDim,
-                        focusedTextColor = colorScheme.onPrimary,
-                        unfocusedTextColor = colorScheme.onPrimary,
-                        disabledTextColor = colorScheme.onPrimary.copy(alpha = 0.38f),
-                        focusedPlaceholderColor = colorScheme.onPrimary.copy(alpha = 0.7f),
-                        unfocusedPlaceholderColor = colorScheme.onPrimary.copy(alpha = 0.7f)
-                    ),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = imeAction),
-                    keyboardActions = KeyboardActions(
-                        onSearch = { onSearchKeyboardAction(searchQuery) },
-                        onDone = { onSearchKeyboardAction(searchQuery) }
-                    ),
-                    trailingIcon = {
-                        if (searchQuery.isNotBlank()) {
-                            IconButton(onClick = onClearSearch) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Cancella",
-                                    tint = colorScheme.onPrimary.copy(alpha = 0.7f)
-                                )
-                            }
-                        } else {
+            TextField(
+                value = searchQuery,
+                onValueChange = onSearchQueryChange,
+                placeholder = {
+                    Text(
+                        text = placeholderText,
+                        style = typography.bodyLarge,
+                        color = colorScheme.onPrimary.copy(alpha = 0.7f)
+                    )
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    // Rimuoviamo l'altezza fissa dal TextField.
+                    // La sua altezza sarà determinata intrinsecamente dal testo e dal padding interno di TextField,
+                    // e sarà centrata verticalmente dalla Row.
+                    // Per assicurare che non sia troppo "schiacciato" se la Row è molto bassa:
+                    .defaultMinSize(minHeight = Dimensions.buttonHeight - Dimensions.spacingMedium) // Es. 40dp altezza minima desiderata per il TextField
+                    .clip(CircleShape) // O RoundedCornerShape(Dimensions.cornerRadiusLarge) per un aspetto più da "pillola"
+                    .background(colorScheme.surface.copy(alpha = 0.15f))
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { focusState -> onFocusChanged(focusState.isFocused) },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = colorScheme.surfaceDim,
+                    unfocusedContainerColor = colorScheme.surfaceDim,
+                    disabledContainerColor = colorScheme.surfaceDim,
+                    cursorColor = colorScheme.onPrimary,
+                    focusedIndicatorColor = colorScheme.surfaceDim,
+                    unfocusedIndicatorColor = colorScheme.surfaceDim,
+                    disabledIndicatorColor = colorScheme.surfaceDim,
+                    errorIndicatorColor = colorScheme.surfaceDim,
+                    focusedTextColor = colorScheme.onPrimary,
+                    unfocusedTextColor = colorScheme.onPrimary,
+                    disabledTextColor = colorScheme.onPrimary.copy(alpha = 0.38f),
+                    focusedPlaceholderColor = colorScheme.onPrimary.copy(alpha = 0.7f),
+                    unfocusedPlaceholderColor = colorScheme.onPrimary.copy(alpha = 0.7f)
+                ),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = imeAction),
+                keyboardActions = KeyboardActions(
+                    onSearch = { onSearchKeyboardAction(searchQuery) },
+                    onDone = { onSearchKeyboardAction(searchQuery) }
+                ),
+                trailingIcon = {
+                    if (searchQuery.isNotBlank()) {
+                        IconButton(onClick = onClearSearch) {
                             Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Cerca",
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cancella",
                                 tint = colorScheme.onPrimary.copy(alpha = 0.7f)
                             )
                         }
-                    },
-                    textStyle = typography.bodyLarge.copy(color = colorScheme.onPrimary)
-                )
-            }
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Cerca",
+                            tint = colorScheme.onPrimary.copy(alpha = 0.7f)
+                        )
+                    }
+                },
+                textStyle = typography.bodyLarge.copy(color = colorScheme.onPrimary)
+            )
         }
     }
+}
 
 @Composable
 fun GeneralHeaderBar(
     title: String,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
-    actions: @Composable RowScope.() -> Unit = {}
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
@@ -265,7 +265,7 @@ fun GeneralHeaderBar(
                     color = colorScheme.onPrimary,
                     style = typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
+                    textAlign = TextAlign.Left,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -310,7 +310,7 @@ fun AppTopBar(
     titleColor: Color? = null,
     colorScheme: ColorScheme = MaterialTheme.colorScheme,
     typography: Typography = MaterialTheme.typography,
-    dimensions: Dimensions = Dimensions
+    dimensions: Dimensions = Dimensions,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth()

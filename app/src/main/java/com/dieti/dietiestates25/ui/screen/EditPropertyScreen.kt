@@ -46,6 +46,7 @@ import com.dieti.dietiestates25.ui.components.AppOutlinedTextField
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
+import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
@@ -134,6 +135,11 @@ fun EditPropertyScreen(
 
     Scaffold(
         topBar = {
+            GeneralHeaderBar(
+                title = "Modifica Immobile",
+                onBackClick = { navController.popBackStack() },
+                actions = {}
+            )
             EditPropertyTopAppBar(
                 onBackClick = {
                     if (isEditing && isModified) {
