@@ -11,7 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BusinessCenter
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
@@ -46,6 +45,7 @@ import com.dieti.dietiestates25.ui.components.CalendarView
 import com.dieti.dietiestates25.ui.components.TimeSlotSelector
 import java.time.LocalDate
 import android.util.Log
+import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +63,8 @@ fun AppointmentDetailScreen(
 
     var showRescheduleDialog by remember { mutableStateOf(false) }
 
+    var showMenu by remember { mutableStateOf(false) }
+
     LaunchedEffect(appointmentId) {
         viewModel.loadAppointmentDetail(appointmentId)
     }
@@ -78,17 +80,56 @@ fun AppointmentDetailScreen(
 
     Scaffold(
         topBar = {
-            AppointmentDetailTopAppBar(
-                navController = navController,
-                appointmentTitle = appointmentDetail?.title ?: "Dettaglio Appuntamento",
-                colorScheme = colorScheme,
-                typography = typography,
-                dimensions = dimensions,
-                onReschedule = {
-                    Log.d("AppointmentDetailScreen", "Reschedule button clicked. Opening dialog.")
-                    showRescheduleDialog = true
-                },
-                onCancel = viewModel::cancelAppointment // Questa chiamata ora triggererà l'evento
+            GeneralHeaderBar(
+                title = "Dettaglio Appuntamento",
+                onBackClick = { navController.popBackStack() },
+                actions = {
+                    Box (
+                        modifier = Modifier.padding(end = dimensions.paddingSmall)
+                    )  {
+                        CircularIconActionButton(
+                            onClick = { showMenu = !showMenu },
+                            iconVector = Icons.Filled.MoreVert,
+                            contentDescription = "Altre opzioni",
+                            backgroundColor = colorScheme.primaryContainer,
+                            iconTint = colorScheme.onPrimaryContainer,
+                            buttonSize = dimensions.iconSizeLarge,
+                            iconSize = dimensions.iconSizeMedium,
+                        )
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Riprogramma") },
+                                onClick = {
+                                    showRescheduleDialog = true
+                                    showMenu = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Filled.EditCalendar,
+                                        contentDescription = "Riprogramma"
+                                    )
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Annulla Appuntamento", color = colorScheme.error) },
+                                onClick = {
+                                    viewModel.cancelAppointment()
+                                    showMenu = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Filled.Delete,
+                                        contentDescription = "Annulla",
+                                        tint = colorScheme.error
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -140,98 +181,6 @@ fun AppointmentDetailScreen(
     }
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AppointmentDetailTopAppBar(
-    navController: NavController,
-    appointmentTitle: String,
-    colorScheme: ColorScheme,
-    typography: Typography,
-    dimensions: Dimensions,
-    onReschedule: () -> Unit,
-    onCancel: () -> Unit
-) {
-    var showMenu by remember { mutableStateOf(false) }
-    Column (
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsTopHeight(WindowInsets.statusBars)
-                .background(colorScheme.primaryContainer)
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(colorScheme.primary)
-                .padding(
-                    horizontal = dimensions.paddingMedium,
-                    vertical = dimensions.paddingMedium
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                CircularIconActionButton(
-                    onClick = { navController.popBackStack() },
-                    iconVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Indietro",
-                    backgroundColor = colorScheme.primaryContainer,
-                    iconTint = colorScheme.onPrimaryContainer,
-                    buttonSize = dimensions.iconSizeLarge,
-                    iconSize = dimensions.iconSizeMedium,
-                )
-                Spacer(modifier = Modifier.width(dimensions.spacingSmall))
-                Text(
-                    text = appointmentTitle,
-                    style = typography.titleLarge,
-                    color = colorScheme.onPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-            }
-            Box {
-                CircularIconActionButton(
-                    onClick = { showMenu = !showMenu },
-                    iconVector = Icons.Filled.MoreVert,
-                    contentDescription = "Altre opzioni",
-                    backgroundColor = colorScheme.primaryContainer,
-                    iconTint = colorScheme.onPrimaryContainer,
-                    buttonSize = dimensions.iconSizeLarge,
-                    iconSize = dimensions.iconSizeMedium,
-                )
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Riprogramma") },
-                        onClick = {
-                            onReschedule()
-                            showMenu = false
-                        },
-                        leadingIcon = { Icon(Icons.Filled.EditCalendar, contentDescription = "Riprogramma") }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Annulla Appuntamento", color = colorScheme.error) },
-                        onClick = {
-                            onCancel() // Chiama la lambda per cancellare
-                            showMenu = false
-                        },
-                        leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = "Annulla", tint = colorScheme.error) }
-                    )
-                }
-            }
-        }
-    }
-}
-
 @Composable
 private fun AppointmentDetailContent(
     modifier: Modifier = Modifier,
@@ -252,12 +201,6 @@ private fun AppointmentDetailContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(
-                    RoundedCornerShape(
-                        topStart = dimensions.cornerRadiusLarge,
-                        topEnd = dimensions.cornerRadiusLarge
-                    )
-                )
                 .background(colorScheme.background)
                 .padding(dimensions.paddingMedium)
                 .verticalScroll(rememberScrollState()),

@@ -4,8 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -13,11 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppPropertyCard
 import com.dieti.dietiestates25.ui.components.AppPropertyViewButton
+import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 import com.dieti.dietiestates25.ui.model.modelsource.sampleListingProperties // Using sample data
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
@@ -45,26 +43,9 @@ fun YourPropertyScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Le Tue Proprietà",
-                        style = typography.titleLarge,
-                        color = colorScheme.onPrimary
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Indietro",
-                            tint = colorScheme.onPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorScheme.primary
-                )
+            GeneralHeaderBar(
+                title = "Le tue proprietà",
+                onBackClick = { navController.popBackStack() }
             )
         }
     ) { innerPadding ->
@@ -104,7 +85,7 @@ fun YourPropertyScreen(
                         AppPropertyCard(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(250.dp),
+                                .height(dimensions.propertyCardHeight),
                             price = property.price,
                             imageResId = property.imageRes,
                             address = property.location,

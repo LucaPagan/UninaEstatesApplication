@@ -20,6 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppEmptyDisplayView
+import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 
 @OptIn(ExperimentalMaterial3Api::class) // Necessario per TopAppBar
@@ -43,31 +44,9 @@ fun RequestsScreen(
 
     Scaffold(
         topBar = {
-            // Sostituzione di AppTopBar con la TopAppBar standard
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsTopHeight(WindowInsets.statusBars)
-                    .background(colorScheme.primaryContainer)
-            )
-            TopAppBar(
-                title = {
-                    Text("Le Tue Richieste")
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Torna indietro"
-                        )
-                    }
-                },
-                // Imposta i colori per coerenza con il tema dell'app
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorScheme.primaryContainer,
-                    titleContentColor = colorScheme.onPrimaryContainer,
-                    navigationIconContentColor = colorScheme.onPrimaryContainer
-                )
+            GeneralHeaderBar(
+                title = "Le tue richieste",
+                onBackClick = { navController.popBackStack() }
             )
         },
     ) { paddingValues ->
