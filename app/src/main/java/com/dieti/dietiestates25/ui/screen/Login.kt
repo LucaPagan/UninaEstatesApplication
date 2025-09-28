@@ -13,7 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.graphics.Color                // <-- IMPORT NECESSARIO
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,13 +29,14 @@ fun LoginScreenPreviewOnly() {
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(false) }
 
+    // Questi si adattano automaticamente al tema chiaro/scuro
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppGradients.primaryToBackground) // gradiente come HomeScreen
+            .background(AppGradients.primaryToBackground)
             .padding(Dimensions.paddingLarge)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -47,6 +48,7 @@ fun LoginScreenPreviewOnly() {
             modifier = Modifier.padding(bottom = Dimensions.spacingLarge)
         )
 
+        // Bottoni Login e Sign Up
         Row(modifier = Modifier.padding(bottom = Dimensions.spacingLarge)) {
             Button(
                 onClick = {},
@@ -59,10 +61,11 @@ fun LoginScreenPreviewOnly() {
                 onClick = {},
                 colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primaryContainer)
             ) {
-                Text("Sign Up", color = colorScheme.onPrimaryContainer)
+                Text("Registrati", color = colorScheme.onPrimaryContainer)
             }
         }
 
+        // Campo Email
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
@@ -79,6 +82,7 @@ fun LoginScreenPreviewOnly() {
                 .padding(bottom = Dimensions.spacingSmall)
         )
 
+        // Campo Password
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -103,6 +107,7 @@ fun LoginScreenPreviewOnly() {
                 .padding(bottom = Dimensions.spacingSmall)
         )
 
+        // Checkbox Remember Me
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -114,9 +119,10 @@ fun LoginScreenPreviewOnly() {
                 onCheckedChange = { rememberMe = it },
                 colors = CheckboxDefaults.colors(checkedColor = colorScheme.primary)
             )
-            Text("Remember me", color = colorScheme.onBackground)
+            Text("Ricordami", color = colorScheme.onBackground)
         }
 
+        // Bottone Login
         Button(
             onClick = {},
             colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary),
@@ -127,16 +133,18 @@ fun LoginScreenPreviewOnly() {
             Text("Login", color = colorScheme.onPrimary)
         }
 
+        // Separatore
         Text(
-            "OR",
+            "Oppure",
             color = colorScheme.onBackground.copy(alpha = 0.6f),
             style = typography.bodyMedium,
             modifier = Modifier.padding(bottom = Dimensions.spacingMedium)
         )
 
+        // Bottone Apple → SEMPRE NERO
         Button(
             onClick = {},
-            colors = ButtonDefaults.buttonColors(containerColor = colorScheme.onBackground),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Black), // forzato nero
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = Dimensions.spacingSmall)
@@ -149,12 +157,13 @@ fun LoginScreenPreviewOnly() {
                     .padding(end = Dimensions.spacingSmall),
                 contentScale = ContentScale.Fit
             )
-            Text("Continue with Apple", color = colorScheme.background)
+            Text("Continua con Apple", color = Color.White) // testo bianco su sfondo nero
         }
 
+        // Bottone Google → SEMPRE BIANCO
         Button(
             onClick = {},
-            colors = ButtonDefaults.buttonColors(containerColor = colorScheme.background),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.White), // forzato bianco
             border = BorderStroke(Dimensions.borderStrokeSmall, colorScheme.onBackground.copy(alpha = 0.3f)),
             modifier = Modifier
                 .fillMaxWidth()
@@ -168,9 +177,10 @@ fun LoginScreenPreviewOnly() {
                     .padding(end = Dimensions.spacingSmall),
                 contentScale = ContentScale.Fit
             )
-            Text("Continue with Google", color = colorScheme.onBackground)
+            Text("Continua con Google", color = Color.Black) // testo nero su sfondo bianco
         }
 
+        // Bottone Facebook
         Button(
             onClick = {},
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1877F2)),
@@ -184,12 +194,13 @@ fun LoginScreenPreviewOnly() {
                     .padding(end = Dimensions.spacingSmall),
                 contentScale = ContentScale.Fit
             )
-            Text("Continue with Facebook", color = Color.White)
+            Text("Continua con Facebook", color = Color.White)
         }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Login Light")
+@Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, name = "Login Dark")
 @Composable
 fun LoginScreenPreview() {
     DietiEstatesTheme {

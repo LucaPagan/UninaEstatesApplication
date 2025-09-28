@@ -38,13 +38,14 @@ fun RegisterScreenPreviewOnly() {
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Logo App al posto del testo
+        // Logo App
         AppIconDisplay(
             size = Dimensions.logoLarge,
             shapeRadius = Dimensions.cornerRadiusMedium,
             modifier = Modifier.padding(bottom = Dimensions.spacingLarge)
         )
 
+        // Bottoni Login/Sign Up
         Row(modifier = Modifier.padding(bottom = Dimensions.spacingLarge)) {
             Button(
                 onClick = {},
@@ -57,75 +58,54 @@ fun RegisterScreenPreviewOnly() {
                 onClick = {},
                 colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primaryContainer)
             ) {
-                Text("Sign Up", color = colorScheme.onPrimaryContainer)
+                Text("Registrati", color = colorScheme.onPrimaryContainer)
             }
         }
 
-        // --- TextFields ---
+        // TextFields
+        val fieldModifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = Dimensions.spacingSmall)
+
+        val fieldColors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = colorScheme.secondary.copy(alpha = 0.2f),
+            unfocusedContainerColor = colorScheme.secondary.copy(alpha = 0.2f),
+            focusedTextColor = colorScheme.onBackground,
+            unfocusedTextColor = colorScheme.onBackground
+        )
+
         OutlinedTextField(
             value = nome,
             onValueChange = { nome = it },
             label = { Text("Nome", color = colorScheme.onBackground) },
             singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = colorScheme.secondary.copy(alpha = 0.2f),
-                unfocusedContainerColor = colorScheme.secondary.copy(alpha = 0.2f),
-                focusedTextColor = colorScheme.onBackground,
-                unfocusedTextColor = colorScheme.onBackground
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = Dimensions.spacingSmall)
+            colors = fieldColors,
+            modifier = fieldModifier
         )
-
         OutlinedTextField(
             value = cognome,
             onValueChange = { cognome = it },
             label = { Text("Cognome", color = colorScheme.onBackground) },
             singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = colorScheme.secondary.copy(alpha = 0.2f),
-                unfocusedContainerColor = colorScheme.secondary.copy(alpha = 0.2f),
-                focusedTextColor = colorScheme.onBackground,
-                unfocusedTextColor = colorScheme.onBackground
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = Dimensions.spacingSmall)
+            colors = fieldColors,
+            modifier = fieldModifier
         )
-
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email", color = colorScheme.onBackground) },
             singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = colorScheme.secondary.copy(alpha = 0.2f),
-                unfocusedContainerColor = colorScheme.secondary.copy(alpha = 0.2f),
-                focusedTextColor = colorScheme.onBackground,
-                unfocusedTextColor = colorScheme.onBackground
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = Dimensions.spacingSmall)
+            colors = fieldColors,
+            modifier = fieldModifier
         )
-
         OutlinedTextField(
             value = numero,
             onValueChange = { numero = it },
             label = { Text("Numero", color = colorScheme.onBackground) },
             singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = colorScheme.secondary.copy(alpha = 0.2f),
-                unfocusedContainerColor = colorScheme.secondary.copy(alpha = 0.2f),
-                focusedTextColor = colorScheme.onBackground,
-                unfocusedTextColor = colorScheme.onBackground
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = Dimensions.spacingSmall)
+            colors = fieldColors,
+            modifier = fieldModifier
         )
-
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -135,17 +115,11 @@ fun RegisterScreenPreviewOnly() {
             trailingIcon = {
                 Icon(Icons.Default.Visibility, contentDescription = null, tint = colorScheme.onBackground)
             },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = colorScheme.secondary.copy(alpha = 0.2f),
-                unfocusedContainerColor = colorScheme.secondary.copy(alpha = 0.2f),
-                focusedTextColor = colorScheme.onBackground,
-                unfocusedTextColor = colorScheme.onBackground
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = Dimensions.spacingSmall)
+            colors = fieldColors,
+            modifier = fieldModifier
         )
 
+        // Bottone Register
         Button(
             onClick = {},
             colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary),
@@ -153,9 +127,10 @@ fun RegisterScreenPreviewOnly() {
                 .fillMaxWidth()
                 .padding(bottom = Dimensions.spacingMedium)
         ) {
-            Text("Register", color = colorScheme.onPrimary)
+            Text("Registra", color = colorScheme.onPrimary)
         }
 
+        // Checkbox Remember Me
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -167,12 +142,13 @@ fun RegisterScreenPreviewOnly() {
                 onCheckedChange = { rememberMe = it },
                 colors = CheckboxDefaults.colors(checkedColor = colorScheme.primary)
             )
-            Text("Remember me", color = colorScheme.onBackground)
+            Text("Ricordami", color = colorScheme.onBackground)
         }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Register Light")
+@Preview(showBackground = true, uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, name = "Register Dark")
 @Composable
 fun RegisterScreenPreview() {
     DietiEstatesTheme {

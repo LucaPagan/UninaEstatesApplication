@@ -377,7 +377,7 @@ private fun ManagerTabButton(
     ) {
         Text(
             text = text,
-            style = typography.labelLarge.copy(
+            style = typography.labelMedium.copy(
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
             ),
             color = if (isSelected) colorScheme.onPrimary else colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
