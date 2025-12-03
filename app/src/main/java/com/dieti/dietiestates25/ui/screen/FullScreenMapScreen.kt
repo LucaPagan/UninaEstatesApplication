@@ -1,6 +1,5 @@
 package com.dieti.dietiestates25.ui.screen
 
-import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -13,13 +12,10 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import android.Manifest
 import android.content.res.Configuration
 import android.util.Log
-import androidx.compose.foundation.background
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -28,16 +24,12 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import com.dieti.dietiestates25.ui.components.AppCustomMapMarker
+import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -92,41 +84,10 @@ fun FullScreenMapScreen(
 
     Scaffold(
         topBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                // Status Bar con colore TealDeep fisso
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .windowInsetsTopHeight(WindowInsets.statusBars)
-                        .background(colorScheme.primaryContainer)
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(colorScheme.primary)
-                        .padding(
-                            horizontal = dimensions.paddingMedium,
-                            vertical = dimensions.paddingMedium
-                        ),
-                    verticalAlignment = Alignment.CenterVertically, // Vertically center all items in this Row
-                    horizontalArrangement = Arrangement.Start, // Align items to the start (left)
-                ) {
-                    CircularIconActionButton(
-                        onClick = { navController.popBackStack() },
-                        iconVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Indietro",
-                        backgroundColor = colorScheme.primaryContainer,
-                        iconTint = colorScheme.onPrimary,
-                        buttonSize = dimensions.iconSizeExtraLarge,
-                        iconSize = dimensions.iconSizeMedium
-                    )
-
-                    Text("Mappa Proprietà", color = colorScheme.onPrimary)
-                }
-            }
+            GeneralHeaderBar(
+                title = "Mappa Proprietà",
+                onBackClick = { navController.popBackStack() }
+            )
         }
     ) { innerPadding ->
         Box(

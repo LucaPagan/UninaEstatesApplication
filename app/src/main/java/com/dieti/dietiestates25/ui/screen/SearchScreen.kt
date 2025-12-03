@@ -117,14 +117,6 @@ fun SearchScreen(navController: NavController, idUtente: String) {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Status Bar con colore TealDeep fisso
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsTopHeight(WindowInsets.statusBars)
-                .background(TealDeep)
-        )
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
