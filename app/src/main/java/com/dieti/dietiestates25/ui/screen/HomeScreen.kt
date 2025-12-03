@@ -3,31 +3,27 @@ package com.dieti.dietiestates25.ui.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.ui.components.AppIconDisplay
 import com.dieti.dietiestates25.ui.components.AppSecondaryButton
 import com.dieti.dietiestates25.ui.components.ClickableSearchBar
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
 import com.dieti.dietiestates25.ui.components.AppPropertyCard
+import com.dieti.dietiestates25.ui.components.AppTopBar
 import com.dieti.dietiestates25.ui.components.PropertyShowcaseSection
 import com.dieti.dietiestates25.ui.model.modelsource.sampleListingProperties
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.AppGradients
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.ui.theme.TealDeep
 
 @Composable
 fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
@@ -38,11 +34,12 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
 
     Scaffold(
         topBar = {
-            HomeScreenHeader(
-                idUtente = idUtente,
-                dimensions = dimensions,
+            AppTopBar(
+                title = "Danilo",
+                showAppIcon = true,
+                colorScheme = colorScheme,
                 typography = typography,
-                colorScheme = colorScheme
+                dimensions = dimensions
             )
         },
         bottomBar = {
@@ -128,67 +125,6 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                     )
                 }
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
-            }
-        }
-    }
-}
-
-@Composable
-fun HomeScreenHeader(
-    idUtente: String,
-    dimensions: Dimensions,
-    typography: Typography,
-    colorScheme: ColorScheme
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        // Status Bar con colore TealDeep fisso
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsTopHeight(WindowInsets.statusBars)
-                .background(TealDeep)
-        )
-
-        // Header content con primary color e angoli arrotondati
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(colorScheme.primary)
-                .clip(
-                    RoundedCornerShape(
-                        bottomStart = dimensions.cornerRadiusLarge,
-                        bottomEnd = dimensions.cornerRadiusLarge
-                    )
-                )
-                .padding(horizontal = dimensions.paddingLarge)
-                .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingLarge),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AppIconDisplay(
-                    size = dimensions.logoMedium,
-                    shapeRadius = dimensions.cornerRadiusMedium
-                )
-                Spacer(modifier = Modifier.width(dimensions.spacingMedium))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Bentornato",
-                        color = colorScheme.onPrimary.copy(alpha = 0.8f),
-                        style = typography.titleSmall
-                    )
-                    Text(
-                        text = idUtente.ifEmpty { "Utente" },
-                        color = colorScheme.onPrimary,
-                        style = typography.titleLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
         }
     }

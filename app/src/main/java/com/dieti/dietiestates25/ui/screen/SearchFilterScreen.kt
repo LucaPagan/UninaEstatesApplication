@@ -31,7 +31,6 @@ import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.AppGradients
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.ui.theme.TealDeep
 
 @Composable
 fun SearchFilterScreen(

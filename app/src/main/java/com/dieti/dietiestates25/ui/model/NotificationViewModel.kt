@@ -71,6 +71,7 @@ class NotificationsViewModel : ViewModel() {
     }
 
     fun setCurrentTab(tab: NotificationTab) {
+
         _currentTab.value = tab
     }
 
