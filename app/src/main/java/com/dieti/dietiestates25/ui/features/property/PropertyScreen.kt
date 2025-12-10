@@ -1,0 +1,676 @@
+package com.dieti.dietiestates25.ui.features.property
+
+import com.dieti.dietiestates25.R
+import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.components.CircularIconActionButton
+import com.dieti.dietiestates25.ui.components.AppPrimaryButton
+import com.dieti.dietiestates25.ui.components.AppSecondaryButton
+import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.components.AppPropertyCard
+import com.dieti.dietiestates25.ui.components.PropertyShowcaseSection
+import com.dieti.dietiestates25.data.model.modelsource.sampleListingProperties
+import com.dieti.dietiestates25.ui.components.AppCustomMapMarker // Assuming this component exists from previous context
+
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineScope
+
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.CameraPositionState
+import com.google.maps.android.compose.MapType
+import com.google.maps.android.compose.MarkerComposable
+
+import android.content.Intent
+import android.content.res.Configuration
+import android.content.Context
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.core.net.toUri
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.ui.geometry.Offset
+import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun PropertyScreen(
+    navController: NavController
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val context = LocalContext.current
+    val dimensions = Dimensions
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val propertyImages = listOf(
+        R.drawable.property1,
+        R.drawable.property2,
+    )
+
+    val totalImages = propertyImages.size
+    val pagerState = rememberPagerState(initialPage = 0) { totalImages }
+
+    val propertyCoordinates = LatLng(40.8518, 14.2681) // Esempio Napoli
+    var isMapInteractive by remember { mutableStateOf(false) }
+    var isPageScrollEnabled by remember { mutableStateOf(true) }
+
+    val initialZoomMiniMap = 12f
+    val zoomForFullscreenNavigation = 15f
+
+    val cameraPositionStateMiniMap = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(propertyCoordinates, initialZoomMiniMap)
+    }
+
+    val onMapInteractionStart = {
+        if (!isMapInteractive) {
+            isMapInteractive = true
+            isPageScrollEnabled = false
+        }
+    }
+
+    val onMapInteractionEnd = {
+        if (isMapInteractive) {
+            isMapInteractive = false
+            isPageScrollEnabled = true
+        }
+    }
+
+    Scaffold { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(isMapInteractive) {
+                    if (isMapInteractive) {
+                        detectTapGestures(
+                            onTap = { onMapInteractionEnd() }
+                        )
+                    }
+                }
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                userScrollEnabled = isPageScrollEnabled
+            ) {
+                item {
+                    PropertyImagePager(pagerState, propertyImages, coroutineScope, colorScheme, typography, dimensions)
+                }
+                item {
+                    PropertyPriceAndLocation("€129.500", "Appartamento Napoli, Via Francesco Girardi 90", colorScheme, typography, dimensions)
+                }
+                item {
+                    // La sezione delle caratteristiche ora mostra tutto con le icone
+                    PropertyFeaturesRow(colorScheme, typography, dimensions)
+                }
+                item {
+                    PropertyDescriptionSection("Scopri questo accogliente appartamento situato nel cuore di Napoli, ideale per chi cerca comfort e comodità. L’immobile, situato al terzo piano di un edificio con ascensore, è perfetto per famiglie o coppie alla ricerca di uno spazio ben organizzato e luminoso.", colorScheme, typography, dimensions)
+                }
+                item {
+                    MiniMapSection(
+                        propertyCoordinates = propertyCoordinates,
+                        cameraPositionState = cameraPositionStateMiniMap,
+                        isMapInteractive = isMapInteractive,
+                        onMapInteractionStart = onMapInteractionStart,
+                        onFullscreenClick = {
+                            // Assicurati che il tuo Screen object abbia questa funzione o una simile
+                            navController.navigate(
+                                Screen.FullScreenMapScreen.withPosition(
+                                    latitude = propertyCoordinates.latitude,
+                                    longitude = propertyCoordinates.longitude,
+                                    zoom = zoomForFullscreenNavigation
+                                )
+                            )
+                        },
+                        colorScheme = colorScheme,
+                        typography = typography,
+                        dimensions = dimensions
+                    )
+                }
+                item {
+                    AgentInfoSection("Agenzia Gianfranco Lombardi", "081 192 6079", "VIA G. PORZIO ISOLA Es 3, Napoli (NA), Campania, 80143", colorScheme, typography, dimensions)
+                }
+                item {
+                    ActionButtonsSection(navController, "081 192 6079", typography, context, dimensions)
+                }
+                item {
+                    ReportAdSection(colorScheme, typography, dimensions)
+                }
+                item {
+                    PropertyShowcaseSection(
+                        title = "Appartamenti Simili",
+                        items = sampleListingProperties,
+                        itemContent = { property ->
+                            AppPropertyCard(
+                                modifier = Modifier
+                                    .width(dimensions.propertyCardHeight)
+                                    .height(dimensions.circularIconSize),
+                                price = property.price,
+                                imageResId = property.imageRes,
+                                address = property.location,
+                                details = listOf(property.type),
+                                onClick = {
+                                    navController.navigate(Screen.PropertyScreen.route)
+                                },
+                                actionButton = null,
+                                horizontalMode = false,
+                                imageHeightVerticalRatio = 0.55f,
+                                elevationDp = Dimensions.elevationSmall
+                            )
+                        },
+                        onSeeAllClick = {
+                            navController.navigate(
+                                Screen.ApartmentListingScreen.buildRoute(
+                                    idUtentePath = "",
+                                    comunePath = "",
+                                    ricercaPath = ""
+                                )
+                            )
+                        },
+                        listContentPadding = PaddingValues(horizontal = dimensions.paddingLarge)
+                    )
+                }
+                item {
+                    Spacer(Modifier.height(dimensions.paddingLarge))
+                }
+            }
+
+            PropertyTopAppBar(colorScheme, navController, dimensions)
+        }
+    }
+}
+
+@Composable
+private fun MiniMapSection(
+    propertyCoordinates: LatLng,
+    cameraPositionState: CameraPositionState,
+    isMapInteractive: Boolean,
+    onMapInteractionStart: () -> Unit,
+    onFullscreenClick: () -> Unit,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingLarge)
+    ) {
+        Text(
+            text = "Mappa e dintorni",
+            style = typography.titleMedium,
+            color = colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = dimensions.spacingMedium)
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(dimensions.circularIconSize)
+                .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
+        ) {
+            GoogleMap(
+                modifier = Modifier.matchParentSize().background(colorScheme.surfaceVariant),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(
+                    mapType = MapType.NORMAL,
+                    isBuildingEnabled = true,
+                    isTrafficEnabled = false,
+                    minZoomPreference = 13f,
+                    maxZoomPreference = 18f
+                ),
+                uiSettings = MapUiSettings(
+                    zoomControlsEnabled = false,
+                    mapToolbarEnabled = false,
+                    myLocationButtonEnabled = false,
+                    scrollGesturesEnabled = isMapInteractive,
+                    zoomGesturesEnabled = isMapInteractive,
+                    tiltGesturesEnabled = isMapInteractive,
+                    rotationGesturesEnabled = isMapInteractive
+                ),
+                onMapClick = {
+                    if (!isMapInteractive) {
+                        onMapInteractionStart()
+                    }
+                }
+            ) {
+                MarkerComposable(
+                    state = MarkerState(position = propertyCoordinates),
+                    title = "Posizione Proprietà",
+                    anchor = Offset(0.5f, 0.5f)
+                ) {
+                    // Assumendo che AppCustomMapMarker sia il Composable UI per l'icona
+                    AppCustomMapMarker(
+                        tint = colorScheme.primary,
+                        iconSize = dimensions.logoSmall,
+                        dimensions = dimensions
+                    )
+                }
+            }
+
+            if (!isMapInteractive) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onMapInteractionStart
+                        )
+                        .background(Color.Black.copy(alpha = 0.4f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Clicca per interagire con la mappa",
+                        color = colorScheme.onPrimary,
+                        style = typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(dimensions.paddingMedium)
+                    )
+                }
+            }
+            CircularIconActionButton(
+                onClick = onFullscreenClick,
+                iconVector = Icons.Filled.Fullscreen,
+                contentDescription = "Mappa a schermo intero",
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(dimensions.spacingSmall),
+                backgroundColor = colorScheme.surface.copy(alpha = 0.8f),
+                iconTint = colorScheme.onSurface
+            )
+        }
+        Text(
+            text = "La mappa mostra un'area di circa 5-10km. I P.O.I. sono indicativi.",
+            style = typography.labelSmall,
+            color = colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = dimensions.spacingSmall)
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PropertyTopAppBar(
+    colorScheme: ColorScheme,
+    navController: NavController,
+    dimensions: Dimensions
+) {
+    // Il tuo codice PropertyTopAppBar qui, non modificato
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(colorScheme.primaryContainer)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingSmall),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CircularIconActionButton(
+                onClick = { navController.popBackStack() },
+                iconVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                backgroundColor = colorScheme.primaryContainer,
+                iconTint = colorScheme.onPrimaryContainer, // Modificato per contrasto
+                buttonSize = dimensions.iconSizeExtraLarge,
+                iconSize = dimensions.iconSizeMedium,
+            )
+            val isFavorite = remember { mutableStateOf(false) }
+            CircularIconActionButton(
+                onClick = { isFavorite.value = !isFavorite.value },
+                iconVector = if (isFavorite.value) Icons.Filled.Star else Icons.Outlined.Star,
+                contentDescription = "Favorite",
+                backgroundColor = colorScheme.primaryContainer,
+                iconTint = if (isFavorite.value) colorScheme.tertiary else colorScheme.onPrimaryContainer,
+                buttonSize = dimensions.iconSizeExtraLarge,
+                iconSize = dimensions.iconSizeMedium,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun PropertyImagePager(
+    pagerState: PagerState,
+    images: List<Int>,
+    coroutineScope: CoroutineScope,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions
+) {
+    // Il tuo codice PropertyImagePager qui, non modificato
+    val totalImages = images.size
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(dimensions.propertyCardHeight)
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            Image(
+                painter = painterResource(id = images[page]),
+                contentDescription = "Property Image ${page + 1}",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(dimensions.paddingMedium),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CircularIconActionButton(
+                onClick = {
+                    coroutineScope.launch {
+                        val targetPage =
+                            if (pagerState.currentPage > 0) pagerState.currentPage - 1 else totalImages - 1
+                        pagerState.animateScrollToPage(targetPage)
+                    }
+                },
+                iconVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                contentDescription = "Previous Image",
+                backgroundColor = colorScheme.onBackground.copy(alpha = 0.6f),
+                iconTint = colorScheme.background,
+                buttonSize = dimensions.iconSizeExtraLarge,
+                iconSize = dimensions.iconSizeMedium
+            )
+            Box(
+                modifier = Modifier
+                    .background(colorScheme.onBackground.copy(alpha = 0.6f), RoundedCornerShape(dimensions.cornerRadiusMedium))
+                    .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingExtraSmall),
+            ) {
+                Text(
+                    text = "${pagerState.currentPage + 1}/$totalImages",
+                    color = colorScheme.background,
+                    style = typography.labelMedium
+                )
+            }
+            CircularIconActionButton(
+                onClick = {
+                    coroutineScope.launch {
+                        val targetPage = if (pagerState.currentPage < totalImages - 1) pagerState.currentPage + 1 else 0
+                        pagerState.animateScrollToPage(targetPage)
+                    }
+                },
+                iconVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "Next Image",
+                backgroundColor = colorScheme.onBackground.copy(alpha = 0.6f),
+                iconTint = colorScheme.background,
+                buttonSize = dimensions.iconSizeExtraLarge,
+                iconSize = dimensions.iconSizeMedium,
+            )
+        }
+    }
+}
+
+@Composable
+fun PropertyPriceAndLocation(
+    price: String,
+    location: String,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions
+) {
+    // Il tuo codice PropertyPriceAndLocation qui, non modificato
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(dimensions.paddingMedium)
+    ) {
+        Text(text = price, style = typography.displayLarge, color = colorScheme.onBackground)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(top = dimensions.paddingExtraSmall)
+        ) {
+            Icon(Icons.Default.LocationOn, "Location", tint = colorScheme.onBackground, modifier = Modifier.size(dimensions.iconSizeSmall))
+            Text(location, style = typography.bodyMedium, color = colorScheme.onBackground, modifier = Modifier.padding(start = dimensions.paddingExtraSmall))
+        }
+    }
+}
+
+// --- SEZIONE CARATTERISTICHE MODIFICATA ---
+@Composable
+fun PropertyFeaturesRow(colorScheme: ColorScheme, typography: Typography, dimensions: Dimensions = Dimensions) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingMedium) // Aggiunto padding verticale
+    ) {
+        Text(
+            text = "Caratteristiche",
+            style = typography.titleMedium,
+            color = colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = dimensions.spacingMedium) // Spazio tra titolo e icone
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround // Distribuisce le icone equamente
+        ) {
+            // I valori sono hardcoded come nell'esempio originale.
+            // In un'app reale, questi sarebbero passati come parametri.
+            PropertyFeature(icon = Icons.Filled.KingBed, label = "2 Letti", colorScheme = colorScheme, typography = typography, dimensions = dimensions)
+            PropertyFeature(icon = Icons.Filled.Bathtub, label = "1 Bagno", colorScheme = colorScheme, typography = typography, dimensions = dimensions)
+            PropertyFeature(icon = Icons.Filled.MeetingRoom, label = "3 Locali", colorScheme = colorScheme, typography = typography, dimensions = dimensions)
+            PropertyFeature(icon = Icons.Filled.SquareFoot, label = "115 m²", colorScheme = colorScheme, typography = typography, dimensions = dimensions)
+        }
+    }
+}
+
+@Composable
+fun PropertyFeature(icon: ImageVector, label: String, colorScheme: ColorScheme, typography: Typography, dimensions: Dimensions) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(dimensions.paddingSmall)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = colorScheme.primary, // --- COLORE ICONA MODIFICATO ---
+            modifier = Modifier.size(dimensions.iconSizeMedium)
+        )
+        Spacer(modifier = Modifier.height(dimensions.spacingSmall))
+        Text(
+            text = label,
+            style = typography.labelMedium,
+            color = colorScheme.onBackground
+        )
+    }
+}
+// --- FINE SEZIONE CARATTERISTICHE MODIFICATA ---
+
+// La vecchia PropertyCharacteristicsSection non è più necessaria.
+/*
+@Composable
+fun PropertyCharacteristicsSection(
+    characteristics: List<String>,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions
+) { ... }
+*/
+
+@Composable
+fun PropertyDescriptionSection(
+    description: String,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions
+) {
+    // Il tuo codice PropertyDescriptionSection qui, non modificato
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(dimensions.paddingMedium)
+    ) {
+        Text("Descrizione", style = typography.titleMedium, color = colorScheme.onBackground, modifier = Modifier.padding(bottom = dimensions.paddingSmall))
+        Text(description, style = typography.bodyMedium, color = colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+fun AgentInfoSection(
+    agencyName: String,
+    phoneNumber: String,
+    address: String,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions
+) {
+    // Il tuo codice AgentInfoSection qui, non modificato
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(dimensions.paddingMedium)
+    ) {
+        Text(
+            text = "Contatta l'Agenzia",
+            style = typography.titleMedium,
+            color = colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = dimensions.spacingMedium)
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.Business, "Agency", tint = colorScheme.primary, modifier = Modifier.size(dimensions.iconSizeMedium))
+            Column(modifier = Modifier.padding(start = dimensions.spacingMedium)) {
+                Text(agencyName, style = typography.titleSmall.copy(fontWeight = FontWeight.Bold) , color = colorScheme.onBackground)
+                Spacer(modifier = Modifier.height(dimensions.spacingExtraSmall))
+                Text("Telefono: $phoneNumber", style = typography.bodyMedium, color = colorScheme.onSurfaceVariant)
+                Text(address, style = typography.bodySmall, color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+            }
+        }
+    }
+}
+
+@Composable
+fun ActionButtonsSection(
+    navController: NavController,
+    phoneNumber: String,
+    typography: Typography,
+    context: Context,
+    dimensions: Dimensions
+) {
+    // Il tuo codice ActionButtonsSection qui, non modificato
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingLarge),
+        verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
+    ) {
+        AppPrimaryButton(
+            onClick = {
+                val dialIntent = Intent(Intent.ACTION_DIAL, "tel:$phoneNumber".toUri())
+                context.startActivity(dialIntent)
+            },
+            text = "Chiama ora", textStyle = typography.labelLarge, icon = Icons.Default.Phone, iconContentDescription = "Call",
+            modifier = Modifier.fillMaxWidth(),
+        )
+        AppSecondaryButton(
+            onClick = { navController.navigate(Screen.AppointmentBookingScreen.route) },
+            text = "Fissa una Visita", icon = Icons.Default.DateRange, iconContentDescription = "Visit",
+            modifier = Modifier.fillMaxWidth(),
+        )
+        AppSecondaryButton(
+            onClick = { navController.navigate(Screen.PriceProposalScreen.route) },
+            text = "Proponi Prezzo", icon = Icons.Default.Euro, iconContentDescription = "Propose price",
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+fun ReportAdSection(colorScheme: ColorScheme, typography: Typography, dimensions: Dimensions) {
+    // Il tuo codice ReportAdSection qui, non modificato
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingLarge),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Button(
+            onClick = { /* TODO: Logica per segnalare annuncio */ },
+            modifier = Modifier
+                .height(dimensions.buttonHeight)
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(dimensions.cornerRadiusExtraSmall),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colorScheme.surface,
+                contentColor = colorScheme.error
+            ),
+            border = BorderStroke(dimensions.borderStrokeSmall, colorScheme.error.copy(alpha = 0.5f)),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = dimensions.elevationSmall,
+                pressedElevation = dimensions.elevationMedium
+            )
+        ) {
+            Icon(Icons.Default.WarningAmber, "Report", tint = colorScheme.error, modifier = Modifier.size(dimensions.iconSizeSmall))
+            Text("Segnala Annuncio", color = colorScheme.error, style = typography.labelMedium, modifier = Modifier.padding(start = dimensions.paddingSmall))
+        }
+    }
+}
+
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO, name = "PropertyScreen Light")
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES, name = "PropertyScreen Dark")
+@Composable
+fun PropertyDetailScreenPreview() {
+    val navController = rememberNavController()
+    DietiEstatesTheme {
+        PropertyScreen(navController = navController)
+    }
+}

@@ -24,10 +24,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import com.dieti.dietiestates25.ui.model.Appointment // Importa dal package model
-import com.dieti.dietiestates25.ui.model.AppointmentIconType // Importa dal package model
-import com.dieti.dietiestates25.ui.model.Notification // Importa dal package model
-import com.dieti.dietiestates25.ui.model.NotificationIconType // Importa dal package model
+import com.dieti.dietiestates25.data.model.Appointment // Importa dal package model
+import com.dieti.dietiestates25.data.model.AppointmentIconType // Importa dal package model
+import com.dieti.dietiestates25.data.model.Notification // Importa dal package model
+import com.dieti.dietiestates25.data.model.NotificationIconType // Importa dal package model
 import com.dieti.dietiestates25.ui.theme.Dimensions // Assumendo che Dimensions sia accessibile
 import java.time.format.DateTimeFormatter
 import java.util.Locale

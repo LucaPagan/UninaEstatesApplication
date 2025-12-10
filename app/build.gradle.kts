@@ -68,6 +68,16 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(platform(libs.androidx.compose.bom.v20250400))
 
+    // Retrofit (Per le chiamate API)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+
+    // Coil (Per caricare le immagini dagli URL/Byte)
+    implementation(libs.coil.compose)
+
+    // Coroutines (Per gestire le chiamate asincrone)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
@@ -112,16 +122,9 @@ dependencies {
 
     implementation(libs.androidx.material.icons.extended)
 
-    // RETROFIT (Per le chiamate HTTP)
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-
     // OKHTTP (Il motore sotto Retrofit, utile per loggare le richieste)
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
-    // COROUTINES (Per non bloccare l'app mentre scarica i dati)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-
     // GSON (Per convertire JSON in Oggetti)
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.gson)
 }

@@ -14,9 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import com.dieti.dietiestates25.ui.model.Richiesta
-import com.dieti.dietiestates25.ui.model.StatoRichiesta
+import com.dieti.dietiestates25.data.model.Richiesta
+import com.dieti.dietiestates25.data.model.StatoRichiesta
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import java.time.format.DateTimeFormatter
 import java.util.Locale

@@ -9,27 +9,27 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.dieti.dietiestates25.ui.model.NotificationsViewModel
-import com.dieti.dietiestates25.ui.screen.ApartmentListingScreen
-import com.dieti.dietiestates25.ui.screen.HomeScreen
-import com.dieti.dietiestates25.ui.screen.SearchFilterScreen
-import com.dieti.dietiestates25.ui.screen.WelcomeScreen // Import mancante
-import com.dieti.dietiestates25.ui.screen.SearchScreen // Import mancante
-import com.dieti.dietiestates25.ui.screen.PropertySellScreen // Import mancante
-import com.dieti.dietiestates25.ui.screen.PropertyScreen // Import mancante
-import com.dieti.dietiestates25.ui.screen.PriceProposalScreen // Import mancante
-import com.dieti.dietiestates25.ui.screen.AppointmentBookingScreen // Import mancante
-import com.dieti.dietiestates25.ui.screen.AppointmentDetailScreen
-import com.dieti.dietiestates25.ui.screen.EditPropertyScreen
-import com.dieti.dietiestates25.ui.screen.FullScreenMapScreen
-import com.dieti.dietiestates25.ui.screen.MapSearchScreen
-import com.dieti.dietiestates25.ui.screen.NotificationScreen // Import mancante
-import com.dieti.dietiestates25.ui.screen.NotificationDetailScreen // Import mancante
-import com.dieti.dietiestates25.ui.screen.ProfileScreen // Import mancante
-import com.dieti.dietiestates25.ui.screen.SearchTypeSelectionScreen
-import com.dieti.dietiestates25.ui.screen.YourPropertyScreen
-import com.dieti.dietiestates25.ui.screen.ManagerScreen
-import com.dieti.dietiestates25.ui.screen.RequestsScreen
+import com.dieti.dietiestates25.ui.features.notification.NotificationsViewModel
+import com.dieti.dietiestates25.ui.features.property.ApartmentListingScreen
+import com.dieti.dietiestates25.ui.features.home.HomeScreen
+import com.dieti.dietiestates25.ui.features.search.SearchFilterScreen
+import com.dieti.dietiestates25.ui.features.auth.WelcomeScreen // Import mancante
+import com.dieti.dietiestates25.ui.features.search.SearchScreen // Import mancante
+import com.dieti.dietiestates25.ui.features.property.PropertySellScreen // Import mancante
+import com.dieti.dietiestates25.ui.features.property.PropertyScreen // Import mancante
+import com.dieti.dietiestates25.ui.features.property.PriceProposalScreen // Import mancante
+import com.dieti.dietiestates25.ui.features.appointments.AppointmentBookingScreen // Import mancante
+import com.dieti.dietiestates25.ui.features.appointments.AppointmentDetailScreen
+import com.dieti.dietiestates25.ui.features.property.EditPropertyScreen
+import com.dieti.dietiestates25.ui.features.search.FullScreenMapScreen
+import com.dieti.dietiestates25.ui.features.search.MapSearchScreen
+import com.dieti.dietiestates25.ui.features.notification.NotificationScreen // Import mancante
+import com.dieti.dietiestates25.ui.features.notification.NotificationDetailScreen // Import mancante
+import com.dieti.dietiestates25.ui.features.profile.ProfileScreen // Import mancante
+import com.dieti.dietiestates25.ui.features.search.SearchTypeSelectionScreen
+import com.dieti.dietiestates25.ui.features.property.YourPropertyScreen
+import com.dieti.dietiestates25.ui.features.manager.ManagerScreen
+import com.dieti.dietiestates25.ui.features.manager.RequestsScreen
 @Composable
 fun Navigation() {
     val navController = rememberNavController()

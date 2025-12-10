@@ -1,6 +1,5 @@
 package com.dieti.dietiestates25.ui.components
 
-import android.R
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,7 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
-import com.dieti.dietiestates25.ui.model.PropertyMarker
+import com.dieti.dietiestates25.data.model.PropertyMarker
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.google.android.gms.maps.model.LatLng

@@ -1,0 +1,131 @@
+package com.dieti.dietiestates25.ui.features.property
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.components.AppPropertyCard
+import com.dieti.dietiestates25.ui.components.AppPropertyViewButton
+import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
+import com.dieti.dietiestates25.data.model.modelsource.sampleListingProperties // Using sample data
+import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import com.dieti.dietiestates25.ui.theme.Dimensions
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun YourPropertyScreen(
+    navController: NavController,
+    idUtente: String // Assuming you might need this for fetching user-specific properties
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val dimensions = Dimensions
+
+    // CORREZIONE: Rimosse le parentesi. 'sampleListingProperties' è una lista, non una funzione.
+    val userProperties = sampleListingProperties
+
+    val gradientColors = arrayOf(
+        0.0f to colorScheme.primary, 0.20f to colorScheme.background,
+        0.60f to colorScheme.background, 1.0f to colorScheme.primary
+    )
+
+    // CORREZIONE STRUTTURALE: La TopAppBar va nel parametro topBar dello Scaffold
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            GeneralHeaderBar(
+                title = "Le tue proprietà",
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding) // Applica i padding forniti dallo Scaffold
+                .background(Brush.verticalGradient(colorStops = gradientColors))
+        ) {
+            if (userProperties.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f) // Usa weight per occupare lo spazio rimanente
+                        .fillMaxWidth()
+                        .padding(dimensions.paddingLarge),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Non hai nessuna proprietà al momento.",
+                        style = typography.bodyLarge,
+                        color = colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f), // Usa weight per occupare lo spazio rimanente
+                    contentPadding = PaddingValues(
+                        start = dimensions.paddingMedium,
+                        end = dimensions.paddingMedium,
+                        top = dimensions.paddingMedium,
+                        bottom = dimensions.paddingLarge
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(dimensions.paddingMedium)
+                ) {
+                    items(items = userProperties, key = { it.id }) { property ->
+                        AppPropertyCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(dimensions.propertyCardHeight),
+                            price = property.price,
+                            imageResId = property.imageRes,
+                            address = property.location,
+                            details = listOfNotNull(
+                                property.type,
+                                property.areaMq?.let { "$it mq" },
+                                property.bathrooms?.let { numBagni ->
+                                    if (numBagni == 1) "$numBagni bagno" else "$numBagni bagni"
+                                }
+                            ).filter { it.isNotBlank() },
+                            onClick = {
+                                navController.navigate(Screen.PropertyScreen.route)
+                            },
+                            actionButton = {
+                                AppPropertyViewButton(
+                                    text = "Modifica",
+                                    onClick = {
+                                        navController.navigate(Screen.EditPropertyScreen.route)
+                                    }
+                                )
+                            },
+                            horizontalMode = false,
+                            imageHeightVerticalRatio = 0.50f,
+                            elevationDp = Dimensions.elevationSmall
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, device = "id:pixel_4")
+@Composable
+fun YourPropertyScreenPreview() {
+    val navController = rememberNavController()
+    DietiEstatesTheme {
+        YourPropertyScreen(
+            navController = navController,
+            idUtente = "previewUser"
+        )
+    }
+}
