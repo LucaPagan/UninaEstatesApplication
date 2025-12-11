@@ -1,7 +1,10 @@
-package com.dieti.dietiestates25.data.model
+package com.dieti.dietiestates25.ui.features.notification
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dieti.dietiestates25.data.model.NotificationDetail
+import com.dieti.dietiestates25.data.model.NotificationIconType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -9,23 +12,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import android.util.Log
 
-// Data class per i dettagli della notifica
-data class NotificationDetail(
-    val id: Int,
-    val senderType: String, // Es. "Proposta d'acquisto", "Sistema", "Agenzia"
-    val senderName: String, // Es. "Mario Rossi", "Supporto DietiEstates"
-    val message: String,    // Il messaggio completo
-    val rawMessageForFormatting: String? = null, // Messaggio originale se serve per formattazione speciale
-    val date: LocalDate,
-    var isFavorite: Boolean,
-    val iconType: NotificationIconType,
-    val isProposal: Boolean, // Indica se la notifica è una proposta che richiede azioni
-    val proposalAmount: String? = null, // Es. "€250.000" - specifico per le proposte
-    val propertyAddress: String? = null // Indirizzo immobile relativo alla proposta
-    // Aggiungi altri campi specifici se necessario
-)
 
 class NotificationDetailViewModel : ViewModel() {
 
