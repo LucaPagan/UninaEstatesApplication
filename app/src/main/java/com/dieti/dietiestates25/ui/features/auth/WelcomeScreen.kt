@@ -108,7 +108,7 @@ fun WelcomeScreen(navController: NavController) {
                 AppPrimaryButton(
                     text = "Inizia ora",
                     onClick = {
-                        navController.navigate(Screen.HomeScreen.withIdUtente(idUtente))
+                        navController.navigate(Screen.LoginScreen.route)
                     },
                     modifier = Modifier.fillMaxWidth()
                 )

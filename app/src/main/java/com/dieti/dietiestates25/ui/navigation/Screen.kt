@@ -6,6 +6,8 @@ import com.dieti.dietiestates25.data.model.FilterModel
 sealed class Screen(val route: String) {
     data object WelcomeScreen : Screen("welcome_screen")
 
+    data object LoginScreen : Screen("login_screen")
+
     data object HomeScreen : Screen("home_screen") {
         fun withIdUtente(idUtente: String): String {
             return "$route/${Uri.encode(idUtente)}" // Usa Uri.encode per path params
@@ -153,7 +155,6 @@ sealed class Screen(val route: String) {
         }
     }
 
-    // Funzione generica withArgs modificata per usare Uri.encode
     fun withArgs(vararg args: String): String {
         return buildString {
             append(route)
@@ -165,12 +166,10 @@ sealed class Screen(val route: String) {
 
     object FullScreenMapScreen : Screen("fullscreen_map_screen") {
         fun withPosition(latitude: Double, longitude: Double, zoom: Float): String {
-            // Converti i numeri in stringhe e poi esegui l'encode
             val encodedLat = Uri.encode(latitude.toString())
             val encodedLng = Uri.encode(longitude.toString())
             val encodedZoom = Uri.encode(zoom.toString())
 
-            // Costruisci la route con i segmenti encodati
             return "$route/$encodedLat/$encodedLng/$encodedZoom"
         }
     }

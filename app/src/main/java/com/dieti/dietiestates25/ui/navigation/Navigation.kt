@@ -30,6 +30,8 @@ import com.dieti.dietiestates25.ui.features.search.SearchTypeSelectionScreen
 import com.dieti.dietiestates25.ui.features.property.YourPropertyScreen
 import com.dieti.dietiestates25.ui.features.manager.ManagerScreen
 import com.dieti.dietiestates25.ui.features.manager.RequestsScreen
+import com.dieti.dietiestates25.ui.features.auth.LoginScreenPreviewOnly
+
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
@@ -39,6 +41,10 @@ fun Navigation() {
         // WelcomeScreen (invariato)
         composable(route = Screen.WelcomeScreen.route) {
             WelcomeScreen(navController = navController)
+        }
+
+        composable(route = Screen.LoginScreen.route) {
+            LoginScreenPreviewOnly()
         }
 
         // HomeScreen (invariato, ma potrebbe usare Screen.HomeScreen.withIdUtente)
@@ -95,11 +101,10 @@ fun Navigation() {
                     navController.popBackStack()
                 },
                 onApplyFilters = { filterModel ->
-                    // Utilizza la nuova funzione helper specifica con nomi di parametri chiari
                     val destinationRoute = Screen.SearchTypeSelectionScreen.buildRoute(
-                        idUtentePath = idUtenteArg,       // Corrisponde a idUtentePath in buildRoute
-                        comunePath = comuneArg,          // Corrisponde a comunePath in buildRoute
-                        ricercaPath = ricercaQueryTextArg, // Corrisponde a ricercaPath in buildRoute
+                        idUtentePath = idUtenteArg,
+                        comunePath = comuneArg,
+                        ricercaPath = ricercaQueryTextArg,
                         filters = filterModel
                     )
                 }
@@ -107,19 +112,14 @@ fun Navigation() {
         }
 
         composable(
-            // La rotta di ApartmentListingScreen DEVE corrispondere a come viene costruita
-            // e i nomi dei path parameters qui ({idUtente}, {comune}, {ricerca})
-            // devono corrispondere a quelli usati in buildRoute per i path.
             route = Screen.ApartmentListingScreen.route + "/{idUtente}/{comune}/{ricerca}" +
                     "?purchaseType={purchaseType}&minPrice={minPrice}&maxPrice={maxPrice}" +
                     "&minSurface={minSurface}&maxSurface={maxSurface}&minRooms={minRooms}" +
                     "&maxRooms={maxRooms}&bathrooms={bathrooms}&condition={condition}",
             arguments = listOf(
-                // Path arguments (DEVONO corrispondere ai nomi nella stringa route qui sopra)
-                navArgument("idUtente") { type = NavType.StringType }, // Rimosso defaultValue se sempre fornito
+                navArgument("idUtente") { type = NavType.StringType },
                 navArgument("comune") { type = NavType.StringType },
                 navArgument("ricerca") { type = NavType.StringType },
-                // Query arguments (opzionali)
                 navArgument("purchaseType") { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument("minPrice") { type = NavType.FloatType; defaultValue = -1f },
                 navArgument("maxPrice") { type = NavType.FloatType; defaultValue = -1f },
@@ -133,10 +133,9 @@ fun Navigation() {
         ) { entry ->
             ApartmentListingScreen(
                 navController = navController,
-                idUtente = entry.arguments?.getString("idUtente") ?: "utente", // Fallback
-                comune = entry.arguments?.getString("comune") ?: "Napoli",     // Fallback
-                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"   // Fallback
-                // ApartmentListingScreen leggerà gli altri filtri da entry.arguments al suo interno
+                idUtente = entry.arguments?.getString("idUtente") ?: "utente",
+                comune = entry.arguments?.getString("comune") ?: "Napoli",
+                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"
             )
         }
 
@@ -148,7 +147,6 @@ fun Navigation() {
             PropertyScreen(navController = navController)
         }
 
-
         composable(route = Screen.PriceProposalScreen.route){ PriceProposalScreen(navController = navController) }
 
         composable(route = Screen.AppointmentBookingScreen.route){ AppointmentBookingScreen(navController = navController) }
@@ -156,11 +154,11 @@ fun Navigation() {
         composable(route = Screen.NotificationScreen.route){ NotificationScreen(navController = navController) }
 
         composable(
-            route = Screen.NotificationDetailScreen.route, // Usa la route base "notification_detail_screen/{notificationId}"
+            route = Screen.NotificationDetailScreen.route,
             arguments = listOf(navArgument("notificationId") { type = NavType.IntType })
         ) { backStackEntry ->
             val notificationId = backStackEntry.arguments?.getInt("notificationId")
-            val notificationsViewModel: NotificationsViewModel = viewModel() // O come ottieni il ViewModel principale
+            val notificationsViewModel: NotificationsViewModel = viewModel()
 
             NotificationDetailScreen(
                 navController = navController,
@@ -172,19 +170,14 @@ fun Navigation() {
         composable(route = Screen.ProfileScreen.route){ ProfileScreen(navController = navController) }
 
         composable(
-            // La rotta di MapSearchScreen DEVE corrispondere a come viene costruita
-            // e i nomi dei path parameters qui ({idUtente}, {comune}, {ricerca})
-            // devono corrispondere a quelli usati in buildRoute per i path.
             route = Screen.MapSearchScreen.route + "/{idUtente}/{comune}/{ricerca}" +
                     "?purchaseType={purchaseType}&minPrice={minPrice}&maxPrice={maxPrice}" +
                     "&minSurface={minSurface}&maxSurface={maxSurface}&minRooms={minRooms}" +
                     "&maxRooms={maxRooms}&bathrooms={bathrooms}&condition={condition}",
             arguments = listOf(
-                // Path arguments (DEVONO corrispondere ai nomi nella stringa route qui sopra)
-                navArgument("idUtente") { type = NavType.StringType }, // Rimosso defaultValue se sempre fornito
+                navArgument("idUtente") { type = NavType.StringType },
                 navArgument("comune") { type = NavType.StringType },
                 navArgument("ricerca") { type = NavType.StringType },
-                // Query arguments (opzionali)
                 navArgument("purchaseType") { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument("minPrice") { type = NavType.FloatType; defaultValue = -1f },
                 navArgument("maxPrice") { type = NavType.FloatType; defaultValue = -1f },
@@ -198,27 +191,21 @@ fun Navigation() {
         ) { entry ->
             MapSearchScreen(
                 navController = navController,
-                idUtente = entry.arguments?.getString("idUtente") ?: "utente", // Fallback
-                comune = entry.arguments?.getString("comune") ?: "Napoli",     // Fallback
-                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"   // Fallback
-                // MapSearchScreen leggerà gli altri filtri da entry.arguments al suo interno
+                idUtente = entry.arguments?.getString("idUtente") ?: "utente",
+                comune = entry.arguments?.getString("comune") ?: "Napoli",
+                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"
             )
         }
 
         composable(
-            // La rotta di SearchTypeSelectionScreen DEVE corrispondere a come viene costruita
-            // e i nomi dei path parameters qui ({idUtente}, {comune}, {ricerca})
-            // devono corrispondere a quelli usati in buildRoute per i path.
             route = Screen.SearchTypeSelectionScreen.route + "/{idUtente}/{comune}/{ricerca}" +
                     "?purchaseType={purchaseType}&minPrice={minPrice}&maxPrice={maxPrice}" +
                     "&minSurface={minSurface}&maxSurface={maxSurface}&minRooms={minRooms}" +
                     "&maxRooms={maxRooms}&bathrooms={bathrooms}&condition={condition}",
             arguments = listOf(
-                // Path arguments (DEVONO corrispondere ai nomi nella stringa route qui sopra)
-                navArgument("idUtente") { type = NavType.StringType }, // Rimosso defaultValue se sempre fornito
+                navArgument("idUtente") { type = NavType.StringType },
                 navArgument("comune") { type = NavType.StringType },
                 navArgument("ricerca") { type = NavType.StringType },
-                // Query arguments (opzionali)
                 navArgument("purchaseType") { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument("minPrice") { type = NavType.FloatType; defaultValue = -1f },
                 navArgument("maxPrice") { type = NavType.FloatType; defaultValue = -1f },
@@ -232,15 +219,14 @@ fun Navigation() {
         ) { entry ->
             SearchTypeSelectionScreen(
                 navController = navController,
-                idUtente = entry.arguments?.getString("idUtente") ?: "utente", // Fallback
-                comune = entry.arguments?.getString("comune") ?: "Napoli",     // Fallback
-                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"   // Fallback
-                // SearchTypeSelectionScreen leggerà gli altri filtri da entry.arguments al suo interno
+                idUtente = entry.arguments?.getString("idUtente") ?: "utente",
+                comune = entry.arguments?.getString("comune") ?: "Napoli",
+                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"
             )
         }
 
         composable(
-            route = Screen.FullScreenMapScreen.route + "/{lat}" + "/{lng}" + "/{zoom}", // Es: "fullscreen_map_screen/{lat}/{lng}/{zoom}"
+            route = Screen.FullScreenMapScreen.route + "/{lat}" + "/{lng}" + "/{zoom}",
             arguments = listOf(
                 navArgument("lat") { type = NavType.StringType },
                 navArgument("lng") { type = NavType.StringType },
@@ -252,10 +238,10 @@ fun Navigation() {
             exitTransition = {
                 slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(700))
             },
-            popEnterTransition = { // Animazione quando si torna indietro ALLA SCHERMATA PRECEDENTE (non a questa)
+            popEnterTransition = {
                 slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(700))
             },
-            popExitTransition = { // Animazione quando si esce da QUESTA schermata tornando indietro
+            popExitTransition = {
                 slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(700))
             }
         ) { navBackStackEntry ->

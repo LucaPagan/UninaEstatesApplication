@@ -142,30 +142,13 @@ fun LoginScreenPreviewOnly() {
             modifier = Modifier.padding(bottom = Dimensions.spacingMedium)
         )
 
-        // Bottone Apple → SEMPRE NERO
-        Button(
-            onClick = {},
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Black), // forzato nero
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = Dimensions.spacingSmall)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.apple),
-                contentDescription = "Apple Logo",
-                modifier = Modifier
-                    .size(Dimensions.iconSizeLarge)
-                    .padding(end = Dimensions.spacingSmall),
-                contentScale = ContentScale.Fit
-            )
-            Text("Continua con Apple", color = Color.White) // testo bianco su sfondo nero
-        }
-
-        // Bottone Google → SEMPRE BIANCO
         Button(
             onClick = {},
             colors = ButtonDefaults.buttonColors(containerColor = Color.White), // forzato bianco
-            border = BorderStroke(Dimensions.borderStrokeSmall, colorScheme.onBackground.copy(alpha = 0.3f)),
+            border = BorderStroke(
+                Dimensions.borderStrokeSmall,
+                colorScheme.onBackground.copy(alpha = 0.3f)
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = Dimensions.spacingSmall)
@@ -179,23 +162,6 @@ fun LoginScreenPreviewOnly() {
                 contentScale = ContentScale.Fit
             )
             Text("Continua con Google", color = Color.Black) // testo nero su sfondo bianco
-        }
-
-        // Bottone Facebook
-        Button(
-            onClick = {},
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1877F2)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.facebook),
-                contentDescription = "Facebook Logo",
-                modifier = Modifier
-                    .size(Dimensions.iconSizeLarge)
-                    .padding(end = Dimensions.spacingSmall),
-                contentScale = ContentScale.Fit
-            )
-            Text("Continua con Facebook", color = Color.White)
         }
     }
 }
