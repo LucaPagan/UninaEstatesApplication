@@ -1,8 +1,10 @@
-package com.dieti.dietiestates25.data.model
+package com.dieti.dietiestates25.ui.features.manager
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dieti.dietiestates25.data.model.Richiesta
+import com.dieti.dietiestates25.data.model.StatoRichiesta
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

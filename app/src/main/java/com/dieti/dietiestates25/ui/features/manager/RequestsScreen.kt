@@ -2,7 +2,7 @@ package com.dieti.dietiestates25.ui.features.manager
 
 import android.content.res.Configuration
 import com.dieti.dietiestates25.ui.components.AppRequestDisplay
-import com.dieti.dietiestates25.data.model.RequestViewModel
+import com.dieti.dietiestates25.ui.features.manager.RequestViewModel
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
