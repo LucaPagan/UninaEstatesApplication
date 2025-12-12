@@ -78,7 +78,8 @@ import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun PropertyScreen(
-    navController: NavController
+    navController: NavController,
+    idProperty: String?
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
@@ -671,6 +672,6 @@ fun ReportAdSection(colorScheme: ColorScheme, typography: Typography, dimensions
 fun PropertyDetailScreenPreview() {
     val navController = rememberNavController()
     DietiEstatesTheme {
-        PropertyScreen(navController = navController)
+        PropertyScreen(navController = navController, idProperty = "1")
     }
 }

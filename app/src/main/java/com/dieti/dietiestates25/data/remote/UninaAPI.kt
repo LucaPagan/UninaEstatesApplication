@@ -55,6 +55,11 @@ interface UninaAPI {
     @GET("api/utenti/{id}/notifiche")
     suspend fun getUserNotifications(@Path("id") userId: String): List<NotificationDTO>
 
+    @GET("api/immobili")
+    suspend fun cercaImmobili(
+        @Query("comune") comune: String,
+        @Query("ricerca") ricerca: String
+    ): Response<List<ImmobileDTO>>
     @GET("api/utenti/{id}/appuntamenti")
     suspend fun getUserAppointments(@Path("id") userId: String): List<AppuntamentoDTO>
 
