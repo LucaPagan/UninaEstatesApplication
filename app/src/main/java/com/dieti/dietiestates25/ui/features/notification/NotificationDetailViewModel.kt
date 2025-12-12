@@ -1,133 +1,133 @@
 package com.dieti.dietiestates25.ui.features.notification
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dieti.dietiestates25.data.model.NotificationDetail
 import com.dieti.dietiestates25.data.model.NotificationIconType
+import com.dieti.dietiestates25.data.remote.NotificationDetailDTO
+import com.dieti.dietiestates25.data.remote.ProposalResponseRequest
+import com.dieti.dietiestates25.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import java.text.NumberFormat
 import java.util.Locale
-
 
 class NotificationDetailViewModel : ViewModel() {
 
     private val _currentNotification = MutableStateFlow<NotificationDetail?>(null)
     val currentNotification: StateFlow<NotificationDetail?> = _currentNotification.asStateFlow()
 
-    // Esempio di dati (sostituisci con il tuo data source reale)
-    private val sampleNotifications = listOf(
-        NotificationDetail(
-            id = 1,
-            senderType = "Proposta d'acquisto",
-            senderName = "Mario Rossi",
-            message = "Il sig. Mario Rossi ha inviato una nuova proposta d'acquisto per l'immobile situato in Via Toledo 123, per un importo di €280.000. La proposta è valida fino al 15 Giugno 2025.",
-            rawMessageForFormatting = "Il sig. %s ha inviato una nuova proposta d'acquisto per l'immobile situato in %s, per un importo di %s. La proposta è valida fino al %s.",
-            date = LocalDate.now().minusDays(1),
-            isFavorite = false,
-            iconType = NotificationIconType.PERSON,
-            isProposal = true,
-            proposalAmount = "€280.000",
-            propertyAddress = "Via Toledo 123, Napoli"
-        ),
-        NotificationDetail(
-            id = 2,
-            senderType = "Sistema",
-            senderName = "DietiEstates",
-            message = "Manutenzione programmata per il server il giorno 10 Giugno 2025 dalle 02:00 alle 04:00. Alcune funzionalità potrebbero essere limitate.",
-            date = LocalDate.now().minusDays(3),
-            isFavorite = true,
-            iconType = NotificationIconType.BADGE,
-            isProposal = false
-        ),
-        NotificationDetail(
-            id = 3,
-            senderType = "Contatto Telefonico",
-            senderName = "Agenzia Immobiliare Sole",
-            message = "Hai una chiamata persa da Agenzia Immobiliare Sole. Ricontattare al più presto per aggiornamenti sull'immobile di Via Chiaia.",
-            date = LocalDate.now(),
-            isFavorite = false,
-            iconType = NotificationIconType.PHONE,
-            isProposal = false
-        )
-    )
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    fun loadNotificationById(notificationId: Int?) {
+    // Accetta String (UUID) invece di Int
+    fun loadNotificationById(id: String) {
         viewModelScope.launch {
-            Log.d("NotificationDetailVM", "Attempting to load notification with ID: $notificationId")
-            if (notificationId == null) {
-                _currentNotification.value = null
-                Log.w("NotificationDetailVM", "Notification ID is null.")
-                return@launch
-            }
-            // Simula il caricamento da una sorgente dati
-            val detail = sampleNotifications.find { it.id == notificationId }
-            _currentNotification.value = detail
-            if (detail == null) {
-                Log.w("NotificationDetailVM", "No notification found for ID: $notificationId")
-            } else {
-                Log.d("NotificationDetailVM", "Notification loaded: ${detail.senderType}")
-            }
-        }
-    }
-
-    fun getFormattedMessage(notificationDetail: NotificationDetail?): String {
-        if (notificationDetail == null) return "Nessun messaggio."
-
-        // Esempio di formattazione più complessa se necessario
-        if (notificationDetail.isProposal && notificationDetail.rawMessageForFormatting != null) {
+            _isLoading.value = true
             try {
-                return String.format(
-                    Locale.ITALIAN,
-                    notificationDetail.rawMessageForFormatting,
-                    notificationDetail.senderName,
-                    notificationDetail.propertyAddress ?: "indirizzo non specificato",
-                    notificationDetail.proposalAmount ?: "importo non specificato",
-                    notificationDetail.date.plusDays(10).format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.ITALIAN)) // Esempio: scadenza proposta
-                )
+                val response = RetrofitClient.instance.getNotificationDetail(id)
+                if (response.isSuccessful && response.body() != null) {
+                    val dto = response.body()!!
+                    _currentNotification.value = mapDtoToDomain(dto)
+                } else {
+                    Log.e("NotifDetailVM", "Errore caricamento: ${response.code()}")
+                }
             } catch (e: Exception) {
-                Log.e("NotificationDetailVM", "Error formatting proposal message", e)
-                // Fallback al messaggio semplice se la formattazione fallisce
+                Log.e("NotifDetailVM", "Eccezione caricamento notifica", e)
+            } finally {
+                _isLoading.value = false
             }
         }
-        return notificationDetail.message
     }
 
-    fun acceptProposal() {
-        // Logica per accettare la proposta
-        // Potrebbe aggiornare lo stato della notifica/proposta nel backend/repository
-        _currentNotification.value?.let {
-            Log.d("NotificationDetailVM", "Proposta accettata per notifica ID: ${it.id}")
-            // Esempio: aggiorna lo stato locale (sebbene dovrebbe venire da una fonte unica di verità)
-            // _currentNotification.value = it.copy(isProposal = false, message = "Proposta Accettata!")
+    private fun mapDtoToDomain(dto: NotificationDetailDTO): NotificationDetail {
+        return NotificationDetail(
+            id = dto.id,
+            title = dto.titolo, // Mappa il titolo
+            senderType = mapSenderType(dto.mittenteTipo),
+            senderName = dto.mittenteNome ?: "DietiEstates",
+            message = dto.corpo ?: "Nessun contenuto disponibile", // Gestione null
+            iconType = mapIconType(dto.mittenteTipo),
+            isProposal = dto.isProposta,
+            proposalPrice = dto.prezzoProposto, // Mappa il prezzo
+            isFavorite = false, // Backend non supporta preferiti per singola notifica
+            timestamp = dto.data
+        )
+    }
+
+    private fun mapIconType(type: String?): NotificationIconType {
+        return when (type?.uppercase()) {
+            "AGENTE" -> NotificationIconType.PERSON
+            "AGENZIA" -> NotificationIconType.BADGE
+            else -> NotificationIconType.PHONE
         }
     }
 
-    fun rejectProposal() {
-        // Logica per rifiutare la proposta
-        _currentNotification.value?.let {
-            Log.d("NotificationDetailVM", "Proposta rifiutata per notifica ID: ${it.id}")
-            // _currentNotification.value = it.copy(isProposal = false, message = "Proposta Rifiutata.")
+    private fun mapSenderType(type: String?): String {
+        return when (type?.uppercase()) {
+            "AGENTE" -> "Agente Immobiliare"
+            "AGENZIA" -> "Agenzia"
+            "SISTEMA" -> "Avviso di Sistema"
+            else -> "Notifica"
         }
     }
 
-    // Questa funzione non è più necessaria qui se onToggleMasterFavorite viene passata dall'esterno.
-    // Se vuoi che questo ViewModel gestisca anche il toggle (e poi lo comunichi al repository),
-    // allora potresti tenerla e modificarla.
-    /*
-    fun toggleFavoriteCurrentNotification() {
-        _currentNotification.value?.let { currentDetail ->
-            val newFavoriteState = !currentDetail.isFavorite
-            // Qui dovresti aggiornare la sorgente dati (es. Repository)
-            // e poi ricaricare o aggiornare _currentNotification.
-            // Per ora, simuliamo l'aggiornamento locale:
-            _currentNotification.value = currentDetail.copy(isFavorite = newFavoriteState)
-            Log.d("NotificationDetailVM", "Favorite toggled for ID ${currentDetail.id} to $newFavoriteState")
+    // --- GESTIONE PROPOSTE ---
+
+    fun acceptProposal(context: Context) {
+        val id = _currentNotification.value?.id ?: return
+        sendProposalResponse(id, true, context)
+    }
+
+    fun rejectProposal(context: Context) {
+        val id = _currentNotification.value?.id ?: return
+        sendProposalResponse(id, false, context)
+    }
+
+    // Placeholder per chiamate UI senza context (da evitare ma presenti per compatibilità)
+    fun acceptProposal() { Log.w("NotifDetailVM", "Context mancante") }
+    fun rejectProposal() { Log.w("NotifDetailVM", "Context mancante") }
+
+    private fun sendProposalResponse(id: String, accepted: Boolean, context: Context) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val response = RetrofitClient.instance.respondToProposal(
+                    id,
+                    ProposalResponseRequest(accettata = accepted)
+                )
+
+                if (response.isSuccessful) {
+                    val msg = if (accepted) "Proposta accettata!" else "Proposta rifiutata."
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    // Opzionale: Ricarica per aggiornare lo stato UI
+                    loadNotificationById(id)
+                } else {
+                    Toast.makeText(context, "Errore nell'invio della risposta", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("NotifDetailVM", "Errore risposta proposta", e)
+                Toast.makeText(context, "Errore di connessione", Toast.LENGTH_SHORT).show()
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
-    */
+
+    fun getFormattedMessage(detail: NotificationDetail?): String {
+        return detail?.message ?: "Nessun dettaglio disponibile."
+    }
+
+    fun getFormattedPrice(price: Double?): String {
+        return if (price != null) {
+            NumberFormat.getCurrencyInstance(Locale.ITALY).format(price)
+        } else {
+            ""
+        }
+    }
 }

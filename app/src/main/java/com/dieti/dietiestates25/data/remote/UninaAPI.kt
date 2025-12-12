@@ -36,6 +36,35 @@ interface UninaAPI {
     ): Response<String>
 
     // --- UTENTI ---
+    // Ottieni Profilo Utente
+    @GET("api/utenti/{id}")
+    suspend fun getUserProfile(@Path("id") id: String): Response<UserProfileDTO>
+
+    // Ottieni i Immobili Preferiti di un Utente
     @GET("api/utenti/{userId}/preferiti")
     suspend fun getPreferiti(@Path("userId") userId: String): List<ImmobileDTO>
+
+    // Aggiorna Profilo Utente (Telefono e Password)
+    @PUT("api/utenti/{id}")
+    suspend fun updateUserProfile(
+        @Path("id") id: String,
+        @Body request: UserUpdateRequest
+    ): Response<Any>
+
+    // --- NOTIFICHE & APPUNTAMENTI ---
+    @GET("api/utenti/{id}/notifiche")
+    suspend fun getUserNotifications(@Path("id") userId: String): List<NotificationDTO>
+
+    @GET("api/utenti/{id}/appuntamenti")
+    suspend fun getUserAppointments(@Path("id") userId: String): List<AppointmentDTO>
+
+    // --- DETTAGLIO NOTIFICA & PROPOSTE ---
+    @GET("api/notifiche/{id}")
+    suspend fun getNotificationDetail(@Path("id") id: String): Response<NotificationDetailDTO>
+
+    @POST("api/notifiche/{id}/risposta")
+    suspend fun respondToProposal(
+        @Path("id") id: String,
+        @Body response: ProposalResponseRequest
+    ): Response<Any>
 }

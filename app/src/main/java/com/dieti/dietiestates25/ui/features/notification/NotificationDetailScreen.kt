@@ -1,17 +1,22 @@
 package com.dieti.dietiestates25.ui.features.notification
 
 import android.content.res.Configuration
-import com.dieti.dietiestates25.ui.components.AppPrimaryButton
-import com.dieti.dietiestates25.ui.components.AppRedButton
-import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.data.model.NotificationDetailViewModel
-import com.dieti.dietiestates25.data.model.NotificationDetail // Importa la data class aggiornata
-import com.dieti.dietiestates25.data.model.NotificationIconType // Importa l'enum aggiornato
-import com.dieti.dietiestates25.ui.components.CircularIconActionButton
-
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -22,28 +27,49 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.Typography
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.data.model.NotificationDetail
+import com.dieti.dietiestates25.data.model.NotificationIconType
+import com.dieti.dietiestates25.ui.components.AppPrimaryButton
+import com.dieti.dietiestates25.ui.components.AppRedButton
+import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
+import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationDetailScreen(
     navController: NavController,
-    notificationId: Int?,
-    onToggleMasterFavorite: (Int) -> Unit,
+    notificationId: String?,
+    onToggleMasterFavorite: (String) -> Unit,
     viewModel: NotificationDetailViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val notificationDetail by viewModel.currentNotification.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
     val formattedMessage = remember(notificationDetail) {
         viewModel.getFormattedMessage(notificationDetail)
     }
@@ -70,7 +96,6 @@ fun NotificationDetailScreen(
                 onToggleFavorite = {
                     notificationDetail?.id?.let { id ->
                         onToggleMasterFavorite(id)
-                        // Ricarica per riflettere immediatamente il cambiamento di isFavorite
                         viewModel.loadNotificationById(id)
                     }
                 },
@@ -80,39 +105,48 @@ fun NotificationDetailScreen(
             )
         }
     ) { paddingValues ->
-        if (notificationDetail == null && notificationId != null) {
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = colorScheme.primary)
             }
         } else if (notificationDetail != null) {
             NotificationDetailContent(
                 modifier = Modifier.padding(paddingValues),
-                notificationDetail = notificationDetail!!, // Sappiamo che non è nullo qui
+                notificationDetail = notificationDetail!!,
                 formattedMessage = formattedMessage,
-                onAccept = viewModel::acceptProposal,
-                onReject = viewModel::rejectProposal,
+                onAccept = { viewModel.acceptProposal(context) },
+                onReject = { viewModel.rejectProposal(context) },
                 colorScheme = colorScheme,
                 typography = typography,
                 dimensions = dimensions
             )
         } else {
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues), contentAlignment = Alignment.Center) {
-                Text("Dettagli notifica non disponibili.")
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (notificationId == null) "ID notifica mancante." else "Dettagli notifica non disponibili.",
+                    style = typography.bodyLarge,
+                    color = colorScheme.onSurfaceVariant
+                )
             }
         }
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NotificationDetailTopAppBar(
     navController: NavController,
-    notificationDetail: NotificationDetail?, // Usa la data class aggiornata
+    notificationDetail: NotificationDetail?,
     onToggleFavorite: () -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
@@ -121,30 +155,27 @@ private fun NotificationDetailTopAppBar(
     Column (
         modifier = Modifier.fillMaxWidth()
     ) {
-        // Status Bar con colore TealDeep fisso
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsTopHeight(WindowInsets.statusBars)
                 .background(colorScheme.primaryContainer)
         )
-        // Main content Row for buttons and title
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colorScheme.primary)
                 .padding(
-                    horizontal = dimensions.paddingMedium, // MODIFICATO: Più padding orizzontale
-                    vertical = dimensions.paddingMedium    // MODIFICATO: Leggermente più padding verticale
+                    horizontal = dimensions.paddingMedium,
+                    vertical = dimensions.paddingMedium
                 ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween // Pushes elements to sides
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .weight(1f) // Allows title group to take available
+                modifier = Modifier.weight(1f)
             ) {
                 CircularIconActionButton(
                     onClick = { navController.popBackStack() },
@@ -204,20 +235,19 @@ private fun NotificationDetailContent(
                 NotificationHeaderCard(
                     senderType = notificationDetail.senderType,
                     senderName = notificationDetail.senderName,
-                    iconType = notificationDetail.iconType, // Passa l'iconType corretto
+                    iconType = notificationDetail.iconType,
                     colorScheme = colorScheme,
                     typography = typography,
                     dimensions = dimensions
                 )
                 Spacer(modifier = Modifier.height(dimensions.spacingMedium))
                 ProposalDetailsCard(
-                    message = formattedMessage, // Usa il messaggio formattato
+                    message = formattedMessage,
                     colorScheme = colorScheme,
                     typography = typography,
                     dimensions = dimensions
                 )
             }
-            // Mostra i bottoni solo se è una proposta
             if (notificationDetail.isProposal) {
                 ActionButtonsSection(
                     onAccept = onAccept,
@@ -234,7 +264,7 @@ private fun NotificationDetailContent(
 private fun NotificationHeaderCard(
     senderType: String,
     senderName: String,
-    iconType: NotificationIconType, // Usa l'enum corretto
+    iconType: NotificationIconType,
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions
@@ -242,7 +272,7 @@ private fun NotificationHeaderCard(
     val icon = when(iconType) {
         NotificationIconType.PHONE -> Icons.Filled.Phone
         NotificationIconType.PERSON -> Icons.Filled.Person
-        NotificationIconType.BADGE -> Icons.AutoMirrored.Filled.Comment // Esempio per badge
+        NotificationIconType.BADGE -> Icons.AutoMirrored.Filled.Comment
     }
 
     Row(
@@ -336,14 +366,11 @@ private fun ActionButtonsSection(
 fun NotificationDetailScreenPreview() {
     val navController = rememberNavController()
     val previewViewModel = viewModel<NotificationDetailViewModel>()
-    LaunchedEffect(Unit) {
-        previewViewModel.loadNotificationById(1)
-    }
-
+    // In preview mode loadNotificationById would need to be mocked or fail gracefully
     NotificationDetailScreen(
         navController = navController,
-        notificationId = 1,
-        onToggleMasterFavorite = { /* no-op in preview */ },
+        notificationId = "",
+        onToggleMasterFavorite = { },
         viewModel = previewViewModel
     )
 }

@@ -70,6 +70,7 @@ data class UserProfileDTO(
 )
 
 data class UserUpdateRequest(
+    val email: String?,
     val telefono: String?,
     val password: String?
 )
@@ -83,11 +84,17 @@ data class AppuntamentoRequest(
     val orario: String // Formato "HH:mm"
 )
 
-data class AppuntamentoDTO(
+data class ProposalResponseRequest(
+    val accettata: Boolean
+)
+
+data class AppointmentDTO(
     val id: String,
-    val immobileTitolo: String,
-    val data: String,
-    val orario: String
+    val data: String, // "YYYY-MM-DD"
+    val ora: String,  // "HH:mm"
+    val stato: String, // "PROGRAMMATO", "COMPLETATO", "CANCELLATO"
+    val immobileId: String?,
+    val titoloImmobile: String?
 )
 
 // --- OFFERTE ---
@@ -106,12 +113,27 @@ data class OffertaDTO(
 )
 
 // --- NOTIFICHE ---
-data class NotificaDTO(
+data class NotificationDTO(
     val id: String,
     val titolo: String,
     val corpo: String?,
+    val data: String, // ISO date string
+    val letto: Boolean,
+    val tipo: String = "INFO"
+)
+
+data class NotificationDetailDTO(
+    val id: String, // UUID
+    val titolo: String,
+    val corpo: String?,
     val data: String,
-    val letto: Boolean
+    val letto: Boolean,
+    val tipo: String,
+    val mittenteNome: String?,
+    val mittenteTipo: String?,
+    val isProposta: Boolean = false,
+    val immobileId: String? = null, // UUID
+    val prezzoProposto: Double? = null
 )
 
 // --- AUTH ---

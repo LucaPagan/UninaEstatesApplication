@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,7 +59,6 @@ import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
 import com.dieti.dietiestates25.ui.components.AppTopBar
 import com.dieti.dietiestates25.data.model.ProfileData
-import com.dieti.dietiestates25.data.model.ProfileViewModel
 import com.dieti.dietiestates25.data.model.modelsource.PhonePrefix
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
@@ -67,16 +69,22 @@ fun ProfileScreen(
     navController: NavController,
     viewModel: ProfileViewModel = viewModel()
 ) {
-
+    val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val focusManager = LocalFocusManager.current
     val dimensions = Dimensions
 
+    // Carica i dati del profilo all'avvio
+    LaunchedEffect(Unit) {
+        viewModel.loadProfile(context)
+    }
+
     val profileData by viewModel.currentProfileData.collectAsState()
     val isEditMode by viewModel.isEditMode.collectAsState()
     val hasUnsavedChanges by viewModel.hasUnsavedChanges.collectAsState()
     val canSaveChanges by viewModel.canSaveChanges.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     val showExitEditModeDialog by viewModel.showExitEditModeConfirmDialog.collectAsState()
     val showLogoutDialog by viewModel.showLogoutConfirmDialog.collectAsState()
@@ -115,19 +123,15 @@ fun ProfileScreen(
             )
         },
         bottomBar = {
-            // --- MODIFICA PER GESTIRE LA NAVIGAZIONE CON MODIFICHE NON SALVATE ---
-            // Nota: questo richiede di modificare il tuo componente AppBottomNavigation
-            // per accettare una nuova lambda `onNavigateAttempt` che restituisce un Boolean.
             AppBottomNavigation(
                 navController = navController,
                 idUtente = profileData.email,
                 onNavigateAttempt = {
-                    // Controlla se la navigazione deve essere bloccata per mostrare il dialogo
                     if (isEditMode && hasUnsavedChanges) {
-                        viewModel.triggerExitEditModeDialog() // Mostra il dialogo "Modifiche non salvate"
-                        false // Blocca la navigazione
+                        viewModel.triggerExitEditModeDialog()
+                        false
                     } else {
-                        true // Permetti la navigazione
+                        true
                     }
                 }
             )
@@ -137,35 +141,40 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Brush.verticalGradient(colors = gradientColors))
+                .padding(scaffoldPaddingValues)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(scaffoldPaddingValues)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { focusManager.clearFocus() }
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = colorScheme.primary)
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { focusManager.clearFocus() }
+                        )
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    ProfileContent(
+                        profileData = profileData,
+                        isEditMode = isEditMode,
+                        canSaveChanges = canSaveChanges,
+                        availablePhonePrefixes = viewModel.availablePhonePrefixes,
+                        onEmailChange = viewModel::onEmailChange,
+                        onPhonePrefixChange = viewModel::onPhonePrefixChange,
+                        onPhoneNumberWithoutPrefixChange = viewModel::onPhoneNumberWithoutPrefixChange,
+                        onSaveChanges = { viewModel.saveChanges(context) },
+                        onLogout = viewModel::triggerLogoutDialog,
+                        onDeleteProfile = viewModel::triggerDeleteProfileDialog,
+                        typography = typography,
+                        colorScheme = colorScheme,
+                        navController = navController,
+                        dimensions = dimensions
                     )
-                    .verticalScroll(rememberScrollState())
-            ) {
-                ProfileContent(
-                    profileData = profileData,
-                    isEditMode = isEditMode, // Passa lo stato di modifica
-                    canSaveChanges = canSaveChanges,
-                    availablePhonePrefixes = viewModel.availablePhonePrefixes,
-                    onNameChange = viewModel::onNameChange,
-                    onEmailChange = viewModel::onEmailChange,
-                    onPhonePrefixChange = viewModel::onPhonePrefixChange,
-                    onPhoneNumberWithoutPrefixChange = viewModel::onPhoneNumberWithoutPrefixChange,
-                    onSaveChanges = viewModel::saveChanges,
-                    onLogout = viewModel::triggerLogoutDialog,
-                    onDeleteProfile = viewModel::triggerDeleteProfileDialog,
-                    typography = typography,
-                    colorScheme = colorScheme,
-                    navController = navController,
-                    dimensions = dimensions
-                )
+                }
             }
         }
 
@@ -173,7 +182,7 @@ fun ProfileScreen(
             UnsavedChangesAlertDialog(
                 onDismissRequest = viewModel::closeExitEditModeConfirmDialog,
                 onSave = {
-                    if (canSaveChanges) viewModel.confirmExitEditModeAndSave()
+                    if (canSaveChanges) viewModel.confirmExitEditModeAndSave(context)
                 },
                 onDontSave = viewModel::confirmExitEditModeWithoutSaving,
                 canSave = canSaveChanges,
@@ -184,7 +193,12 @@ fun ProfileScreen(
         if (showLogoutDialog) {
             LogoutConfirmAlertDialog(
                 onDismissRequest = viewModel::cancelLogoutDialog,
-                onLogoutConfirm = { save -> viewModel.confirmLogout(save) },
+                onLogoutConfirm = { save ->
+                    viewModel.confirmLogout(save, context)
+                    navController.navigate(Screen.LoginScreen.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
                 isEditMode = isEditMode,
                 hasUnsavedChanges = hasUnsavedChanges,
                 canSaveChanges = canSaveChanges,
@@ -212,7 +226,6 @@ private fun ProfileContent(
     isEditMode: Boolean,
     canSaveChanges: Boolean,
     availablePhonePrefixes: List<PhonePrefix>,
-    onNameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPhonePrefixChange: (PhonePrefix) -> Unit,
     onPhoneNumberWithoutPrefixChange: (String) -> Unit,
@@ -242,7 +255,6 @@ private fun ProfileContent(
             profileData = profileData,
             isEditMode = isEditMode,
             availablePhonePrefixes = availablePhonePrefixes,
-            onNameChange = onNameChange,
             onEmailChange = onEmailChange,
             onPhonePrefixChange = onPhonePrefixChange,
             onPhoneNumberWithoutPrefixChange = onPhoneNumberWithoutPrefixChange,
@@ -252,7 +264,7 @@ private fun ProfileContent(
         )
         Spacer(modifier = Modifier.height(dimensions.spacingLarge))
         ProfileOtherOptions(
-            isEditMode = isEditMode, // Passa lo stato di modifica
+            isEditMode = isEditMode,
             typography = typography,
             colorScheme = colorScheme,
             navController = navController,
@@ -277,7 +289,6 @@ private fun ProfileDataFields(
     profileData: ProfileData,
     isEditMode: Boolean,
     availablePhonePrefixes: List<PhonePrefix>,
-    onNameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPhonePrefixChange: (PhonePrefix) -> Unit,
     onPhoneNumberWithoutPrefixChange: (String) -> Unit,
@@ -291,7 +302,6 @@ private fun ProfileDataFields(
         .fillMaxWidth()
         .padding(bottom = dimensions.paddingMedium)
 
-    val nameIsError = isEditMode && profileData.name.isBlank()
     val emailIsError = isEditMode && profileData.email.isBlank()
     val phoneIsError = isEditMode && profileData.phoneNumberWithoutPrefix.isBlank()
 
@@ -322,19 +332,7 @@ private fun ProfileDataFields(
         unfocusedLabelColor = colorScheme.onSurfaceVariant,
     )
 
-
-    OutlinedTextField(
-        value = profileData.name,
-        onValueChange = onNameChange,
-        label = { Text("Nome Utente") },
-        enabled = isEditMode,
-        modifier = commonTextFieldModifier,
-        singleLine = true,
-        isError = nameIsError,
-        colors = textFieldErrorColors,
-        textStyle = typography.bodyLarge
-    )
-
+    // Campo Email modificabile
     OutlinedTextField(
         value = profileData.email,
         onValueChange = onEmailChange,
@@ -348,9 +346,10 @@ private fun ProfileDataFields(
         textStyle = typography.bodyLarge
     )
 
+    // Campo Telefono modificabile
     Row(verticalAlignment = Alignment.Top) {
         ExposedDropdownMenuBox(
-            expanded = prefixDropdownExpanded && isEditMode, // Il menu si apre solo in edit mode
+            expanded = prefixDropdownExpanded && isEditMode,
             onExpandedChange = { if (isEditMode) prefixDropdownExpanded = !prefixDropdownExpanded },
             modifier = Modifier.padding(end = dimensions.spacingSmall)
         ) {
@@ -404,7 +403,7 @@ private fun ProfileDataFields(
 
 @Composable
 private fun ProfileOtherOptions(
-    isEditMode: Boolean, // Aggiunto per disabilitare i pulsanti
+    isEditMode: Boolean,
     typography: Typography,
     colorScheme: ColorScheme,
     navController: NavController,
@@ -420,15 +419,15 @@ private fun ProfileOtherOptions(
         )
         ProfileOptionRow(
             text = "I tuoi immobili",
-            icon = Icons.Default.NightsStay, // Cambia con un'icona appropriata
+            icon = Icons.Default.NightsStay,
             onClick = { navController.navigate(Screen.YourPropertyScreen.route) },
-            enabled = !isEditMode, // Disabilitato se in edit mode
+            enabled = !isEditMode,
             dimensions = dimensions,
             colorScheme = colorScheme
         )
         ProfileOptionRow(
             text = "Immobili salvati",
-            icon = Icons.Default.NightsStay, // Cambia con un'icona appropriata
+            icon = Icons.Default.NightsStay,
             onClick = { navController.navigate(
                 Screen.ApartmentListingScreen.buildRoute(
                     idUtentePath = "",
@@ -436,17 +435,17 @@ private fun ProfileOtherOptions(
                     ricercaPath = ""
                 )
             ) },
-            enabled = !isEditMode, // Disabilitato se in edit mode
+            enabled = !isEditMode,
             dimensions = dimensions,
             colorScheme = colorScheme
         )
         ProfileOptionRow(
             text = "Richieste appuntamenti",
-            icon = Icons.Default.NightsStay, // Cambia con un'icona appropriata
+            icon = Icons.Default.NightsStay,
             onClick = { navController.navigate(
                 Screen.RequestsScreen.withIdUtente("")
             ) },
-            enabled = !isEditMode, // Disabilitato se in edit mode
+            enabled = !isEditMode,
             dimensions = dimensions,
             colorScheme = colorScheme
         )
@@ -458,7 +457,7 @@ fun ProfileOptionRow(
     text: String,
     icon: ImageVector,
     onClick: () -> Unit,
-    enabled: Boolean, // Nuovo parametro per l'abilitazione
+    enabled: Boolean,
     dimensions: Dimensions,
     colorScheme: ColorScheme = MaterialTheme.colorScheme,
     typography: Typography = MaterialTheme.typography
@@ -469,7 +468,7 @@ fun ProfileOptionRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = enabled, onClick = onClick) // Applica lo stato enabled
+            .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = dimensions.paddingMedium),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -520,4 +519,3 @@ fun ProfileScreenPreview() {
         ProfileScreen(navController = navController)
     }
 }
-

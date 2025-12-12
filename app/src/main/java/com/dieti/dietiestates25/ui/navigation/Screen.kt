@@ -84,7 +84,7 @@ sealed class Screen(val route: String) {
     data object NotificationScreen : Screen("notification_screen")
 
     object NotificationDetailScreen : Screen("notification_detail_screen/{notificationId}") {
-        fun createRoute(notificationId: Int): String {
+        fun createRoute(notificationId: String): String {
             return "notification_detail_screen/$notificationId"
         }
     }

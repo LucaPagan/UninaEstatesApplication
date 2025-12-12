@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dieti.dietiestates25.data.model.Appointment
 import com.dieti.dietiestates25.data.model.AppointmentIconType
+import com.dieti.dietiestates25.data.remote.AgenziaDTO
+import com.dieti.dietiestates25.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,6 +51,32 @@ class ManagerViewModel : ViewModel() {
 
     init {
         loadInitialData()
+    }
+
+    private val _agenzie = MutableStateFlow<List<AgenziaDTO>>(emptyList())
+    val agenzie = _agenzie.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
+
+    init {
+        fetchAgenzie()
+    }
+
+    fun fetchAgenzie() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // Recupera la lista delle agenzie dal backend
+                val result = RetrofitClient.instance.getAllAgenzie()
+                _agenzie.value = result
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _agenzie.value = emptyList() // Gestione errore base
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 
     private fun loadInitialData() {
