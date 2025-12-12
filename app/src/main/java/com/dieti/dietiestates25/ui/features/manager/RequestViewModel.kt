@@ -21,6 +21,21 @@ class RequestViewModel : ViewModel() {
         Log.d("ViewModelDebug", "ViewModel init finished.") // <-- Log 3
     }
 
+
+    init {
+        fetchRequests()
+    }
+
+    fun fetchRequests() {
+        viewModelScope.launch {
+            // Simulazione dati. Collegare al backend quando l'endpoint è pronto (es. GET /api/manager/richieste)
+            _richieste.value = listOf(
+                Richiesta(1, "Richiesta Valutazione", "In Attesa"),
+                Richiesta(2, "Richiesta Visita", "Approvata")
+            )
+        }
+    }
+
     private fun caricaRichieste() {
         Log.d("ViewModelDebug", "caricaRichieste started.") // <-- Log 2
         viewModelScope.launch {

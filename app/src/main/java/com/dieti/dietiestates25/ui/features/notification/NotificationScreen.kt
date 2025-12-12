@@ -1,53 +1,87 @@
 package com.dieti.dietiestates25.ui.features.notification
 
 import android.content.res.Configuration
-import com.dieti.dietiestates25.ui.components.AppBottomNavigation
-import com.dieti.dietiestates25.ui.navigation.Screen
-import com.dieti.dietiestates25.ui.theme.Dimensions
-import com.dieti.dietiestates25.data.model.Notification
-import com.dieti.dietiestates25.data.model.Appointment
-import com.dieti.dietiestates25.ui.components.AppNotificationDisplay
-import com.dieti.dietiestates25.ui.components.AppAppointmentDisplay
-import java.util.Locale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.Typography
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.ui.graphics.Brush
+import com.dieti.dietiestates25.data.model.Appointment
+import com.dieti.dietiestates25.data.model.Notification
+import com.dieti.dietiestates25.ui.components.AppAppointmentDisplay
+import com.dieti.dietiestates25.ui.components.AppBottomNavigation
 import com.dieti.dietiestates25.ui.components.AppEmptyDisplayView
+import com.dieti.dietiestates25.ui.components.AppNotificationDisplay
 import com.dieti.dietiestates25.ui.components.AppTopBar
+import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.utils.SessionManager
+import java.util.Locale
 
 @Composable
 fun NotificationScreen(
     navController: NavController,
     idUtente: String = "sconosciuto",
-    viewModel: NotificationsViewModel = viewModel(), // viewModel ora è importato da model
+    viewModel: NotificationViewModel = viewModel(), // Corretto nome classe VM
 ) {
+    val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
+
+    // Carica i dati all'avvio della schermata
+    LaunchedEffect(Unit) {
+        val actualUserId = if (idUtente == "sconosciuto" || idUtente.isBlank()) {
+            SessionManager.getUserId(context) ?: ""
+        } else {
+            idUtente
+        }
+
+        if (actualUserId.isNotEmpty()) {
+            viewModel.loadData(context)
+        }
+    }
 
     val currentTab by viewModel.currentTab.collectAsState()
     val notifications by viewModel.filteredNotifications.collectAsState()
     val isShowingAppointments by viewModel.isShowingAppointments.collectAsState()
     val appointments by viewModel.appointments.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     // Configurazione dell'action button dinamica
     val actionIcon = if (isShowingAppointments) Icons.Filled.Notifications else Icons.Filled.CalendarToday
@@ -86,28 +120,33 @@ fun NotificationScreen(
                 .background(Brush.verticalGradient(colors = gradientColors))
                 .padding(paddingValues)
         ) {
-            if (isShowingAppointments) {
-                AppointmentsScreenContent(
-                    appointments = appointments,
-                    onAppointmentClick = { appointment ->
-                        navController.navigate(Screen.AppointmentDetailScreen.route)
-                    },
-                    dimensions = dimensions, // Passa dimensions
-                    colorScheme = colorScheme, // Passa se AppAppointmentDisplay non usa il default
-                    typography = typography  // Passa se AppAppointmentDisplay non usa il default
-                )
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = colorScheme.primary)
+                }
             } else {
-                NotificationScreenContent(
-                    currentTab = currentTab,
-                    notifications = notifications,
-                    onTabSelected = viewModel::setCurrentTab,
-                    onToggleFavorite = viewModel::toggleFavorite,
-                    navController = navController,
-                    dimensions = dimensions, // Passa dimensions
-                    colorScheme = colorScheme,
-                    typography = typography,
-
-                )
+                if (isShowingAppointments) {
+                    AppointmentsScreenContent(
+                        appointments = appointments,
+                        onAppointmentClick = { appointment ->
+                            navController.navigate(Screen.AppointmentDetailScreen.route)
+                        },
+                        dimensions = dimensions,
+                        colorScheme = colorScheme,
+                        typography = typography
+                    )
+                } else {
+                    NotificationScreenContent(
+                        currentTab = currentTab,
+                        notifications = notifications,
+                        onTabSelected = viewModel::setCurrentTab,
+                        onToggleFavorite = viewModel::toggleFavorite,
+                        navController = navController,
+                        dimensions = dimensions,
+                        colorScheme = colorScheme,
+                        typography = typography
+                    )
+                }
             }
         }
     }
@@ -115,9 +154,9 @@ fun NotificationScreen(
 
 @Composable
 private fun NotificationScreenContent(
-    currentTab: NotificationsViewModel.NotificationTab,
+    currentTab: NotificationViewModel.NotificationTab,
     notifications: List<Notification>,
-    onTabSelected: (NotificationsViewModel.NotificationTab) -> Unit,
+    onTabSelected: (NotificationViewModel.NotificationTab) -> Unit,
     onToggleFavorite: (Int) -> Unit,
     navController: NavController,
     colorScheme: ColorScheme,
@@ -172,7 +211,7 @@ private fun AppointmentsScreenContent(
             .padding(top = dimensions.paddingMedium)
     ) {
         if (appointments.isEmpty()) {
-            AppEmptyDisplayView( // Riutilizza EmptyDisplayView
+            AppEmptyDisplayView(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
@@ -193,7 +232,7 @@ private fun AppointmentsScreenContent(
                 verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
             ) {
                 items(appointments, key = { it.id }) { appointment ->
-                    AppAppointmentDisplay( // Usa il nuovo componente da AppNotification.kt
+                    AppAppointmentDisplay(
                         appointment = appointment,
                         onClick = { onAppointmentClick(appointment) },
                         dimensions = dimensions,
@@ -227,7 +266,7 @@ private fun NotificationsList(
         items(notifications, key = { it.id }) { notification ->
             AppNotificationDisplay(
                 notification = notification,
-                onToggleFavorite = onToggleFavorite, // Già accetta (Int)
+                onToggleFavorite = onToggleFavorite,
                 onClick = { onNotificationClick(notification) },
                 dimensions = dimensions,
                 colorScheme = colorScheme,
@@ -239,8 +278,8 @@ private fun NotificationsList(
 
 @Composable
 fun NotificationTabs(
-    currentTab: NotificationsViewModel.NotificationTab,
-    onTabSelected: (NotificationsViewModel.NotificationTab) -> Unit,
+    currentTab: NotificationViewModel.NotificationTab,
+    onTabSelected: (NotificationViewModel.NotificationTab) -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions
@@ -259,7 +298,7 @@ fun NotificationTabs(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val tabs = NotificationsViewModel.NotificationTab.entries.toTypedArray()
+        val tabs = NotificationViewModel.NotificationTab.entries.toTypedArray()
         tabs.forEach { tab ->
             TabButton(
                 text = tab.name.lowercase(Locale.getDefault())
@@ -311,7 +350,7 @@ fun TabButton(
 fun NotificationScreenPreview() {
     val navController = rememberNavController()
     val previewViewModel = remember {
-        NotificationsViewModel().apply {}
+        NotificationViewModel().apply {}
     }
     NotificationScreen(
         navController = navController,

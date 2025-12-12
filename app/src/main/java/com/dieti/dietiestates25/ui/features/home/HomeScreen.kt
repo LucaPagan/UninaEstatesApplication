@@ -1,6 +1,5 @@
 package com.dieti.dietiestates25.ui.features.home
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,54 +8,45 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.data.remote.ImmobileDTO
-import com.dieti.dietiestates25.data.remote.RetrofitClient
+import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.components.AppSecondaryButton
 import com.dieti.dietiestates25.ui.components.ClickableSearchBar
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
 import com.dieti.dietiestates25.ui.components.AppPropertyCard
 import com.dieti.dietiestates25.ui.components.AppTopBar
 import com.dieti.dietiestates25.ui.components.PropertyShowcaseSection
-// import com.dieti.dietiestates25.data.model.modelsource.sampleListingProperties // Non serve più
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.AppGradients
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import kotlinx.coroutines.launch
 
 @Composable
-fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
+fun HomeScreen(
+    navController: NavController,
+    idUtente: String = "sconosciuto",
+    viewModel: HomeViewModel = viewModel()
+) {
+    // Stato per la lista degli immobili dal DB
+    val immobili by viewModel.immobili.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
     val comune = "Napoli"
 
-    // --- LOGICA BACKEND AGGIUNTA ---
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-
-    // Stato per la lista degli immobili dal DB
-    var immobiliList by remember { mutableStateOf<List<ImmobileDTO>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
 
     // Caricamento Dati all'avvio
     LaunchedEffect(Unit) {
-        scope.launch {
-            try {
-                // Chiamata al Backend per ottenere gli immobili veri
-                immobiliList = RetrofitClient.instance.getAllImmobili()
-            } catch (e: Exception) {
-                Toast.makeText(context, "Errore connessione: ${e.message}", Toast.LENGTH_LONG).show()
-            } finally {
-                isLoading = false
-            }
+        if (immobili.isEmpty()) {
+            viewModel.fetchImmobili()
         }
     }
     // -------------------------------
@@ -109,7 +99,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                 } else {
                     PropertyShowcaseSection(
                         title = "Immobili in evidenza",
-                        items = immobiliList, // Passiamo la lista dal Backend
+                        items = immobili, // Passiamo la lista dal Backend
                         itemContent = { property ->
                             // Adattiamo ImmobileDTO (Backend) ai parametri di AppPropertyCard (Frontend)
                             AppPropertyCard(
@@ -119,7 +109,7 @@ fun HomeScreen(navController: NavController, idUtente: String = "sconosciuto") {
                                 price = "€ ${property.prezzo}", // Conversione Int -> String
                                 // TODO: Modifica AppPropertyCard per accettare imageUrl (String) e usa AsyncImage + Coil
                                 // Per ora usiamo un placeholder statico per evitare errori di compilazione
-                                imageResId = com.dieti.dietiestates25.R.drawable.property1,
+                                imageResId = R.drawable.property1,
                                 address = property.localita ?: "N/A",
                                 details = listOfNotNull(property.tipologia, "${property.mq} mq"),
                                 onClick = {
