@@ -56,7 +56,7 @@ interface UninaAPI {
     suspend fun getUserNotifications(@Path("id") userId: String): List<NotificationDTO>
 
     @GET("api/utenti/{id}/appuntamenti")
-    suspend fun getUserAppointments(@Path("id") userId: String): List<AppointmentDTO>
+    suspend fun getUserAppointments(@Path("id") userId: String): List<AppuntamentoDTO>
 
     // --- DETTAGLIO NOTIFICA & PROPOSTE ---
     @GET("api/notifiche/{id}")
@@ -67,4 +67,20 @@ interface UninaAPI {
         @Path("id") id: String,
         @Body response: ProposalResponseRequest
     ): Response<Any>
+
+    // --- APPUNTAMENTI ---
+    @POST("api/appuntamenti/crea")
+    suspend fun createAppointment(@Body request: AppuntamentoRequest): Response<String>
+
+    // Endpoint per ottenere i dettagli (Assicurati di implementarlo nel backend se non c'è!)
+    // Se il backend non ha questo endpoint specifico, useremo un filtro lato client nel ViewModel.
+    @GET("api/appuntamenti/{id}")
+    suspend fun getAppointment(@Path("id") id: String): Response<AppuntamentoDTO>
+
+    @GET("api/appuntamenti/miei/{userId}")
+    suspend fun getMyAppointments(@Path("userId") userId: String): List<AppuntamentoDTO>
+
+    // --- MANAGER ---
+    @GET("api/manager/agenzie")
+    suspend fun getAllAgenzie(): List<AgenziaDTO>
 }

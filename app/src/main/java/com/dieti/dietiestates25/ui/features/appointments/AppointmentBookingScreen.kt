@@ -17,12 +17,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
@@ -32,16 +35,33 @@ import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentBookingScreen(
-    navController: NavController
+    navController: NavController,
+    idUtente: String,
+    idImmobile: String,
+    // ViewModel dedicato per questa view
+    viewModel: AppointmentBookingViewModel = viewModel()
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
 
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-    var selectedTimeSlotIndex by remember { mutableStateOf<Int?>(0) } // Modificato per usare l'indice
+    var selectedTimeSlotIndex by remember { mutableStateOf<Int?>(null) } // Inizia nullo per forzare selezione
     val scrollState = rememberScrollState()
     val haptic = LocalHapticFeedback.current
+
+    val context = LocalContext.current
+    val bookingState by viewModel.bookingState.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    // Gestione Successo
+    LaunchedEffect(bookingState) {
+        if (bookingState == "Successo") {
+            // Delay opzionale per far leggere il toast o vedere un feedback
+            navController.popBackStack()
+            viewModel.resetState()
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -56,27 +76,46 @@ fun AppointmentBookingScreen(
                 haptic = haptic,
                 colorScheme = colorScheme,
                 onProceedClick = {
-                    // Ora selectedTimeSlotIndex è l'indice, puoi mappare a una stringa se necessario
-                    val timeSlots = listOf("9-12", "12-14", "14-17", "17-20") // Coerente con TimeSlotSelector
-                    val timeSlotString = selectedTimeSlotIndex?.let { timeSlots.getOrNull(it) } ?: "N/A"
-                    println("Data selezionata: $selectedDate, Fascia oraria (indice $selectedTimeSlotIndex): $timeSlotString")
+                    // Chiama la funzione di prenotazione del ViewModel
+                    viewModel.bookAppointment(
+                        utenteId = idUtente,
+                        immobileId = idImmobile,
+                        date = selectedDate,
+                        timeSlotIndex = selectedTimeSlotIndex,
+                        context = context
+                    )
                 },
                 dimensions = dimensions,
-                isProceedEnabled = selectedTimeSlotIndex != null // Abilita Prosegui solo se uno slot è selezionato
+                isProceedEnabled = selectedTimeSlotIndex != null && !isLoading // Disabilita se loading o nessun orario
             )
         }
     ) { paddingValues ->
-        AppointmentBookingContent(
-            paddingValues = paddingValues,
-            scrollState = scrollState,
-            selectedDate = selectedDate,
-            onDateSelected = { newDate -> selectedDate = newDate },
-            selectedTimeSlotIndex = selectedTimeSlotIndex,
-            onTimeSlotSelected = { newTimeSlotIndex -> selectedTimeSlotIndex = newTimeSlotIndex }, // Riceve l'indice
-            colorScheme = colorScheme,
-            typography = typography,
-            dimensions = dimensions
-        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            AppointmentBookingContent(
+                paddingValues = paddingValues,
+                scrollState = scrollState,
+                selectedDate = selectedDate,
+                onDateSelected = { newDate -> selectedDate = newDate },
+                selectedTimeSlotIndex = selectedTimeSlotIndex,
+                onTimeSlotSelected = { newTimeSlotIndex -> selectedTimeSlotIndex = newTimeSlotIndex }, // Riceve l'indice
+                colorScheme = colorScheme,
+                typography = typography,
+                dimensions = dimensions
+            )
+
+            // Overlay di caricamento
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(colorScheme.surface.copy(alpha = 0.5f))
+                        .padding(paddingValues), // Rispetta padding scaffold
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = colorScheme.primary)
+                }
+            }
+        }
     }
 }
 
@@ -104,7 +143,7 @@ private fun AppointmentBookingBottomBar(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onProceedClick()
                 },
-                text = "Prosegui",
+                text = "Conferma Prenotazione", // Testo più esplicito
                 modifier = Modifier.fillMaxWidth(),
                 enabled = isProceedEnabled // Abilita/disabilita il bottone
             )
@@ -208,13 +247,13 @@ fun NotificationBox(
             modifier = Modifier.padding(dimensions.paddingMedium)
         ) {
             Text(
-                text = "Questa non è una prenotazione effettiva:",
+                text = "Nota sulla prenotazione:",
                 style = typography.bodyMedium.copy(fontWeight = FontWeight.Bold), // Bold per più enfasi
                 color = colorScheme.onSecondaryContainer
             )
             Spacer(modifier = Modifier.height(dimensions.spacingSmall)) // Aumentato leggermente
             Text(
-                text = "La tua richiesta sarà inviata all'inserzionista che si occuperà di ricontattarti.",
+                text = "La tua richiesta sarà inviata all'agente o al proprietario. Riceverai una notifica di conferma.",
                 style = typography.bodySmall,
                 color = colorScheme.onSecondaryContainer.copy(alpha = 0.9f) // Leggermente meno trasparente
             )
@@ -226,5 +265,5 @@ fun NotificationBox(
 @Composable
 fun AppointmentBookingScreenPreview() {
     val navController = rememberNavController()
-    AppointmentBookingScreen(navController = navController)
+    AppointmentBookingScreen(navController = navController, idUtente = "1", idImmobile = "1")
 }

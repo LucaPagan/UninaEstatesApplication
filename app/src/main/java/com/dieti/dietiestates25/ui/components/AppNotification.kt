@@ -157,7 +157,7 @@ fun AppNotificationDisplay(
         trailingTopText = notification.date.format(dateFormatter),
         trailingBottomContent = {
             CircularIconActionButton(
-                onClick = { onToggleFavorite(notification.id) },
+                onClick = { onToggleFavorite(notification.id.toInt()) },
                 iconVector = if (notification.isFavorite) Icons.Filled.Star else Icons.Outlined.Star,
                 contentDescription = if (notification.isFavorite) "Rimuovi dai preferiti" else "Aggiungi ai preferiti",
                 backgroundColor = colorScheme.surfaceDim,

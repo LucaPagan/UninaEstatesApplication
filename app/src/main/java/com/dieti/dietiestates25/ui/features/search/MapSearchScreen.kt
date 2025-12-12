@@ -112,8 +112,8 @@ fun MapSearchScreen(
                 bedrooms = 2,
                 purchaseType = "affitto",
                 condition = "ottimo",
-                priceValue = 850,
-                surfaceValue = 85
+                priceValue = 850F,
+                surfaceValue = 85F
             ),
             PropertyMarker(
                 id = "2",
@@ -128,8 +128,8 @@ fun MapSearchScreen(
                 bedrooms = 1,
                 purchaseType = "affitto",
                 condition = "buono",
-                priceValue = 650,
-                surfaceValue = 45
+                priceValue = 650F,
+                surfaceValue = 45F
             ),
             PropertyMarker(
                 id = "3",
@@ -144,8 +144,8 @@ fun MapSearchScreen(
                 bedrooms = 3,
                 purchaseType = "affitto",
                 condition = "eccellente",
-                priceValue = 1200,
-                surfaceValue = 120
+                priceValue = 1200F,
+                surfaceValue = 120F
             ),
             PropertyMarker(
                 id = "4",
@@ -160,8 +160,8 @@ fun MapSearchScreen(
                 bedrooms = 4,
                 purchaseType = "vendita",
                 condition = "eccellente",
-                priceValue = 450000,
-                surfaceValue = 200
+                priceValue = 450000F,
+                surfaceValue = 200F
             ),
             PropertyMarker(
                 id = "5",
@@ -176,8 +176,8 @@ fun MapSearchScreen(
                 bedrooms = 1,
                 purchaseType = "affitto",
                 condition = "nuovo",
-                priceValue = 900,
-                surfaceValue = 95
+                priceValue = 900F,
+                surfaceValue = 95F
             )
         )
     }

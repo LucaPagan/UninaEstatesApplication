@@ -9,26 +9,25 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.dieti.dietiestates25.ui.features.notification.NotificationsViewModel
 import com.dieti.dietiestates25.ui.features.property.ApartmentListingScreen
 import com.dieti.dietiestates25.ui.features.home.HomeScreen
+import com.dieti.dietiestates25.ui.features.manager.ManagerScreen
+import com.dieti.dietiestates25.ui.features.notification.NotificationDetailScreen
+import com.dieti.dietiestates25.ui.features.notification.NotificationScreen
+import com.dieti.dietiestates25.ui.features.profile.ProfileScreen
+import com.dieti.dietiestates25.ui.features.property.PropertySellScreen
+import com.dieti.dietiestates25.ui.features.appointments.AppointmentBookingScreen
+import com.dieti.dietiestates25.ui.features.property.PriceProposalScreen
+import com.dieti.dietiestates25.ui.features.property.PropertyScreen
+import com.dieti.dietiestates25.ui.features.search.MapSearchScreen
 import com.dieti.dietiestates25.ui.features.search.SearchFilterScreen
 import com.dieti.dietiestates25.ui.features.auth.WelcomeScreen // Import mancante
 import com.dieti.dietiestates25.ui.features.search.SearchScreen // Import mancante
-import com.dieti.dietiestates25.ui.features.property.PropertySellScreen // Import mancante
-import com.dieti.dietiestates25.ui.features.property.PropertyScreen // Import mancante
-import com.dieti.dietiestates25.ui.features.property.PriceProposalScreen // Import mancante
-import com.dieti.dietiestates25.ui.features.appointments.AppointmentBookingScreen // Import mancante
 import com.dieti.dietiestates25.ui.features.appointments.AppointmentDetailScreen
 import com.dieti.dietiestates25.ui.features.property.EditPropertyScreen
 import com.dieti.dietiestates25.ui.features.search.FullScreenMapScreen
-import com.dieti.dietiestates25.ui.features.search.MapSearchScreen
-import com.dieti.dietiestates25.ui.features.notification.NotificationScreen // Import mancante
-import com.dieti.dietiestates25.ui.features.notification.NotificationDetailScreen // Import mancante
-import com.dieti.dietiestates25.ui.features.profile.ProfileScreen // Import mancante
 import com.dieti.dietiestates25.ui.features.search.SearchTypeSelectionScreen
 import com.dieti.dietiestates25.ui.features.property.YourPropertyScreen
-import com.dieti.dietiestates25.ui.features.manager.ManagerScreen
 import com.dieti.dietiestates25.ui.features.manager.RequestsScreen
 import com.dieti.dietiestates25.ui.features.auth.LoginScreenPreviewOnly
 
@@ -149,7 +148,12 @@ fun Navigation() {
 
         composable(route = Screen.PriceProposalScreen.route){ PriceProposalScreen(navController = navController) }
 
-        composable(route = Screen.AppointmentBookingScreen.route){ AppointmentBookingScreen(navController = navController) }
+        composable(route = Screen.AppointmentBookingScreen.route){ AppointmentBookingScreen(
+            navController = navController,
+            idUtente = "",
+            idImmobile = "",
+            viewModel = viewModel()
+        ) }
 
         composable(route = Screen.NotificationScreen.route){ NotificationScreen(navController = navController) }
 
@@ -157,7 +161,7 @@ fun Navigation() {
             route = Screen.NotificationDetailScreen.route,
             arguments = listOf(navArgument("notificationId") { type = NavType.IntType })
         ) { backStackEntry ->
-            val notificationId = backStackEntry.arguments?.getInt("notificationId")
+            val notificationId = backStackEntry.arguments?.getString("notificationId")
             val notificationsViewModel: NotificationsViewModel = viewModel()
 
             NotificationDetailScreen(
@@ -294,3 +298,4 @@ fun Navigation() {
         }
     }
 }
+
