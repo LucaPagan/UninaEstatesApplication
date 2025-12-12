@@ -3,11 +3,46 @@ package com.dieti.dietiestates25.ui.utils
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.net.Uri
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 import java.text.NumberFormat
-import java.util.Currency
 import java.util.Locale
 import kotlin.math.roundToInt
 
+object Utils {
+
+    // Funzione per convertire un URI (content://...) in un File reale
+    fun getFileFromUri(context: Context, uri: Uri): File? {
+        return try {
+            val contentResolver = context.contentResolver
+            val inputStream: InputStream? = contentResolver.openInputStream(uri)
+
+            // Crea un file temporaneo nella cache dell'app
+            val tempFile = File.createTempFile("upload_image", ".jpg", context.cacheDir)
+            tempFile.deleteOnExit() // Pulisce automaticamente all'uscita
+
+            val outputStream = FileOutputStream(tempFile)
+            inputStream?.use { input ->
+                outputStream.use { output ->
+                    input.copyTo(output)
+                }
+            }
+            tempFile
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    // Helper per formattare stringhe (es. prima lettera maiuscola)
+    fun String.capitalizeFirstLetter(): String {
+        return this.lowercase().replaceFirstChar {
+            if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+        }
+    }
+}
 /**
  * Funzione di estensione per trovare l'Activity a partire da un Context.
  * Utile perché LocalView.current.context in alcuni casi (es. Dialog, BottomSheet)

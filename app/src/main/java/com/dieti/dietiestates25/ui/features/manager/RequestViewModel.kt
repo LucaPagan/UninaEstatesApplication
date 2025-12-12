@@ -30,8 +30,18 @@ class RequestViewModel : ViewModel() {
         viewModelScope.launch {
             // Simulazione dati. Collegare al backend quando l'endpoint è pronto (es. GET /api/manager/richieste)
             _richieste.value = listOf(
-                Richiesta(1, "Richiesta Valutazione", "In Attesa"),
-                Richiesta(2, "Richiesta Visita", "Approvata")
+                Richiesta(
+                    1,
+                    "Richiesta Valutazione",
+                    "In Attesa",
+                    data = LocalDate.now(),
+                    stato = StatoRichiesta.IN_ACCETTAZIONE
+                ),
+                Richiesta(
+                    2, "Richiesta Visita", "Approvata",
+                    data = LocalDate.now(),
+                    stato = StatoRichiesta.CONFERMATA
+                )
             )
         }
     }

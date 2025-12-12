@@ -119,11 +119,6 @@ class NotificationViewModel : ViewModel() {
         _isShowingAppointments.value = !_isShowingAppointments.value
     }
 
-    fun toggleFavorite(notificationId: Int) {
-        // Questa funzione ora si aspetta un Int, ma gli ID sono String.
-        // Necessario aggiornare la logica se si vuole supportare i preferiti localmente con String ID
-    }
-
     // Overload per String ID
     fun toggleFavorite(notificationId: String) {
         _notifications.value = _notifications.value.map {

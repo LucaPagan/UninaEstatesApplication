@@ -364,7 +364,14 @@ fun PropertyPreviewInfoWindowPreview() {
                     description = "Splendido appartamento nel cuore del centro storico di Napoli con vista panoramica",
                     surface = "85 m²",
                     bathrooms = 1,
-                    bedrooms = 2
+                    bedrooms = 2,
+                    imageUrl = null,
+                    purchaseType = "Vendita",
+                    address = "Via Roma, 123",
+                    condition = "Nuovo",
+                    isAvailable = true,
+                    priceValue = 300.0F,
+                    surfaceValue = 300.0F
                 ),
                 onClick = { },
                 onClose = { },

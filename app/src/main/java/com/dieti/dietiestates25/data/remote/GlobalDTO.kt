@@ -8,7 +8,7 @@ data class ImmobileDTO(
     val tipologia: String?,
     val localita: String?,
     val mq: Int?,
-    val descrizione: String?,
+    val descrizione: String,
     val coverImageId: Int?,
     val isVendita: Boolean,
     val proprietarioId: String
@@ -88,7 +88,7 @@ data class ProposalResponseRequest(
     val accettata: Boolean
 )
 
-data class AppointmentDTO(
+data class AppuntamentoDTO(
     val id: String,
     val data: String, // "YYYY-MM-DD"
     val ora: String,  // "HH:mm"

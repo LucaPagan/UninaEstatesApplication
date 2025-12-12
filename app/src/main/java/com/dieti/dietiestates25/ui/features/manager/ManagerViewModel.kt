@@ -89,28 +89,32 @@ class ManagerViewModel : ViewModel() {
 
             _appointments.value = listOf(
                 Appointment(
-                    1,
+                    "1",
                     "Visita",
                     "Appartamento in Via Firenze 7",
                     AppointmentIconType.VISIT,
-                    LocalDate.of(2025, 9, 3),
+                    "2025, 9, 3",
                     "Conferma in attesa",
                     "9-12",
                     "Mario Rossi",
                     "Via Roma 10",
                     false,
-                    ""
+                    "",
+                    propertyName = "Appartamento in Via Firenze 7"
                 ),
                 Appointment(
-                    2, "Appuntamento",
+                    "2",
+                    "Appuntamento",
                     "Appartamento in Via Torino 21",
                     AppointmentIconType.MEETING,
-                    LocalDate.of(2025, 9, 5), "Confermato",
+                    "2025, 9, 5",
+                    "Confermato",
                     timeSlot = "12-14",
                     clientName = "Giulia Verdi",
                     propertyAddress = "Via Milano 22",
                     isFavorite = true,
-                    notes = ""
+                    notes = "",
+                    propertyName = "Appartamento in Via Torino 21"
                 )
             )
 
