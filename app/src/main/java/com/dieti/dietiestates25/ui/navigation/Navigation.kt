@@ -142,8 +142,13 @@ fun Navigation() {
         // Se Screen.PropertyScreen.withId("id") produce "property_screen/id", allora:
 
         //Se PropertyScreen non prende argomenti nel path, allora era corretto:
-        composable(route = Screen.PropertyScreen.route) {
-            PropertyScreen(navController = navController)
+        composable(
+            route = Screen.PropertyScreen.route + "{idProperty}",
+            arguments = listOf(
+                navArgument("idProperty") { type = NavType.StringType }
+            )
+        ) { entry ->
+            PropertyScreen(navController = navController, idProperty = entry.arguments?.getString("idProperty"))
         }
 
         composable(route = Screen.PriceProposalScreen.route){ PriceProposalScreen(navController = navController) }

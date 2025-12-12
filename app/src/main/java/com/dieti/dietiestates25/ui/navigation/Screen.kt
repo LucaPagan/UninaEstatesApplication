@@ -65,9 +65,9 @@ sealed class Screen(val route: String) {
         }
     }
 
-    data object PropertyScreen : Screen("property_screen") {
-        fun withId(propertyId: String): String {
-            return "$route/${Uri.encode(propertyId)}"
+    data object PropertyScreen : Screen("property_screen/{idProperty}") {
+        fun withId(idProperty: String): String {
+            return "$route/${Uri.encode(idProperty)}"
         }
     }
 
