@@ -49,6 +49,7 @@ android {
 }
 
 dependencies {
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     //Google Maps
     implementation("com.google.android.gms:play-services-maps:19.2.0")
@@ -84,6 +85,7 @@ dependencies {
     // Gson per la serializzazione JSON (usato in PreferenceManager)
     implementation(libs.gson)
     implementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.compose.runtime.livedata)
 
     // Debug
     debugImplementation(libs.ui.tooling)

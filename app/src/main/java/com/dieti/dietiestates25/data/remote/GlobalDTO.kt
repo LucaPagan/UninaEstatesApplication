@@ -65,6 +65,20 @@ data class ImmobileCreateRequest(
 )
 
 // --- UTENTI ---
+data class UtenteRegistrazioneRequest(
+    val nome: String,
+    val cognome: String,
+    val email: String,
+    val password: String,
+    val telefono: String?
+)
+data class UtenteResponseDTO(
+    val id: String,
+    val nome: String,
+    val cognome: String,
+    val email: String,
+    val telefono: String?
+)
 data class UserProfileDTO(
     val id: String,
     val nome: String,

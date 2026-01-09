@@ -12,6 +12,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel // Import necessario
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
@@ -22,17 +23,25 @@ import com.dieti.dietiestates25.ui.theme.AppGradients
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.theme.TealDeep
+import com.tuonome.immobiliare.ui.register.AuthViewModel
+
+// Assicurati di importare il ViewModel corretto
+// import com.dieti.dietiestates25.ui.viewmodel.AuthViewModel
 
 private const val WELCOME_IMAGE_WIDTH_FRACTION = 0.9f
 private const val WELCOME_IMAGE_ASPECT_RATIO = 1f / 0.8f
 
 @SuppressLint("SuspiciousIndentation")
 @Composable
-fun WelcomeScreen(navController: NavController) {
+fun WelcomeScreen(
+    navController: NavController,
+    idUtente: String? = null,
+    // Iniettiamo il ViewModel per salvare lo stato "Prima Apertura"
+    viewModel: AuthViewModel = viewModel()
+) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
-    val idUtente = "Danilo Scala"
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -105,10 +114,17 @@ fun WelcomeScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.weight(0.3f))
 
+                // --- MODIFICA FONDAMENTALE QUI ---
                 AppPrimaryButton(
                     text = "Inizia ora",
                     onClick = {
-                        navController.navigate(Screen.LoginScreen.route)
+                        // 1. Diciamo al sistema che la Welcome Screen è stata vista
+                        viewModel.completaWelcomeScreen()
+
+                        // 2. Navighiamo al Login rimuovendo la Welcome dal backstack
+                        navController.navigate(Screen.LoginScreen.route) {
+                            popUpTo("welcome_intro_screen") { inclusive = true }
+                        }
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -116,14 +132,5 @@ fun WelcomeScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
             }
         }
-    }
-}
-
-@Preview(showBackground = true, device = "id:pixel_4")
-@Composable
-fun WelcomeScreenPreview() {
-    DietiEstatesTheme {
-        val navController = rememberNavController()
-        WelcomeScreen(navController = navController)
     }
 }

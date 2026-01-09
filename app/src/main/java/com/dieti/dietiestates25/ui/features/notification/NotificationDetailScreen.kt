@@ -1,6 +1,7 @@
 package com.dieti.dietiestates25.ui.features.notification
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,9 +38,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,39 +50,117 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.data.model.NotificationDetail
-import com.dieti.dietiestates25.data.model.NotificationIconType
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
 import com.dieti.dietiestates25.ui.components.CircularIconActionButton
 import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 import com.dieti.dietiestates25.ui.theme.Dimensions
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+// --- DATI MOCK LOCALI (Sostituiscono Model e ViewModel) ---
+enum class NotificationIconType {
+    PHONE, PERSON, BADGE
+}
+
+data class NotificationDetail(
+    val id: String,
+    val senderName: String,
+    val senderType: String,
+    val message: String,
+    val date: String,
+    val isRead: Boolean,
+    val isFavorite: Boolean,
+    val iconType: NotificationIconType,
+    val isProposal: Boolean,
+    val proposalAmount: String? = null
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationDetailScreen(
     navController: NavController,
     notificationId: String?,
-    onToggleMasterFavorite: (String) -> Unit,
-    viewModel: NotificationDetailViewModel = viewModel()
+    onToggleMasterFavorite: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val notificationDetail by viewModel.currentNotification.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-
-    val formattedMessage = remember(notificationDetail) {
-        viewModel.getFormattedMessage(notificationDetail)
-    }
     val dimensions = Dimensions
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
+    val scope = rememberCoroutineScope()
 
+    // --- GESTIONE STATO LOCALE ---
+    var notificationDetail by remember { mutableStateOf<NotificationDetail?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    // --- CARICAMENTO DATI SIMULATO ---
     LaunchedEffect(notificationId) {
+        isLoading = true
+        delay(1000) // Simula ritardo network
+
         if (notificationId != null) {
-            viewModel.loadNotificationById(notificationId)
+            // Mock dei dati basato sull'ID (o generico)
+            notificationDetail = NotificationDetail(
+                id = notificationId,
+                senderName = "Mario Rossi",
+                senderType = "Agente Immobiliare",
+                message = "Salve, ho ricevuto una proposta d'acquisto per il suo immobile in Via Roma. Il cliente è molto interessato e vorrebbe chiudere la trattativa entro la settimana.",
+                date = "2024-05-20",
+                isRead = true,
+                isFavorite = false,
+                iconType = NotificationIconType.PERSON,
+                isProposal = true, // Mettilo a false per nascondere i bottoni
+                proposalAmount = "€ 250.000"
+            )
+        }
+        isLoading = false
+    }
+
+    // Funzione helper per formattare il messaggio
+    fun getFormattedMessage(detail: NotificationDetail?): String {
+        if (detail == null) return ""
+        return if (detail.isProposal && detail.proposalAmount != null) {
+            "${detail.message}\n\nProposta economica: ${detail.proposalAmount}"
+        } else {
+            detail.message
+        }
+    }
+
+    val formattedMessage = remember(notificationDetail) {
+        getFormattedMessage(notificationDetail)
+    }
+
+    // --- AZIONI LOCALI ---
+    fun handleAccept() {
+        scope.launch {
+            Toast.makeText(context, "Proposta accettata con successo!", Toast.LENGTH_SHORT).show()
+            // Qui chiameresti il backend...
+            delay(500)
+            navController.popBackStack()
+        }
+    }
+
+    fun handleReject() {
+        scope.launch {
+            Toast.makeText(context, "Proposta rifiutata.", Toast.LENGTH_SHORT).show()
+            // Qui chiameresti il backend...
+            delay(500)
+            navController.popBackStack()
+        }
+    }
+
+    fun handleToggleFavorite() {
+        notificationDetail?.let { current ->
+            val newStatus = !current.isFavorite
+            // Aggiorna UI locale
+            notificationDetail = current.copy(isFavorite = newStatus)
+            // Notifica il padre/backend
+            onToggleMasterFavorite(current.id)
+
+            val msg = if (newStatus) "Aggiunto ai preferiti" else "Rimosso dai preferiti"
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -93,12 +174,7 @@ fun NotificationDetailScreen(
             NotificationDetailTopAppBar(
                 navController = navController,
                 notificationDetail = notificationDetail,
-                onToggleFavorite = {
-                    notificationDetail?.id?.let { id ->
-                        onToggleMasterFavorite(id)
-                        viewModel.loadNotificationById(id)
-                    }
-                },
+                onToggleFavorite = { handleToggleFavorite() },
                 colorScheme = colorScheme,
                 typography = typography,
                 dimensions = dimensions
@@ -119,8 +195,8 @@ fun NotificationDetailScreen(
                 modifier = Modifier.padding(paddingValues),
                 notificationDetail = notificationDetail!!,
                 formattedMessage = formattedMessage,
-                onAccept = { viewModel.acceptProposal(context) },
-                onReject = { viewModel.rejectProposal(context) },
+                onAccept = { handleAccept() },
+                onReject = { handleReject() },
                 colorScheme = colorScheme,
                 typography = typography,
                 dimensions = dimensions
@@ -365,12 +441,9 @@ private fun ActionButtonsSection(
 @Composable
 fun NotificationDetailScreenPreview() {
     val navController = rememberNavController()
-    val previewViewModel = viewModel<NotificationDetailViewModel>()
-    // In preview mode loadNotificationById would need to be mocked or fail gracefully
     NotificationDetailScreen(
         navController = navController,
-        notificationId = "",
-        onToggleMasterFavorite = { },
-        viewModel = previewViewModel
+        notificationId = "1",
+        onToggleMasterFavorite = { }
     )
 }
