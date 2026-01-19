@@ -1,13 +1,7 @@
 package com.dieti.dietiestates25.ui.features.appointments
 
-import com.dieti.dietiestates25.ui.components.CalendarView
-import com.dieti.dietiestates25.ui.components.AppPrimaryButton
-import com.dieti.dietiestates25.ui.components.TimeSlotSelector
-import com.dieti.dietiestates25.ui.theme.Dimensions
-
-import java.time.LocalDate
-
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -25,11 +19,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.ui.components.CalendarView
+import com.dieti.dietiestates25.ui.components.AppPrimaryButton
+import com.dieti.dietiestates25.ui.components.TimeSlotSelector
 import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
-
+import com.dieti.dietiestates25.ui.theme.Dimensions
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,29 +36,47 @@ import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 fun AppointmentBookingScreen(
     navController: NavController,
     idUtente: String,
-    idImmobile: String,
-    // ViewModel dedicato per questa view
-    viewModel: AppointmentBookingViewModel = viewModel()
+    idImmobile: String
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
-
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-    var selectedTimeSlotIndex by remember { mutableStateOf<Int?>(null) } // Inizia nullo per forzare selezione
-    val scrollState = rememberScrollState()
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
 
-    val context = LocalContext.current
-    val bookingState by viewModel.bookingState.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
+    // --- GESTIONE STATO LOCALE (Sostituisce il ViewModel) ---
+    val scope = rememberCoroutineScope() // Per lanciare operazioni asincrone (delay)
 
-    // Gestione Successo
-    LaunchedEffect(bookingState) {
-        if (bookingState == "Successo") {
-            // Delay opzionale per far leggere il toast o vedere un feedback
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedTimeSlotIndex by remember { mutableStateOf<Int?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    var bookingSuccess by remember { mutableStateOf(false) } // Flag per navigare via al successo
+
+    val scrollState = rememberScrollState()
+
+    // --- LOGICA DI PRENOTAZIONE ---
+    fun performBooking() {
+        scope.launch {
+            isLoading = true
+
+            // Simula una chiamata di rete (es. 2 secondi)
+            delay(2000)
+
+            // Qui inseriresti la logica reale (es. chiamata a Retrofit/Firebase)
+            // Log per debug: "Prenotazione per utente $idUtente immobile $idImmobile il $selectedDate"
+
+            Toast.makeText(context, "Prenotazione inviata con successo!", Toast.LENGTH_SHORT).show()
+
+            isLoading = false
+            bookingSuccess = true
+        }
+    }
+
+    // --- GESTIONE EFFETTI ---
+    // Se la prenotazione ha successo, torna indietro
+    LaunchedEffect(bookingSuccess) {
+        if (bookingSuccess) {
             navController.popBackStack()
-            viewModel.resetState()
         }
     }
 
@@ -76,17 +93,10 @@ fun AppointmentBookingScreen(
                 haptic = haptic,
                 colorScheme = colorScheme,
                 onProceedClick = {
-                    // Chiama la funzione di prenotazione del ViewModel
-                    viewModel.bookAppointment(
-                        utenteId = idUtente,
-                        immobileId = idImmobile,
-                        date = selectedDate,
-                        timeSlotIndex = selectedTimeSlotIndex,
-                        context = context
-                    )
+                    performBooking() // Chiama la funzione locale
                 },
                 dimensions = dimensions,
-                isProceedEnabled = selectedTimeSlotIndex != null && !isLoading // Disabilita se loading o nessun orario
+                isProceedEnabled = selectedTimeSlotIndex != null && !isLoading
             )
         }
     ) { paddingValues ->
@@ -97,7 +107,7 @@ fun AppointmentBookingScreen(
                 selectedDate = selectedDate,
                 onDateSelected = { newDate -> selectedDate = newDate },
                 selectedTimeSlotIndex = selectedTimeSlotIndex,
-                onTimeSlotSelected = { newTimeSlotIndex -> selectedTimeSlotIndex = newTimeSlotIndex }, // Riceve l'indice
+                onTimeSlotSelected = { newTimeSlotIndex -> selectedTimeSlotIndex = newTimeSlotIndex },
                 colorScheme = colorScheme,
                 typography = typography,
                 dimensions = dimensions
@@ -109,7 +119,7 @@ fun AppointmentBookingScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(colorScheme.surface.copy(alpha = 0.5f))
-                        .padding(paddingValues), // Rispetta padding scaffold
+                        .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = colorScheme.primary)
@@ -125,17 +135,17 @@ private fun AppointmentBookingBottomBar(
     colorScheme: ColorScheme,
     onProceedClick: () -> Unit,
     dimensions: Dimensions,
-    isProceedEnabled: Boolean // Nuovo parametro per abilitare/disabilitare il bottone
+    isProceedEnabled: Boolean
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .navigationBarsPadding() // Padding per la navigation bar di sistema
+            .navigationBarsPadding()
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(colorScheme.background) // Sfondo standard per bottom bar
+                .background(colorScheme.background)
                 .padding(dimensions.paddingMedium),
         ) {
             AppPrimaryButton(
@@ -143,9 +153,9 @@ private fun AppointmentBookingBottomBar(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onProceedClick()
                 },
-                text = "Conferma Prenotazione", // Testo più esplicito
+                text = "Conferma Prenotazione",
                 modifier = Modifier.fillMaxWidth(),
-                enabled = isProceedEnabled // Abilita/disabilita il bottone
+                enabled = isProceedEnabled
             )
         }
     }
@@ -157,8 +167,8 @@ private fun AppointmentBookingContent(
     scrollState: ScrollState,
     selectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
-    selectedTimeSlotIndex: Int?, // Modificato per usare l'indice
-    onTimeSlotSelected: (Int) -> Unit, // Modificato per ricevere l'indice
+    selectedTimeSlotIndex: Int?,
+    onTimeSlotSelected: (Int) -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions
@@ -174,7 +184,7 @@ private fun AppointmentBookingContent(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(horizontal = dimensions.paddingMedium)
-                .imePadding() // Padding per la tastiera
+                .imePadding()
         ) {
             Spacer(modifier = Modifier.height(dimensions.spacingMedium))
             ScreenSectionTitle(
@@ -188,7 +198,7 @@ private fun AppointmentBookingContent(
                 onDateSelected = onDateSelected,
                 colorScheme = colorScheme,
                 typography = typography,
-                dimensions = dimensions // Passa dimensions a CalendarView
+                dimensions = dimensions
             )
             Spacer(modifier = Modifier.height(dimensions.spacingLarge))
             ScreenSectionTitle(
@@ -196,8 +206,8 @@ private fun AppointmentBookingContent(
                 colorScheme = colorScheme,
                 typography = typography
             )
-            Spacer(modifier = Modifier.height(dimensions.spacingMedium)) // Aumentato leggermente lo spazio
-            TimeSlotSelector( // Usa il nuovo TimeSlotSelector
+            Spacer(modifier = Modifier.height(dimensions.spacingMedium))
+            TimeSlotSelector(
                 selectedTimeSlotIndex = selectedTimeSlotIndex,
                 onTimeSlotSelected = onTimeSlotSelected,
                 colorScheme = colorScheme,
@@ -210,7 +220,7 @@ private fun AppointmentBookingContent(
                 typography = typography,
                 dimensions = dimensions
             )
-            Spacer(modifier = Modifier.height(dimensions.spacingLarge)) // Spazio extra in fondo
+            Spacer(modifier = Modifier.height(dimensions.spacingLarge))
         }
     }
 }
@@ -223,13 +233,10 @@ private fun ScreenSectionTitle(
 ) {
     Text(
         text = title,
-        style = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), // Leggero bold
+        style = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
         color = colorScheme.onSurface
     )
 }
-
-// TimeSlotSelector ora è definito in components/CalendarComponents.kt
-// Rimuovi la vecchia definizione da questo file se era qui.
 
 @Composable
 fun NotificationBox(
@@ -240,22 +247,22 @@ fun NotificationBox(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
-        color = colorScheme.secondaryContainer.copy(alpha = 0.4f), // Leggermente più trasparente
-        border = BorderStroke(dimensions.borderStrokeSmall, colorScheme.outline.copy(alpha = 0.6f)) // Bordo più leggero
+        color = colorScheme.secondaryContainer.copy(alpha = 0.4f),
+        border = BorderStroke(dimensions.borderStrokeSmall, colorScheme.outline.copy(alpha = 0.6f))
     ) {
         Column(
             modifier = Modifier.padding(dimensions.paddingMedium)
         ) {
             Text(
                 text = "Nota sulla prenotazione:",
-                style = typography.bodyMedium.copy(fontWeight = FontWeight.Bold), // Bold per più enfasi
+                style = typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                 color = colorScheme.onSecondaryContainer
             )
-            Spacer(modifier = Modifier.height(dimensions.spacingSmall)) // Aumentato leggermente
+            Spacer(modifier = Modifier.height(dimensions.spacingSmall))
             Text(
                 text = "La tua richiesta sarà inviata all'agente o al proprietario. Riceverai una notifica di conferma.",
                 style = typography.bodySmall,
-                color = colorScheme.onSecondaryContainer.copy(alpha = 0.9f) // Leggermente meno trasparente
+                color = colorScheme.onSecondaryContainer.copy(alpha = 0.9f)
             )
         }
     }

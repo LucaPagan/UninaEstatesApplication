@@ -20,17 +20,47 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.data.model.Appointment
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
 import com.dieti.dietiestates25.ui.components.AppTopBar
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
+import kotlinx.coroutines.delay
 import java.util.Locale
 
-// Enum per lo stato dell'offerta, necessario per il StatusBadge
+// --- DATI MOCK LOCALI (Sostituiscono Model e ViewModel) ---
+data class Offer(
+    val id: String,
+    val buyerName: String,
+    val price: String,
+    val propertyAddress: String,
+    val status: String,
+    val date: String
+)
+
+data class Appointment(
+    val id: String,
+    val clientName: String,
+    val propertyAddress: String,
+    val date: String,
+    val timeSlot: String,
+    val status: String,
+    val notes: String
+)
+
+data class Report(
+    val id: String,
+    val title: String,
+    val description: String,
+    val date: String,
+    val summary: String
+)
+
+enum class ManagerTab {
+    OFFERS, APPOINTMENTS, REPORTS
+}
+
 enum class StatoOfferta {
     IN_ATTESA, ACCETTATA, RIFIUTATA
 }
@@ -38,18 +68,44 @@ enum class StatoOfferta {
 @Composable
 fun ManagerScreen(
     navController: NavController,
-    idUtente: String = "sconosciuto",
-    viewModel: ManagerViewModel = viewModel()
+    idUtente: String = "sconosciuto"
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
 
-    val currentTab by viewModel.currentTab.collectAsState()
-    val offers by viewModel.offers.collectAsState()
-    val appointments by viewModel.appointments.collectAsState()
-    val reports by viewModel.reports.collectAsState()
-    val selectedItem by viewModel.selectedItem.collectAsState()
+    // --- GESTIONE STATO LOCALE ---
+    var currentTab by remember { mutableStateOf(ManagerTab.OFFERS) }
+    var selectedItem by remember { mutableStateOf<Any?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    // Stati per i dati
+    var offers by remember { mutableStateOf<List<Offer>>(emptyList()) }
+    var appointments by remember { mutableStateOf<List<Appointment>>(emptyList()) }
+    var reports by remember { mutableStateOf<List<Report>>(emptyList()) }
+
+    // --- CARICAMENTO DATI SIMULATO ---
+    LaunchedEffect(Unit) {
+        delay(1000) // Simula caricamento
+
+        offers = listOf(
+            Offer("1", "Mario Rossi", "350.000", "Via Roma 1, Napoli", "In Attesa", "2024-01-15"),
+            Offer("2", "Luigi Verdi", "420.000", "Via Petrarca 10, Napoli", "Accettata", "2024-01-10"),
+            Offer("3", "Giulia Bianchi", "180.000", "Corso Umberto 50, Napoli", "Rifiutata", "2024-01-05")
+        )
+
+        appointments = listOf(
+            Appointment("1", "Anna Neri", "Via Roma 1", "2024-02-20", "10:00 - 11:00", "Confermato", "Interessata al garage"),
+            Appointment("2", "Paolo Gialli", "Via Petrarca 10", "2024-02-21", "15:00 - 16:00", "In Attesa", "Prima visita")
+        )
+
+        reports = listOf(
+            Report("1", "Analisi Mercato Q1", "Andamento prezzi zona Vomero", "2024-01-01", "Prezzi in salita del 5%."),
+            Report("2", "Performance Agenti", "Vendite concluse nel 2023", "2023-12-31", "Ottimi risultati nel settore residenziale.")
+        )
+
+        isLoading = false
+    }
 
     val gradientColors = listOf(
         colorScheme.primary.copy(alpha = 0.7f),
@@ -65,7 +121,7 @@ fun ManagerScreen(
                     title = "Dettagli",
                     actionIcon = Icons.Filled.ArrowBack,
                     actionContentDescription = "Torna indietro",
-                    onActionClick = { viewModel.setSelectedItem(null) },
+                    onActionClick = { selectedItem = null },
                     actionBackgroundColor = colorScheme.primaryContainer,
                     actionIconTint = colorScheme.onPrimaryContainer,
                     showAppIcon = true,
@@ -100,25 +156,31 @@ fun ManagerScreen(
                 .background(Brush.verticalGradient(colors = gradientColors))
                 .padding(paddingValues)
         ) {
-            if (selectedItem != null) {
-                ItemDetailScreen(
-                    item = selectedItem,
-                    colorScheme = colorScheme,
-                    typography = typography,
-                    dimensions = dimensions
-                )
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = colorScheme.onPrimary)
+                }
             } else {
-                ManagerScreenContent(
-                    currentTab = currentTab,
-                    onTabSelected = { viewModel.setCurrentTab(it) },
-                    colorScheme = colorScheme,
-                    typography = typography,
-                    dimensions = dimensions,
-                    offers = offers,
-                    appointments = appointments,
-                    reports = reports,
-                    onItemClick = { item -> viewModel.setSelectedItem(item) }
-                )
+                if (selectedItem != null) {
+                    ItemDetailScreen(
+                        item = selectedItem,
+                        colorScheme = colorScheme,
+                        typography = typography,
+                        dimensions = dimensions
+                    )
+                } else {
+                    ManagerScreenContent(
+                        currentTab = currentTab,
+                        onTabSelected = { currentTab = it },
+                        colorScheme = colorScheme,
+                        typography = typography,
+                        dimensions = dimensions,
+                        offers = offers,
+                        appointments = appointments,
+                        reports = reports,
+                        onItemClick = { item -> selectedItem = item }
+                    )
+                }
             }
         }
     }
@@ -126,8 +188,8 @@ fun ManagerScreen(
 
 @Composable
 private fun ManagerScreenContent(
-    currentTab: ManagerViewModel.ManagerTab,
-    onTabSelected: (ManagerViewModel.ManagerTab) -> Unit,
+    currentTab: ManagerTab,
+    onTabSelected: (ManagerTab) -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions,
@@ -148,7 +210,7 @@ private fun ManagerScreenContent(
         )
 
         when (currentTab) {
-            ManagerViewModel.ManagerTab.OFFERS -> {
+            ManagerTab.OFFERS -> {
                 if (offers.isEmpty()) {
                     EmptyDisplayView(
                         modifier = Modifier.weight(1f),
@@ -168,7 +230,7 @@ private fun ManagerScreenContent(
                     )
                 }
             }
-            ManagerViewModel.ManagerTab.APPOINTMENTS -> {
+            ManagerTab.APPOINTMENTS -> {
                 if (appointments.isEmpty()) {
                     EmptyDisplayView(
                         modifier = Modifier.weight(1f),
@@ -188,7 +250,7 @@ private fun ManagerScreenContent(
                     )
                 }
             }
-            ManagerViewModel.ManagerTab.REPORTS -> {
+            ManagerTab.REPORTS -> {
                 if (reports.isEmpty()) {
                     EmptyDisplayView(
                         modifier = Modifier.weight(1f),
@@ -319,8 +381,8 @@ private fun ReportsList(
 
 @Composable
 private fun ManagerTabs(
-    currentTab: ManagerViewModel.ManagerTab,
-    onTabSelected: (ManagerViewModel.ManagerTab) -> Unit,
+    currentTab: ManagerTab,
+    onTabSelected: (ManagerTab) -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions
@@ -336,13 +398,13 @@ private fun ManagerTabs(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val tabs = ManagerViewModel.ManagerTab.entries.toTypedArray()
+        val tabs = ManagerTab.entries.toTypedArray()
         tabs.forEach { tab ->
             ManagerTabButton(
                 text = when (tab) {
-                    ManagerViewModel.ManagerTab.OFFERS -> "Offerte"
-                    ManagerViewModel.ManagerTab.APPOINTMENTS -> "Appuntamenti"
-                    ManagerViewModel.ManagerTab.REPORTS -> "Report"
+                    ManagerTab.OFFERS -> "Offerte"
+                    ManagerTab.APPOINTMENTS -> "Appuntamenti"
+                    ManagerTab.REPORTS -> "Report"
                 },
                 isSelected = currentTab == tab,
                 onClick = { onTabSelected(tab) },

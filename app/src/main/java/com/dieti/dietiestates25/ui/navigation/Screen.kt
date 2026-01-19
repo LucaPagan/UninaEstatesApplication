@@ -4,6 +4,7 @@ import android.net.Uri // <<-- IMPORT AGGIUNTO
 import com.dieti.dietiestates25.data.model.FilterModel
 
 sealed class Screen(val route: String) {
+    data object RegisterScreen : Screen("register_screen")
     data object WelcomeScreen : Screen("welcome_screen")
 
     data object LoginScreen : Screen("login_screen")

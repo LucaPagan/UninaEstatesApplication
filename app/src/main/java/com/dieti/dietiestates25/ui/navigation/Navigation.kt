@@ -3,7 +3,6 @@ package com.dieti.dietiestates25.ui.navigation
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -12,7 +11,6 @@ import androidx.navigation.navArgument
 import com.dieti.dietiestates25.ui.features.property.ApartmentListingScreen
 import com.dieti.dietiestates25.ui.features.home.HomeScreen
 import com.dieti.dietiestates25.ui.features.manager.ManagerScreen
-import com.dieti.dietiestates25.ui.features.notification.NotificationDetailScreen
 import com.dieti.dietiestates25.ui.features.notification.NotificationScreen
 import com.dieti.dietiestates25.ui.features.profile.ProfileScreen
 import com.dieti.dietiestates25.ui.features.property.PropertySellScreen
@@ -21,32 +19,42 @@ import com.dieti.dietiestates25.ui.features.property.PriceProposalScreen
 import com.dieti.dietiestates25.ui.features.property.PropertyScreen
 import com.dieti.dietiestates25.ui.features.search.MapSearchScreen
 import com.dieti.dietiestates25.ui.features.search.SearchFilterScreen
-import com.dieti.dietiestates25.ui.features.auth.WelcomeScreen // Import mancante
-import com.dieti.dietiestates25.ui.features.search.SearchScreen // Import mancante
+import com.dieti.dietiestates25.ui.features.auth.WelcomeScreen
+import com.dieti.dietiestates25.ui.features.search.SearchScreen
 import com.dieti.dietiestates25.ui.features.appointments.AppointmentDetailScreen
+import com.dieti.dietiestates25.ui.features.auth.LoginScreen
 import com.dieti.dietiestates25.ui.features.property.EditPropertyScreen
 import com.dieti.dietiestates25.ui.features.search.FullScreenMapScreen
 import com.dieti.dietiestates25.ui.features.search.SearchTypeSelectionScreen
 import com.dieti.dietiestates25.ui.features.property.YourPropertyScreen
 import com.dieti.dietiestates25.ui.features.manager.RequestsScreen
-import com.dieti.dietiestates25.ui.features.auth.LoginScreenPreviewOnly
+import com.dieti.dietiestates25.ui.features.auth.RegisterScreen
 
 @Composable
-fun Navigation() {
+fun Navigation(
+    startDestination: String = Screen.LoginScreen.route
+) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.WelcomeScreen.route) {
+    NavHost(navController = navController, startDestination = startDestination) {
 
-        // WelcomeScreen (invariato)
-        composable(route = Screen.WelcomeScreen.route) {
+        // 1. Welcome Screen INTRO (Prima apertura assoluta)
+        // Questa è la rotta che chiamiamo dal MainActivity nel caso "isFirstRun == true"
+        composable("welcome_intro_screen") {
             WelcomeScreen(navController = navController)
         }
 
-        composable(route = Screen.LoginScreen.route) {
-            LoginScreenPreviewOnly()
+        // 2. Welcome Screen CON ID (La vecchia rotta, se ti serve per altri scopi, altrimenti puoi toglierla)
+        composable("welcome_view/{userId}") { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId")
+            WelcomeScreen(navController = navController, idUtente = userId)
         }
 
-        // HomeScreen (invariato, ma potrebbe usare Screen.HomeScreen.withIdUtente)
+        // 3. Login
+        composable(route = Screen.LoginScreen.route) {
+            LoginScreen(navController = navController)
+        }
+
         composable(
             route = Screen.HomeScreen.route + "/{idUtente}",
             arguments = listOf(navArgument("idUtente") { type = NavType.StringType; defaultValue = "utente" })
@@ -54,7 +62,6 @@ fun Navigation() {
             HomeScreen(navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente")
         }
 
-        // SearchScreen (invariato, ma potrebbe usare Screen.SearchScreen.withIdUtente)
         composable(
             route = Screen.SearchScreen.route + "/{idUtente}",
             arguments = listOf(navArgument("idUtente") { type = NavType.StringType; defaultValue = "utente" })
@@ -62,7 +69,6 @@ fun Navigation() {
             SearchScreen(navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente")
         }
 
-        // PropertySellScreen (invariato, ma potrebbe usare Screen.PropertySellScreen.withIdUtente)
         composable(
             route = Screen.PropertySellScreen.route + "/{idUtente}",
             arguments = listOf(navArgument("idUtente") { type = NavType.StringType; defaultValue = "utente" })
@@ -70,7 +76,6 @@ fun Navigation() {
             PropertySellScreen(navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente")
         }
 
-        // ManagerScreen - NUOVA ROTTA
         composable(
             route = Screen.ManagerScreen.route + "/{idUtente}",
             arguments = listOf(navArgument("idUtente") { type = NavType.StringType; defaultValue = "utente" })
@@ -78,7 +83,6 @@ fun Navigation() {
             ManagerScreen(navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente")
         }
 
-        // La rotta di SearchFilterScreen usa i nomi dei path parameters come definiti qui
         composable(
             route = Screen.SearchFilterScreen.route + "/{idUtente}/{comune}/{ricercaQueryText}",
             arguments = listOf(
@@ -96,17 +100,8 @@ fun Navigation() {
                 idUtente = idUtenteArg,
                 comune = comuneArg,
                 ricercaQueryText = ricercaQueryTextArg,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onApplyFilters = { filterModel ->
-                    val destinationRoute = Screen.SearchTypeSelectionScreen.buildRoute(
-                        idUtentePath = idUtenteArg,
-                        comunePath = comuneArg,
-                        ricercaPath = ricercaQueryTextArg,
-                        filters = filterModel
-                    )
-                }
+                onNavigateBack = { navController.popBackStack() },
+                onApplyFilters = { /* Logica filtri */ }
             )
         }
 
@@ -138,10 +133,6 @@ fun Navigation() {
             )
         }
 
-        // PropertyScreen (verifica se la rotta definita qui corrisponde all'helper in Screen.kt)
-        // Se Screen.PropertyScreen.withId("id") produce "property_screen/id", allora:
-
-        //Se PropertyScreen non prende argomenti nel path, allora era corretto:
         composable(
             route = Screen.PropertyScreen.route + "{idProperty}",
             arguments = listOf(
@@ -157,24 +148,9 @@ fun Navigation() {
             navController = navController,
             idUtente = "",
             idImmobile = "",
-            viewModel = viewModel()
         ) }
 
         composable(route = Screen.NotificationScreen.route){ NotificationScreen(navController = navController) }
-
-        composable(
-            route = Screen.NotificationDetailScreen.route,
-            arguments = listOf(navArgument("notificationId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val notificationId = backStackEntry.arguments?.getString("notificationId")
-            val notificationsViewModel: NotificationsViewModel = viewModel()
-
-            NotificationDetailScreen(
-                navController = navController,
-                notificationId = notificationId,
-                onToggleMasterFavorite = { id -> notificationsViewModel.toggleFavorite(id) }
-            )
-        }
 
         composable(route = Screen.ProfileScreen.route){ ProfileScreen(navController = navController) }
 
@@ -241,66 +217,27 @@ fun Navigation() {
                 navArgument("lng") { type = NavType.StringType },
                 navArgument("zoom") { type = NavType.StringType }
             ),
-            enterTransition = {
-                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(700))
-            },
-            exitTransition = {
-                slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(700))
-            },
-            popEnterTransition = {
-                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(700))
-            },
-            popExitTransition = {
-                slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(700))
-            }
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(700)) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, animationSpec = tween(700)) },
+            popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(700)) },
+            popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, animationSpec = tween(700)) }
         ) { navBackStackEntry ->
             val latitudeString = navBackStackEntry.arguments?.getString("lat")
             val longitudeString = navBackStackEntry.arguments?.getString("lng")
             val zoomString = navBackStackEntry.arguments?.getString("zoom")
-
             if (latitudeString != null && longitudeString != null && zoomString != null) {
                 val latitude = latitudeString.toDoubleOrNull()
                 val longitude = longitudeString.toDoubleOrNull()
                 val zoom = zoomString.toFloatOrNull()
-
                 if (latitude != null && longitude != null && zoom != null) {
-                    FullScreenMapScreen(
-                        navController = navController,
-                        latitude = latitude,
-                        longitude = longitude,
-                        initialZoom = zoom
-                    )
-                } else {
-                    navController.popBackStack()
-                }
-            } else {
-                navController.popBackStack()
-            }
+                    FullScreenMapScreen(navController = navController, latitude = latitude, longitude = longitude, initialZoom = zoom)
+                } else { navController.popBackStack() }
+            } else { navController.popBackStack() }
         }
 
-        composable(route = Screen.AppointmentDetailScreen.route){ AppointmentDetailScreen(
-            navController = navController,
-            appointmentId = ""
-        ) }
-
-        composable(route = Screen.YourPropertyScreen.route) {
-            YourPropertyScreen(
-                navController = navController,
-                idUtente = ""
-            )
-        }
-
-        composable(route = Screen.EditPropertyScreen.route) {
-            EditPropertyScreen(
-                navController = navController
-            )
-        }
-
-        composable(route = Screen.RequestsScreen.route + "/{idUtente}") {
-            RequestsScreen(
-                navController = navController
-            )
-        }
+        composable(route = Screen.AppointmentDetailScreen.route){ AppointmentDetailScreen(navController = navController, appointmentId = "") }
+        composable(route = Screen.YourPropertyScreen.route) { YourPropertyScreen(navController = navController, idUtente = "") }
+        composable(route = Screen.EditPropertyScreen.route) { EditPropertyScreen(navController = navController) }
+        composable(route = Screen.RequestsScreen.route + "/{idUtente}") { RequestsScreen(navController = navController) }
     }
 }
-

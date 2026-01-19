@@ -1,5 +1,6 @@
 package com.dieti.dietiestates25.ui.features.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -35,10 +36,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,7 +49,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
@@ -58,43 +58,140 @@ import com.dieti.dietiestates25.ui.components.UnsavedChangesAlertDialog
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
 import com.dieti.dietiestates25.ui.components.AppTopBar
-import com.dieti.dietiestates25.data.model.ProfileData
-import com.dieti.dietiestates25.data.model.modelsource.PhonePrefix
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+// --- DATI MOCK LOCALI (Sostituiscono Model e ViewModel) ---
+data class PhonePrefix(
+    val prefix: String,
+    val flagEmoji: String,
+    val displayName: String
+)
+
+data class ProfileData(
+    val email: String,
+    val selectedPrefix: PhonePrefix,
+    val phoneNumberWithoutPrefix: String
+)
 
 @Composable
 fun ProfileScreen(
-    navController: NavController,
-    viewModel: ProfileViewModel = viewModel()
+    navController: NavController
 ) {
     val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val focusManager = LocalFocusManager.current
     val dimensions = Dimensions
+    val scope = rememberCoroutineScope()
 
-    // Carica i dati del profilo all'avvio
-    LaunchedEffect(Unit) {
-        viewModel.loadProfile(context)
+    // --- GESTIONE STATO LOCALE ---
+    var isLoading by remember { mutableStateOf(true) }
+    var isEditMode by remember { mutableStateOf(false) }
+
+    // Dialogs
+    var showExitEditModeDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    // Dati Mock
+    val availablePhonePrefixes = remember {
+        listOf(
+            PhonePrefix("+39", "🇮🇹", "Italia"),
+            PhonePrefix("+1", "🇺🇸", "USA"),
+            PhonePrefix("+44", "🇬🇧", "UK"),
+            PhonePrefix("+33", "🇫🇷", "Francia"),
+            PhonePrefix("+49", "🇩🇪", "Germania")
+        )
     }
 
-    val profileData by viewModel.currentProfileData.collectAsState()
-    val isEditMode by viewModel.isEditMode.collectAsState()
-    val hasUnsavedChanges by viewModel.hasUnsavedChanges.collectAsState()
-    val canSaveChanges by viewModel.canSaveChanges.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
+    // Usiamo due stati: uno per i dati salvati (originali) e uno per quelli in modifica (correnti)
+    var originalProfileData by remember { mutableStateOf<ProfileData?>(null) }
+    var currentProfileData by remember { mutableStateOf<ProfileData?>(null) }
 
-    val showExitEditModeDialog by viewModel.showExitEditModeConfirmDialog.collectAsState()
-    val showLogoutDialog by viewModel.showLogoutConfirmDialog.collectAsState()
-    val showDeleteDialog by viewModel.showDeleteConfirmDialog.collectAsState()
+    // --- CARICAMENTO DATI SIMULATO ---
+    LaunchedEffect(Unit) {
+        isLoading = true
+        delay(1000) // Simula loading da DB/API
+        val data = ProfileData(
+            email = "mario.rossi@studenti.unina.it",
+            selectedPrefix = availablePhonePrefixes.first(),
+            phoneNumberWithoutPrefix = "3331234567"
+        )
+        originalProfileData = data
+        currentProfileData = data
+        isLoading = false
+    }
 
-    // Calcolo del titolo dinamico
+    // --- LOGICA COMPUTATA ---
+    val hasUnsavedChanges = remember(originalProfileData, currentProfileData) {
+        originalProfileData != currentProfileData
+    }
+
+    val canSaveChanges = remember(currentProfileData) {
+        currentProfileData?.let {
+            it.email.isNotBlank() && it.phoneNumberWithoutPrefix.isNotBlank()
+        } ?: false
+    }
+
+    // --- AZIONI ---
+
+    fun handleSave() {
+        scope.launch {
+            isLoading = true
+            delay(1000) // Simula salvataggio
+            originalProfileData = currentProfileData
+            isEditMode = false
+            isLoading = false
+            Toast.makeText(context, "Profilo aggiornato con successo", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun handleToggleEditMode() {
+        if (isEditMode) {
+            if (hasUnsavedChanges) {
+                showExitEditModeDialog = true
+            } else {
+                isEditMode = false
+            }
+        } else {
+            isEditMode = true
+        }
+    }
+
+    fun handleLogout(save: Boolean) {
+        scope.launch {
+            if (save && hasUnsavedChanges && canSaveChanges) {
+                // Simula salvataggio prima del logout
+                delay(500)
+            }
+            Toast.makeText(context, "Logout effettuato", Toast.LENGTH_SHORT).show()
+            showLogoutDialog = false
+            navController.navigate(Screen.LoginScreen.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
+    fun handleDelete() {
+        scope.launch {
+            delay(1000) // Simula eliminazione
+            Toast.makeText(context, "Profilo eliminato", Toast.LENGTH_SHORT).show()
+            showDeleteDialog = false
+            navController.navigate(Screen.LoginScreen.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
+    // Titolo dinamico
     val baseTitle = if (isEditMode) "Modifica Profilo" else "Profilo Utente"
     val screenTitle = if (isEditMode && hasUnsavedChanges) "$baseTitle*" else baseTitle
 
-    // Configurazione dell'action button
+    // Icona Action
     val actionIcon = if (isEditMode) Icons.Filled.Close else Icons.Filled.Edit
     val actionContentDescription = if (isEditMode) "Annulla Modifiche" else "Modifica Dati"
     val actionBackgroundColor = if (isEditMode) colorScheme.errorContainer else colorScheme.primaryContainer
@@ -113,7 +210,7 @@ fun ProfileScreen(
                 title = screenTitle,
                 actionIcon = actionIcon,
                 actionContentDescription = actionContentDescription,
-                onActionClick = viewModel::attemptToggleEditMode,
+                onActionClick = { handleToggleEditMode() },
                 actionBackgroundColor = actionBackgroundColor,
                 actionIconTint = actionIconTint,
                 showAppIcon = true,
@@ -125,10 +222,10 @@ fun ProfileScreen(
         bottomBar = {
             AppBottomNavigation(
                 navController = navController,
-                idUtente = profileData.email,
+                idUtente = currentProfileData?.email ?: "",
                 onNavigateAttempt = {
                     if (isEditMode && hasUnsavedChanges) {
-                        viewModel.triggerExitEditModeDialog()
+                        showExitEditModeDialog = true
                         false
                     } else {
                         true
@@ -148,43 +245,52 @@ fun ProfileScreen(
                     CircularProgressIndicator(color = colorScheme.primary)
                 }
             } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { focusManager.clearFocus() }
+                currentProfileData?.let { data ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { focusManager.clearFocus() }
+                            )
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        ProfileContent(
+                            profileData = data,
+                            isEditMode = isEditMode,
+                            canSaveChanges = canSaveChanges,
+                            availablePhonePrefixes = availablePhonePrefixes,
+                            onEmailChange = { currentProfileData = currentProfileData?.copy(email = it) },
+                            onPhonePrefixChange = { currentProfileData = currentProfileData?.copy(selectedPrefix = it) },
+                            onPhoneNumberWithoutPrefixChange = { currentProfileData = currentProfileData?.copy(phoneNumberWithoutPrefix = it) },
+                            onSaveChanges = { handleSave() },
+                            onLogout = { showLogoutDialog = true },
+                            onDeleteProfile = { showDeleteDialog = true },
+                            typography = typography,
+                            colorScheme = colorScheme,
+                            navController = navController,
+                            dimensions = dimensions
                         )
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    ProfileContent(
-                        profileData = profileData,
-                        isEditMode = isEditMode,
-                        canSaveChanges = canSaveChanges,
-                        availablePhonePrefixes = viewModel.availablePhonePrefixes,
-                        onEmailChange = viewModel::onEmailChange,
-                        onPhonePrefixChange = viewModel::onPhonePrefixChange,
-                        onPhoneNumberWithoutPrefixChange = viewModel::onPhoneNumberWithoutPrefixChange,
-                        onSaveChanges = { viewModel.saveChanges(context) },
-                        onLogout = viewModel::triggerLogoutDialog,
-                        onDeleteProfile = viewModel::triggerDeleteProfileDialog,
-                        typography = typography,
-                        colorScheme = colorScheme,
-                        navController = navController,
-                        dimensions = dimensions
-                    )
+                    }
                 }
             }
         }
 
         if (showExitEditModeDialog) {
             UnsavedChangesAlertDialog(
-                onDismissRequest = viewModel::closeExitEditModeConfirmDialog,
+                onDismissRequest = { showExitEditModeDialog = false },
                 onSave = {
-                    if (canSaveChanges) viewModel.confirmExitEditModeAndSave(context)
+                    if (canSaveChanges) {
+                        handleSave()
+                        showExitEditModeDialog = false
+                    }
                 },
-                onDontSave = viewModel::confirmExitEditModeWithoutSaving,
+                onDontSave = {
+                    currentProfileData = originalProfileData // Revert modifiche
+                    isEditMode = false
+                    showExitEditModeDialog = false
+                },
                 canSave = canSaveChanges,
                 colorScheme = colorScheme
             )
@@ -192,13 +298,8 @@ fun ProfileScreen(
 
         if (showLogoutDialog) {
             LogoutConfirmAlertDialog(
-                onDismissRequest = viewModel::cancelLogoutDialog,
-                onLogoutConfirm = { save ->
-                    viewModel.confirmLogout(save, context)
-                    navController.navigate(Screen.LoginScreen.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
+                onDismissRequest = { showLogoutDialog = false },
+                onLogoutConfirm = { save -> handleLogout(save) },
                 isEditMode = isEditMode,
                 hasUnsavedChanges = hasUnsavedChanges,
                 canSaveChanges = canSaveChanges,
@@ -210,10 +311,8 @@ fun ProfileScreen(
 
         if (showDeleteDialog) {
             DeleteConfirmAlertDialog(
-                onDismissRequest = viewModel::cancelDeleteProfileDialog,
-                onConfirmDelete = {
-                    viewModel.deleteProfile()
-                },
+                onDismissRequest = { showDeleteDialog = false },
+                onConfirmDelete = { handleDelete() },
                 colorScheme = colorScheme
             )
         }
