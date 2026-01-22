@@ -156,7 +156,12 @@ fun Navigation(
 
         composable(route = Screen.NotificationScreen.route){ NotificationScreen(navController = navController) }
 
-        composable(route = Screen.ProfileScreen.route){ ProfileScreen(navController = navController) }
+        composable(
+            route = Screen.ProfileScreen.route + "/{idUtente}",
+            arguments = listOf(navArgument("idUtente") { type = NavType.StringType; defaultValue = "utente" })
+        ) {
+            ProfileScreen(navController = navController)
+        }
 
         composable(
             route = Screen.MapSearchScreen.route + "/{idUtente}/{comune}/{ricerca}" +
