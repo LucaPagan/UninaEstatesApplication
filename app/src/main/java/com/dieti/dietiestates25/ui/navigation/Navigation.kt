@@ -55,6 +55,10 @@ fun Navigation(
             LoginScreen(navController = navController)
         }
 
+        composable(route = Screen.RegisterScreen.route) {
+            RegisterScreen(navController = navController)
+        }
+
         composable(
             route = Screen.HomeScreen.route + "/{idUtente}",
             arguments = listOf(navArgument("idUtente") { type = NavType.StringType; defaultValue = "utente" })

@@ -1,6 +1,7 @@
 package com.dieti.dietiestates25.ui.components
 
 import androidx.annotation.DrawableRes
+import com.dieti.dietiestates25.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,21 +22,26 @@ import androidx.compose.material.icons.filled.SquareFoot
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.dieti.dietiestates25.data.model.PropertyMarker
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.google.android.gms.maps.model.LatLng
-
 @Composable
 fun AppPropertyCard(
     price: String,
-    @DrawableRes imageResId: Int,
+    // NUOVO: URL dell'immagine (dal Backend)
+    imageUrl: String? = null,
+    // ESISTENTE: ID Risorsa locale (Fallback o Preview)
+    @DrawableRes imageResId: Int? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     address: String? = null,
@@ -49,10 +55,39 @@ fun AppPropertyCard(
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
 
+    // Gestione click sulla card intera se non c'è un bottone azione specifico
     val cardClickModifier = if (actionButton == null) {
         Modifier.clickable(onClick = onClick)
     } else {
         Modifier
+    }
+
+    // LOGICA DI CARICAMENTO IMMAGINE (Helper locale)
+    // Se c'è un URL usa Coil, altrimenti usa la risorsa locale
+    val imageContent: @Composable (Modifier) -> Unit = { imgModifier ->
+        if (!imageUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .crossfade(true)
+                    // Immagine da mostrare in caso di errore di caricamento
+                    .error(imageResId ?: R.drawable.property1)
+                    // Immagine da mostrare mentre carica
+                    .placeholder(imageResId ?: R.drawable.property1)
+                    .build(),
+                contentDescription = "Immagine proprietà: $price",
+                contentScale = ContentScale.Crop,
+                modifier = imgModifier
+            )
+        } else {
+            // Fallback su risorsa statica
+            Image(
+                painter = painterResource(id = imageResId ?: R.drawable.property1),
+                contentDescription = "Immagine proprietà: $price",
+                contentScale = ContentScale.Crop,
+                modifier = imgModifier
+            )
+        }
     }
 
     Card(
@@ -62,12 +97,10 @@ fun AppPropertyCard(
         colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
     ) {
         if (horizontalMode) {
+            // --- LAYOUT ORIZZONTALE ---
             Row(modifier = Modifier.fillMaxSize()) {
-                Image(
-                    painter = painterResource(id = imageResId),
-                    contentDescription = "Immagine proprietà: $price",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
+                imageContent(
+                    Modifier
                         .fillMaxHeight()
                         .fillMaxWidth(imageWidthHorizontalRatio)
                         .clip(RoundedCornerShape(topStart = Dimensions.cornerRadiusMedium, bottomStart = Dimensions.cornerRadiusMedium))
@@ -79,7 +112,13 @@ fun AppPropertyCard(
                         .padding(Dimensions.paddingSmall),
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(text = price, style = typography.titleMedium, color = colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        text = price,
+                        style = typography.titleMedium,
+                        color = colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                     address?.let {
                         Text(
                             text = it, style = typography.bodySmall,
@@ -100,12 +139,10 @@ fun AppPropertyCard(
                 }
             }
         } else {
+            // --- LAYOUT VERTICALE (Default) ---
             Column(modifier = Modifier.fillMaxSize()) {
-                Image(
-                    painter = painterResource(id = imageResId),
-                    contentDescription = "Immagine proprietà: $price",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
+                imageContent(
+                    Modifier
                         .fillMaxWidth()
                         .fillMaxHeight(imageHeightVerticalRatio)
                 )
