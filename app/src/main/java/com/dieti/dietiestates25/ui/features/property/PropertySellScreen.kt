@@ -30,6 +30,7 @@ import androidx.navigation.NavController
 import com.dieti.dietiestates25.data.remote.AmbienteDto
 import com.dieti.dietiestates25.data.remote.ImmobileCreateRequest
 import com.dieti.dietiestates25.ui.components.*
+import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @Composable
@@ -93,8 +94,9 @@ fun PropertySellScreen(
             is PropertyFormState.Success -> {
                 Toast.makeText(context, "Annuncio pubblicato con successo!", Toast.LENGTH_LONG).show()
                 viewModel.resetState()
-                navController.navigate("home") {
-                    popUpTo("home") { inclusive = true }
+                navController.navigate(Screen.HomeScreen.withIdUtente(idUtente)) {
+                    // Opzionale: pulisce lo stack per evitare di tornare al form premendo indietro
+                    popUpTo(Screen.HomeScreen.withIdUtente(idUtente)) { inclusive = true }
                 }
             }
             is PropertyFormState.Error -> {

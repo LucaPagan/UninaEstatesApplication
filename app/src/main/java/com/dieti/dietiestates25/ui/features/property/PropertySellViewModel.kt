@@ -1,6 +1,8 @@
 package com.dieti.dietiestates25.ui.features.property
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import android.webkit.MimeTypeMap
@@ -46,76 +48,118 @@ class PropertySellViewModel : ViewModel() {
         viewModelScope.launch {
             _formState.value = PropertyFormState.Loading
             try {
-                // --- FIX IMPORTANTE: RECUPERO CREDENZIALI ---
-                // Se la variabile statica è null (es. dopo restart app), la recuperiamo dal disco
                 if (RetrofitClient.loggedUserEmail == null) {
                     val userPrefs = UserPreferences(context)
                     val savedEmail = userPrefs.userEmail.first()
-
                     if (savedEmail != null) {
                         RetrofitClient.loggedUserEmail = savedEmail
-                        Log.d("PropertyViewModel", "Email ripristinata dalle preferenze: $savedEmail")
                     } else {
-                        _formState.value = PropertyFormState.Error("Errore: Utente non loggato. Effettua nuovamente il login.")
+                        _formState.value = PropertyFormState.Error("Utente non loggato.")
                         return@launch
                     }
                 }
-                // --------------------------------------------
 
-                Log.d("PropertyViewModel", "Inizio upload. Dati: $request")
+                Log.d("PropertyViewModel", "Inizio upload e compressione...")
 
-                // Convertiamo DTO in JSON
                 val jsonString = gson.toJson(request)
                 val immobileBody = jsonString.toRequestBody("application/json".toMediaTypeOrNull())
 
-                // Convertiamo Immagini
+                // Prepara e comprime le immagini
                 val imageParts = imageUris.mapNotNull { uri ->
-                    prepareFilePart(context, uri)
+                    prepareCompressedFilePart(context, uri)
                 }
 
-                // Chiamata API
+                if (imageParts.isEmpty() && imageUris.isNotEmpty()) {
+                    _formState.value = PropertyFormState.Error("Errore durante la compressione delle immagini.")
+                    return@launch
+                }
+
+                Log.d("PropertyViewModel", "Invio ${imageParts.size} immagini compresse...")
                 api.creaImmobile(immobileBody, imageParts)
 
-                Log.d("PropertyViewModel", "Upload completato con successo")
                 _formState.value = PropertyFormState.Success
                 onSuccess()
 
             } catch (e: Exception) {
-                Log.e("PropertyViewModel", "Errore invio immobile", e)
-                // Mostriamo l'errore specifico se è un 403
-                val errorMsg = if (e is retrofit2.HttpException && e.code() == 403) {
-                    "Sessione scaduta o non valida (403). Riprova a fare login."
+                Log.e("PropertyViewModel", "Errore upload", e)
+
+                val msg = if (e is retrofit2.HttpException) {
+                    // Tenta di leggere il corpo dell'errore dal server
+                    val errorBody = e.response()?.errorBody()?.string()
+
+                    when (e.code()) {
+                        401, 403 -> "Sessione scaduta. Effettua nuovamente il login."
+                        413 -> "File troppo grandi anche dopo la compressione!"
+                        500 -> "Errore Server: ${errorBody ?: "Errore interno sconosciuto"}"
+                        else -> "Errore HTTP ${e.code()}: $errorBody"
+                    }
                 } else {
-                    "Errore durante la pubblicazione: ${e.message}"
+                    "Errore di connessione: ${e.message}"
                 }
-                _formState.value = PropertyFormState.Error(errorMsg)
+                _formState.value = PropertyFormState.Error(msg)
             }
         }
     }
 
-    private fun prepareFilePart(context: Context, uri: Uri): MultipartBody.Part? {
+    /**
+     * Legge l'immagine, la ridimensiona se troppo grande e la comprime in JPEG qualità 70.
+     * Versione ottimizzata per la memoria (usa inSampleSize).
+     */
+    private fun prepareCompressedFilePart(context: Context, uri: Uri): MultipartBody.Part? {
         return try {
-            val contentResolver = context.contentResolver
-            val mimeType = contentResolver.getType(uri) ?: "image/jpeg"
-            val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType) ?: "jpg"
+            val resolver = context.contentResolver
 
-            val file = File.createTempFile("upload_${System.currentTimeMillis()}", ".$extension", context.cacheDir)
+            // 1. Decodifica solo le dimensioni (inJustDecodeBounds = true)
+            // Questo è molto leggero e non carica l'immagine in memoria
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            resolver.openInputStream(uri)?.use {
+                BitmapFactory.decodeStream(it, null, options)
+            }
 
-            contentResolver.openInputStream(uri)?.use { inputStream ->
-                FileOutputStream(file).use { outputStream ->
-                    inputStream.copyTo(outputStream)
+            // 2. Calcola il fattore di ridimensionamento (inSampleSize)
+            // Se l'immagine è 4000x3000 e vogliamo 1024x768, inSampleSize sarà 4
+            val maxDimension = 1024
+            var inSampleSize = 1
+            if (options.outHeight > maxDimension || options.outWidth > maxDimension) {
+                val halfHeight: Int = options.outHeight / 2
+                val halfWidth: Int = options.outWidth / 2
+                while (halfHeight / inSampleSize >= maxDimension && halfWidth / inSampleSize >= maxDimension) {
+                    inSampleSize *= 2
                 }
             }
 
-            val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
-            MultipartBody.Part.createFormData("immagini", file.name, requestFile)
+            // 3. Decodifica l'immagine reale usando il fattore di scala
+            val decodeOptions = BitmapFactory.Options().apply { inSampleSize = inSampleSize }
+            val inputStream = resolver.openInputStream(uri) ?: return null
+            val scaledBitmap = BitmapFactory.decodeStream(inputStream, null, decodeOptions)
+            inputStream.close()
+
+            if (scaledBitmap == null) {
+                Log.e("PropertyViewModel", "Impossibile decodificare bitmap da: $uri")
+                return null
+            }
+
+            // 4. Comprimi in JPEG al 70% su file temporaneo
+            val tempFile = File.createTempFile("upload_compressed", ".jpg", context.cacheDir)
+            FileOutputStream(tempFile).use { output ->
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 70, output)
+                output.flush()
+            }
+
+            // Libera memoria
+            scaledBitmap.recycle()
+
+            Log.d("PropertyViewModel", "Immagine originale: ${options.outWidth}x${options.outHeight}, Compressa: ${tempFile.length() / 1024} KB")
+
+            // Crea la parte Multipart per Retrofit
+            val reqFile = tempFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+            MultipartBody.Part.createFormData("immagini", tempFile.name, reqFile)
+
         } catch (e: Exception) {
-            Log.e("PropertyViewModel", "Errore conversione file immagine", e)
+            Log.e("PropertyViewModel", "Errore compressione file", e)
             null
         }
     }
 
-    fun resetState() {
-        _formState.value = PropertyFormState.Idle
-    }
+    fun resetState() { _formState.value = PropertyFormState.Idle }
 }
