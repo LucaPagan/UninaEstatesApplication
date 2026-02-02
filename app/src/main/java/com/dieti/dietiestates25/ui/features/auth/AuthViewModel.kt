@@ -1,6 +1,7 @@
-package com.dieti.dietiestates25.ui.register
+package com.dieti.dietiestates25.ui.features.auth
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -10,9 +11,11 @@ import com.dieti.dietiestates25.data.remote.LoginRequest
 import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.dieti.dietiestates25.data.remote.UtenteRegistrazioneRequest
 import com.dieti.dietiestates25.data.remote.UtenteResponseDTO
+import com.dieti.dietiestates25.ui.utils.SessionManager
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+// --- REGISTER STATE ---
 sealed class RegisterState {
     object Idle : RegisterState()
     object Loading : RegisterState()
@@ -23,12 +26,13 @@ sealed class RegisterState {
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private val userPrefs = UserPreferences(application.applicationContext)
+
+    // Assicurati che AuthApiService sia importato correttamente
     private val apiService = RetrofitClient.retrofit.create(AuthApiService::class.java)
 
     private val _state = MutableLiveData<RegisterState>(RegisterState.Idle)
     val state: LiveData<RegisterState> = _state
 
-    // All'avvio, ripristiniamo l'email se esiste
     init {
         viewModelScope.launch {
             val savedEmail = userPrefs.userEmail.first()
@@ -49,19 +53,21 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
+                Log.d("AUTH_DEBUG", "Inizio chiamata Registrazione...")
                 val response = apiService.registrazione(request)
                 if (response.isSuccessful && response.body() != null) {
                     val utente = response.body()!!
+                    Log.d("AUTH_DEBUG", "Registrazione OK. Utente: ${utente.id}")
 
-                    // Salviamo SEMPRE i dati per evitare problemi di sessione persa
-                    userPrefs.saveUserData(utente.id, utente.email)
-                    RetrofitClient.loggedUserEmail = utente.email
+                    salvaSessioneCompleta(utente)
 
                     _state.value = RegisterState.Success(utente)
                 } else {
+                    Log.e("AUTH_DEBUG", "Errore Registrazione API: ${response.code()}")
                     _state.value = RegisterState.Error("Errore reg: ${response.code()}")
                 }
             } catch (e: Exception) {
+                Log.e("AUTH_DEBUG", "Eccezione Registrazione", e)
                 _state.value = RegisterState.Error("Errore rete: ${e.message}")
             }
         }
@@ -78,33 +84,67 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
+                Log.d("AUTH_DEBUG", "Inizio chiamata Login per $email...")
                 val response = apiService.login(request)
                 if (response.isSuccessful && response.body() != null) {
                     val utente = response.body()!!
+                    Log.d("AUTH_DEBUG", "Login OK. Utente ricevuto: ${utente.id}")
 
-                    // Impostiamo l'email in memoria per le chiamate immediate
-                    RetrofitClient.loggedUserEmail = utente.email
-
-                    // FIX: Salviamo SEMPRE su disco, indipendentemente da 'ricordami'.
-                    // 'ricordami' potrebbe essere usato in futuro per l'auto-login all'avvio,
-                    // ma la sessione corrente deve essere persistente ai crash/riavvii.
-                    userPrefs.saveUserData(utente.id, utente.email)
+                    // Salvataggio critico
+                    salvaSessioneCompleta(utente)
 
                     _state.value = RegisterState.Success(utente)
                 } else {
                     val errorBody = response.errorBody()?.string() ?: "Errore sconosciuto"
+                    Log.e("AUTH_DEBUG", "Errore Login API: $errorBody")
                     _state.value = RegisterState.Error("Login fallito: $errorBody")
                 }
             } catch (e: Exception) {
+                Log.e("AUTH_DEBUG", "Eccezione Login", e)
                 _state.value = RegisterState.Error("Errore connessione: ${e.message}")
             }
         }
     }
 
+    private suspend fun salvaSessioneCompleta(utente: UtenteResponseDTO) {
+        Log.d("AUTH_DEBUG", ">>> INIZIO Salvataggio Sessione Completa")
+
+        // 1. Memoria volatile
+        RetrofitClient.loggedUserEmail = utente.email
+        Log.d("AUTH_DEBUG", "1. RetrofitClient email impostata: ${utente.email}")
+
+        // 2. DataStore (Preferenze asincrone)
+        try {
+            userPrefs.saveUserData(utente.id, utente.email)
+            Log.d("AUTH_DEBUG", "2. DataStore UserData salvato.")
+
+            userPrefs.setFirstRunCompleted()
+            Log.d("AUTH_DEBUG", "3. DataStore FirstRunCompleted impostato (Intro disattivata).")
+        } catch (e: Exception) {
+            Log.e("AUTH_DEBUG", "ERRORE SALVATAGGIO DATASTORE", e)
+        }
+
+        // 3. SessionManager (Preferenze sincrone per MainActivity e Profile)
+        try {
+            SessionManager.saveUserSession(
+                getApplication(),
+                utente.id,
+                "${utente.nome} ${utente.cognome}"
+            )
+            Log.d("AUTH_DEBUG", "4. SessionManager salvato. Verifica ID: ${SessionManager.getUserId(getApplication())}")
+        } catch (e: Exception) {
+            Log.e("AUTH_DEBUG", "ERRORE SALVATAGGIO SESSIONMANAGER", e)
+        }
+
+        Log.d("AUTH_DEBUG", ">>> FINE Salvataggio Sessione Completa")
+    }
+
     fun logout() {
         viewModelScope.launch {
+            Log.d("AUTH_DEBUG", "Eseguo Logout...")
             userPrefs.clearUser()
             RetrofitClient.loggedUserEmail = null
+            SessionManager.logout(getApplication())
         }
     }
 

@@ -2,6 +2,7 @@ package com.dieti.dietiestates25.ui.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 
 object SessionManager {
     private const val PREF_NAME = "UninaEstatesSession"
@@ -28,11 +29,20 @@ object SessionManager {
     }
 
     fun logout(context: Context) {
+        Log.d("SessionManager", "Eseguo Logout (Rimuovo solo dati utente)")
         val editor = getPrefs(context).edit()
-        editor.clear()
+
+        // --- PUNTO CRITICO ---
+        // editor.clear()  <-- QUESTO È IL COLPEVOLE! Cancella anche se hai visto l'intro.
+
+        // Rimuoviamo SOLO i dati dell'utente
+        editor.remove(KEY_USER_ID)
+        editor.remove(KEY_USER_NAME)
+        // editor.remove("user_email") // Se la salvi, rimuovi anche questa
+
         editor.apply()
     }
-    
+
     fun isLoggedIn(context: Context): Boolean {
         return getUserId(context) != null
     }
