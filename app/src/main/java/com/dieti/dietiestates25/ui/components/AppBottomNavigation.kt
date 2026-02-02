@@ -1,5 +1,6 @@
 package com.dieti.dietiestates25.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
@@ -20,7 +21,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
-// Sealed class for navigation items remains the same
 sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: String) {
     object Home : BottomNavItem(Screen.HomeScreen.route, Icons.Default.Home, "Esplora")
     object Notifications : BottomNavItem(Screen.NotificationScreen.route, Icons.Default.Notifications, "Notifiche")
@@ -30,14 +30,16 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
 @Composable
 fun AppBottomNavigation(
     navController: NavController,
-    idUtente: String,
-    // New lambda to intercept navigation attempts. Defaults to 'true' to avoid breaking other screens.
+    idUtente: String = "sconosciuto",
     onNavigateAttempt: () -> Boolean = { true }
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val colorScheme = MaterialTheme.colorScheme
     val dimension = Dimensions
+
+    // Debug: Stampiamo dove siamo
+    // Log.d("NAV_BAR_DEBUG", "Current Route: $currentRoute | ID per navigazione: $idUtente")
 
     NavigationBar(
         containerColor = colorScheme.primary,
@@ -50,22 +52,22 @@ fun AppBottomNavigation(
         )
 
         items.forEach { item ->
-            val selected = isRouteSelected(currentRoute, item.route)
+            // Logica di selezione più robusta per rotte con argomenti
+            // Se currentRoute è "home_screen/123" e item.route è "home_screen", startsWith è true.
+            val selected = currentRoute?.startsWith(item.route) == true
+
             AddItem(
                 item = item,
                 navController = navController,
                 selected = selected,
-                onNavigateAttempt = onNavigateAttempt, // Pass the lambda down
+                idUtente = idUtente,
+                onNavigateAttempt = onNavigateAttempt,
                 colorScheme = colorScheme,
                 dimension = dimension,
-                idUtente = idUtente
+                currentRoute = currentRoute // Passiamo per controllo
             )
         }
     }
-}
-
-fun isRouteSelected(currentRoute: String?, itemRoute: String): Boolean {
-    return currentRoute?.startsWith(itemRoute) == true
 }
 
 @Composable
@@ -74,29 +76,22 @@ fun RowScope.AddItem(
     navController: NavController,
     selected: Boolean,
     idUtente: String,
-    onNavigateAttempt: () -> Boolean, // Receive the lambda
+    onNavigateAttempt: () -> Boolean,
     colorScheme: ColorScheme,
-    dimension: Dimensions
+    dimension: Dimensions,
+    currentRoute: String?
 ) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
     Box(
         modifier = Modifier
             .weight(1f)
-            .then(
-                if (selected) {
-                    Modifier
-                        .padding(
-                            horizontal = dimension.paddingSmall,
-                            vertical = dimension.paddingExtraSmall
-                        )
-                        .clip(RoundedCornerShape(dimension.cornerRadiusLarge))
-                        .background(colorScheme.onPrimary.copy(alpha = 0.2f))
-                } else {
-                    Modifier
-                }
-            )
+            .then(if (selected) {
+                Modifier
+                    .padding(horizontal = dimension.paddingSmall, vertical = dimension.paddingExtraSmall)
+                    .clip(RoundedCornerShape(dimension.cornerRadiusLarge))
+                    .background(colorScheme.onPrimary.copy(alpha = 0.2f))
+            } else {
+                Modifier
+            })
     ) {
         this@AddItem.NavigationBarItem(
             icon = {
@@ -115,29 +110,44 @@ fun RowScope.AddItem(
             },
             selected = selected,
             onClick = {
-                // Check if the destination is not the current one
-                if (!isRouteSelected(currentRoute, item.route)) {
-                    // Call the interceptor lambda first
-                    if (onNavigateAttempt()) {
-                        // If it returns true, proceed with navigation
-                        val finalRoute = when (item) {
-                            // Home e Profilo richiedono l'ID Utente
-                            BottomNavItem.Home -> "${item.route}/$idUtente"
-                            BottomNavItem.Profile -> "${item.route}/$idUtente"
-                            BottomNavItem.Notifications -> "${item.route}/$idUtente"
-                            // Notifiche (e altre future senza argomenti) usano la rotta base
-                            else -> item.route
-                        }
+                Log.d("NAV_BAR_DEBUG", "-----------------------------")
+                Log.d("NAV_BAR_DEBUG", "CLICK su: ${item.label}")
 
-                        navController.navigate(finalRoute) {
-                            popUpTo(navController.graph.startDestinationId)
-                            launchSingleTop = true
-                        }
+                // Controllo Anti-Loop: Se siamo già qui, non fare nulla
+                if (currentRoute?.startsWith(item.route) == true) {
+                    Log.d("NAV_BAR_DEBUG", "BLOCCATO: Già in questa schermata ($currentRoute)")
+                    return@NavigationBarItem
+                }
+
+                if (onNavigateAttempt()) {
+                    // Costruzione Rotta: Aggiungiamo ID solo se necessario
+                    val finalRoute = when (item) {
+                        BottomNavItem.Home -> "${item.route}/$idUtente"
+                        BottomNavItem.Profile -> "${item.route}/$idUtente"
+                        else -> item.route
                     }
+
+                    Log.d("NAV_BAR_DEBUG", "Tento navigazione verso: '$finalRoute'")
+
+                    try {
+                        navController.navigate(finalRoute) {
+                            // Configurazioni standard per la BottomBar
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                        Log.d("NAV_BAR_DEBUG", "Comando navigate inviato.")
+                    } catch (e: Exception) {
+                        Log.e("NAV_BAR_DEBUG", "CRASH Navigazione!", e)
+                    }
+                } else {
+                    Log.d("NAV_BAR_DEBUG", "Navigazione bloccata dall'interceptor esterno.")
                 }
             },
             colors = NavigationBarItemDefaults.colors(
-                indicatorColor = colorScheme.surfaceDim // Remove the indicator
+                indicatorColor = colorScheme.surfaceDim
             )
         )
     }

@@ -27,8 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.components.AppIconDisplay
-import com.dieti.dietiestates25.ui.register.AuthViewModel
-import com.dieti.dietiestates25.ui.register.RegisterState
+import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.AppGradients
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
@@ -55,24 +54,24 @@ fun LoginScreen(
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
 
-    // GESTIONE DEGLI EFFETTI COLLATERALI (Navigazione e Errori)
+    // --- LOGICA DI NAVIGAZIONE AUTOMATICA ---
+    // Questo blocco osserva lo stato. Se diventa Success, naviga alla Home.
     LaunchedEffect(authState) {
         when (val state = authState) {
             is RegisterState.Success -> {
-                // Login riuscito
-                Toast.makeText(context, "Bentornato ${state.utente.nome}!", Toast.LENGTH_SHORT).show()
+                val userId = state.utente.id
+                Toast.makeText(context, "Benvenuto ${state.utente.nome}!", Toast.LENGTH_SHORT).show()
 
-                // Navigazione alla WelcomeView passando l'ID dell'utente
-                navController?.navigate("welcome_view/${state.utente.id}") {
-                    // Rimuove la schermata di login dal backstack (non puoi tornare indietro al login)
-                    popUpTo("login_screen") { inclusive = true }
+                // Navigazione verso la Home passando l'ID
+                // popUpTo(0) rimuove Login e Intro dal tasto "Indietro"
+                navController?.navigate(Screen.HomeScreen.route + "/$userId") {
+                    popUpTo(0) { inclusive = true }
                 }
             }
             is RegisterState.Error -> {
-                // Errore (es. Password errata)
                 Toast.makeText(context, state.errore, Toast.LENGTH_LONG).show()
             }
-            else -> { /* Non fare nulla in Idle o Loading */ }
+            else -> {}
         }
     }
 

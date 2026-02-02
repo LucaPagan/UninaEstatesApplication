@@ -28,6 +28,15 @@ data class AmbienteDto(
     val numero: Int
 )
 
+// DTO Semplificato per i Preferiti (Nuovo)
+data class ImmobileSummaryDTO(
+    val id: String,
+    val titolo: String?,
+    val prezzo: Int?,
+    val indirizzo: String?,
+    val urlImmagine: String?
+)
+
 // DTO per la richiesta (Ricezione dati dall'app)
 data class ImmobileCreateRequest(
     val tipoVendita: Boolean,
@@ -81,20 +90,15 @@ data class UtenteRegistrazioneRequest(
     val password: String,
     val telefono: String?
 )
+
 data class UtenteResponseDTO(
     val id: String,
     val nome: String,
     val cognome: String,
     val email: String,
-    val telefono: String?
-)
-data class UserProfileDTO(
-    val id: String,
-    val nome: String,
-    val cognome: String,
-    val email: String,
     val telefono: String?,
-    val bio: String? = null
+    // Aggiunto per ricevere i preferiti dal backend
+    val preferiti: List<ImmobileSummaryDTO> = emptyList()
 )
 
 data class UserUpdateRequest(

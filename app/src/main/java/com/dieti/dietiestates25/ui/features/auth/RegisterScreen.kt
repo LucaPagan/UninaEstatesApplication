@@ -21,8 +21,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.dieti.dietiestates25.ui.components.AppIconDisplay
-import com.dieti.dietiestates25.ui.register.AuthViewModel
-import com.dieti.dietiestates25.ui.register.RegisterState
 import com.dieti.dietiestates25.ui.theme.AppGradients
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
