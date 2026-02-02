@@ -19,11 +19,11 @@ import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.components.AppIconDisplay
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.navigation.Screen
+import com.dieti.dietiestates25.ui.register.AuthViewModel
 import com.dieti.dietiestates25.ui.theme.AppGradients
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.theme.TealDeep
-import com.tuonome.immobiliare.ui.register.AuthViewModel
 
 // Assicurati di importare il ViewModel corretto
 // import com.dieti.dietiestates25.ui.viewmodel.AuthViewModel

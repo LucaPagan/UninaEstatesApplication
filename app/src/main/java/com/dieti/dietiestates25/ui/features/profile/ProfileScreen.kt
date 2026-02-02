@@ -1,5 +1,6 @@
 package com.dieti.dietiestates25.ui.features.profile
 
+import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,27 +16,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,155 +41,92 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppBottomNavigation
 import com.dieti.dietiestates25.ui.components.DeleteConfirmAlertDialog
 import com.dieti.dietiestates25.ui.components.LogoutConfirmAlertDialog
-import com.dieti.dietiestates25.ui.components.UnsavedChangesAlertDialog
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
 import com.dieti.dietiestates25.ui.components.AppTopBar
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import com.dieti.dietiestates25.data.model.ProfileData
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// --- DATI MOCK LOCALI (Sostituiscono Model e ViewModel) ---
-data class PhonePrefix(
-    val prefix: String,
-    val flagEmoji: String,
-    val displayName: String
-)
-
-data class ProfileData(
-    val email: String,
-    val selectedPrefix: PhonePrefix,
-    val phoneNumberWithoutPrefix: String
-)
-
+// --- ENTRY POINT (STATEFUL) ---
+// Questo composable viene usato dall'App reale (con ViewModel)
 @Composable
 fun ProfileScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: ProfileViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // Osserviamo lo stato dal ViewModel
+    val uiState by viewModel.uiState.collectAsState()
+
+    // Caricamento Iniziale
+    LaunchedEffect(Unit) {
+        viewModel.loadUserProfile(context)
+    }
+
+    // Callbacks per le azioni (gestiscono logica e navigazione)
+    val onLogout = {
+        scope.launch {
+            viewModel.logout(context)
+            Toast.makeText(context, "Logout effettuato", Toast.LENGTH_SHORT).show()
+            navController.navigate(Screen.LoginScreen.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+        Unit
+    }
+
+    val onDelete = {
+        scope.launch {
+            Toast.makeText(context, "Profilo eliminato (Simulato)", Toast.LENGTH_SHORT).show()
+            navController.navigate(Screen.LoginScreen.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+        Unit
+    }
+
+    val onRetry = { viewModel.loadUserProfile(context) }
+
+    // Delega alla UI Stateless
+    ProfileScreenContent(
+        navController = navController,
+        uiState = uiState,
+        onLogout = onLogout,
+        onDelete = onDelete,
+        onRetry = onRetry
+    )
+}
+
+// --- UI IMPLEMENTATION (STATELESS) ---
+// Questo composable contiene solo la UI, niente ViewModel. Perfetto per la Preview.
+@Composable
+fun ProfileScreenContent(
+    navController: NavController,
+    uiState: ProfileUiState,
+    onLogout: () -> Unit,
+    onDelete: () -> Unit,
+    onRetry: () -> Unit
+) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val focusManager = LocalFocusManager.current
     val dimensions = Dimensions
-    val scope = rememberCoroutineScope()
 
-    // --- GESTIONE STATO LOCALE ---
-    var isLoading by remember { mutableStateOf(true) }
-    var isEditMode by remember { mutableStateOf(false) }
-
-    // Dialogs
-    var showExitEditModeDialog by remember { mutableStateOf(false) }
+    // Stato locale per i dialoghi (UI state)
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
-
-    // Dati Mock
-    val availablePhonePrefixes = remember {
-        listOf(
-            PhonePrefix("+39", "🇮🇹", "Italia"),
-            PhonePrefix("+1", "🇺🇸", "USA"),
-            PhonePrefix("+44", "🇬🇧", "UK"),
-            PhonePrefix("+33", "🇫🇷", "Francia"),
-            PhonePrefix("+49", "🇩🇪", "Germania")
-        )
-    }
-
-    // Usiamo due stati: uno per i dati salvati (originali) e uno per quelli in modifica (correnti)
-    var originalProfileData by remember { mutableStateOf<ProfileData?>(null) }
-    var currentProfileData by remember { mutableStateOf<ProfileData?>(null) }
-
-    // --- CARICAMENTO DATI SIMULATO ---
-    LaunchedEffect(Unit) {
-        isLoading = true
-        delay(1000) // Simula loading da DB/API
-        val data = ProfileData(
-            email = "mario.rossi@studenti.unina.it",
-            selectedPrefix = availablePhonePrefixes.first(),
-            phoneNumberWithoutPrefix = "3331234567"
-        )
-        originalProfileData = data
-        currentProfileData = data
-        isLoading = false
-    }
-
-    // --- LOGICA COMPUTATA ---
-    val hasUnsavedChanges = remember(originalProfileData, currentProfileData) {
-        originalProfileData != currentProfileData
-    }
-
-    val canSaveChanges = remember(currentProfileData) {
-        currentProfileData?.let {
-            it.email.isNotBlank() && it.phoneNumberWithoutPrefix.isNotBlank()
-        } ?: false
-    }
-
-    // --- AZIONI ---
-
-    fun handleSave() {
-        scope.launch {
-            isLoading = true
-            delay(1000) // Simula salvataggio
-            originalProfileData = currentProfileData
-            isEditMode = false
-            isLoading = false
-            Toast.makeText(context, "Profilo aggiornato con successo", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    fun handleToggleEditMode() {
-        if (isEditMode) {
-            if (hasUnsavedChanges) {
-                showExitEditModeDialog = true
-            } else {
-                isEditMode = false
-            }
-        } else {
-            isEditMode = true
-        }
-    }
-
-    fun handleLogout(save: Boolean) {
-        scope.launch {
-            if (save && hasUnsavedChanges && canSaveChanges) {
-                // Simula salvataggio prima del logout
-                delay(500)
-            }
-            Toast.makeText(context, "Logout effettuato", Toast.LENGTH_SHORT).show()
-            showLogoutDialog = false
-            navController.navigate(Screen.LoginScreen.route) {
-                popUpTo(0) { inclusive = true }
-            }
-        }
-    }
-
-    fun handleDelete() {
-        scope.launch {
-            delay(1000) // Simula eliminazione
-            Toast.makeText(context, "Profilo eliminato", Toast.LENGTH_SHORT).show()
-            showDeleteDialog = false
-            navController.navigate(Screen.LoginScreen.route) {
-                popUpTo(0) { inclusive = true }
-            }
-        }
-    }
-
-    // Titolo dinamico
-    val baseTitle = if (isEditMode) "Modifica Profilo" else "Profilo Utente"
-    val screenTitle = if (isEditMode && hasUnsavedChanges) "$baseTitle*" else baseTitle
-
-    // Icona Action
-    val actionIcon = if (isEditMode) Icons.Filled.Close else Icons.Filled.Edit
-    val actionContentDescription = if (isEditMode) "Annulla Modifiche" else "Modifica Dati"
-    val actionBackgroundColor = if (isEditMode) colorScheme.errorContainer else colorScheme.primaryContainer
-    val actionIconTint = if (isEditMode) colorScheme.onErrorContainer else colorScheme.onPrimaryContainer
 
     val gradientColors = listOf(
         colorScheme.primary.copy(alpha = 0.7f),
@@ -204,15 +135,15 @@ fun ProfileScreen(
         colorScheme.primary.copy(alpha = 0.6f)
     )
 
+    // Recuperiamo l'ID utente (email) dai dati caricati per la BottomBar
+    val currentUserEmail = if (uiState is ProfileUiState.Success) {
+        (uiState as ProfileUiState.Success).data.email
+    } else ""
+
     Scaffold(
         topBar = {
             AppTopBar(
-                title = screenTitle,
-                actionIcon = actionIcon,
-                actionContentDescription = actionContentDescription,
-                onActionClick = { handleToggleEditMode() },
-                actionBackgroundColor = actionBackgroundColor,
-                actionIconTint = actionIconTint,
+                title = "Profilo Utente",
                 showAppIcon = true,
                 colorScheme = colorScheme,
                 typography = typography,
@@ -222,15 +153,8 @@ fun ProfileScreen(
         bottomBar = {
             AppBottomNavigation(
                 navController = navController,
-                idUtente = currentProfileData?.email ?: "",
-                onNavigateAttempt = {
-                    if (isEditMode && hasUnsavedChanges) {
-                        showExitEditModeDialog = true
-                        false
-                    } else {
-                        true
-                    }
-                }
+                idUtente = currentUserEmail,
+                onNavigateAttempt = { true }
             )
         }
     ) { scaffoldPaddingValues ->
@@ -240,12 +164,30 @@ fun ProfileScreen(
                 .background(Brush.verticalGradient(colors = gradientColors))
                 .padding(scaffoldPaddingValues)
         ) {
-            if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = colorScheme.primary)
+            when (uiState) {
+                is ProfileUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = colorScheme.primary)
+                    }
                 }
-            } else {
-                currentProfileData?.let { data ->
+                is ProfileUiState.Error -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "Errore: ${uiState.message}",
+                                color = colorScheme.error,
+                                style = typography.bodyLarge,
+                                modifier = Modifier.padding(dimensions.paddingMedium)
+                            )
+                            AppPrimaryButton(
+                                onClick = onRetry,
+                                text = "Riprova"
+                            )
+                        }
+                    }
+                }
+                is ProfileUiState.Success -> {
+                    val data = (uiState as ProfileUiState.Success).data
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -256,17 +198,10 @@ fun ProfileScreen(
                             )
                             .verticalScroll(rememberScrollState())
                     ) {
-                        ProfileContent(
+                        ProfileInnerContent(
                             profileData = data,
-                            isEditMode = isEditMode,
-                            canSaveChanges = canSaveChanges,
-                            availablePhonePrefixes = availablePhonePrefixes,
-                            onEmailChange = { currentProfileData = currentProfileData?.copy(email = it) },
-                            onPhonePrefixChange = { currentProfileData = currentProfileData?.copy(selectedPrefix = it) },
-                            onPhoneNumberWithoutPrefixChange = { currentProfileData = currentProfileData?.copy(phoneNumberWithoutPrefix = it) },
-                            onSaveChanges = { handleSave() },
-                            onLogout = { showLogoutDialog = true },
-                            onDeleteProfile = { showDeleteDialog = true },
+                            onLogoutClick = { showLogoutDialog = true },
+                            onDeleteClick = { showDeleteDialog = true },
                             typography = typography,
                             colorScheme = colorScheme,
                             navController = navController,
@@ -277,32 +212,16 @@ fun ProfileScreen(
             }
         }
 
-        if (showExitEditModeDialog) {
-            UnsavedChangesAlertDialog(
-                onDismissRequest = { showExitEditModeDialog = false },
-                onSave = {
-                    if (canSaveChanges) {
-                        handleSave()
-                        showExitEditModeDialog = false
-                    }
-                },
-                onDontSave = {
-                    currentProfileData = originalProfileData // Revert modifiche
-                    isEditMode = false
-                    showExitEditModeDialog = false
-                },
-                canSave = canSaveChanges,
-                colorScheme = colorScheme
-            )
-        }
-
         if (showLogoutDialog) {
             LogoutConfirmAlertDialog(
                 onDismissRequest = { showLogoutDialog = false },
-                onLogoutConfirm = { save -> handleLogout(save) },
-                isEditMode = isEditMode,
-                hasUnsavedChanges = hasUnsavedChanges,
-                canSaveChanges = canSaveChanges,
+                onLogoutConfirm = { _ ->
+                    showLogoutDialog = false
+                    onLogout()
+                },
+                isEditMode = false,
+                hasUnsavedChanges = false,
+                canSaveChanges = false,
                 colorScheme = colorScheme,
                 dimensions = dimensions,
                 typography = typography
@@ -312,7 +231,10 @@ fun ProfileScreen(
         if (showDeleteDialog) {
             DeleteConfirmAlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
-                onConfirmDelete = { handleDelete() },
+                onConfirmDelete = {
+                    showDeleteDialog = false
+                    onDelete()
+                },
                 colorScheme = colorScheme
             )
         }
@@ -320,17 +242,10 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileContent(
+private fun ProfileInnerContent(
     profileData: ProfileData,
-    isEditMode: Boolean,
-    canSaveChanges: Boolean,
-    availablePhonePrefixes: List<PhonePrefix>,
-    onEmailChange: (String) -> Unit,
-    onPhonePrefixChange: (PhonePrefix) -> Unit,
-    onPhoneNumberWithoutPrefixChange: (String) -> Unit,
-    onSaveChanges: () -> Unit,
-    onLogout: () -> Unit,
-    onDeleteProfile: () -> Unit,
+    onLogoutClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     typography: Typography,
     colorScheme: ColorScheme,
     navController: NavController,
@@ -350,159 +265,106 @@ private fun ProfileContent(
                 .padding(top = dimensions.paddingMedium, bottom = dimensions.paddingMedium)
                 .align(Alignment.Start)
         )
-        ProfileDataFields(
+
+        ProfileReadOnlyFields(
             profileData = profileData,
-            isEditMode = isEditMode,
-            availablePhonePrefixes = availablePhonePrefixes,
-            onEmailChange = onEmailChange,
-            onPhonePrefixChange = onPhonePrefixChange,
-            onPhoneNumberWithoutPrefixChange = onPhoneNumberWithoutPrefixChange,
             colorScheme = colorScheme,
             typography = typography,
             dimensions = dimensions
         )
+
         Spacer(modifier = Modifier.height(dimensions.spacingLarge))
+        Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
+
+        // --- Opzioni Navigazione Commentate ---
+        /*
         ProfileOtherOptions(
-            isEditMode = isEditMode,
+            profileData = profileData,
             typography = typography,
             colorScheme = colorScheme,
             navController = navController,
             dimensions = dimensions
         )
         Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
+        */
+
         ProfileActionButtons(
-            isEditMode = isEditMode,
-            canSaveChanges = canSaveChanges,
-            onSaveClick = onSaveChanges,
-            onLogoutClick = onLogout,
-            onDeleteProfileClick = onDeleteProfile,
+            onLogoutClick = onLogoutClick,
+            onDeleteProfileClick = onDeleteClick,
             dimensions = dimensions
         )
         Spacer(modifier = Modifier.height(dimensions.spacingLarge))
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ProfileDataFields(
+private fun ProfileReadOnlyFields(
     profileData: ProfileData,
-    isEditMode: Boolean,
-    availablePhonePrefixes: List<PhonePrefix>,
-    onEmailChange: (String) -> Unit,
-    onPhonePrefixChange: (PhonePrefix) -> Unit,
-    onPhoneNumberWithoutPrefixChange: (String) -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions
 ) {
-    var prefixDropdownExpanded by remember { mutableStateOf(false) }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colorScheme.primary.copy(alpha = 0.6f), shape = MaterialTheme.shapes.medium)
+            .padding(dimensions.paddingMedium)
+    ) {
+        Text(
+            text = "Nome e Cognome",
+            style = typography.labelMedium,
+            color = colorScheme.onPrimary.copy(alpha = 0.6f)
+        )
+        Text(
+            text = profileData.name, // Assicurati che 'name' esista nel tuo ProfileData
+            style = typography.bodyLarge,
+            color = colorScheme.onPrimary,
+            modifier = Modifier.padding(top = dimensions.paddingExtraSmall, bottom = dimensions.paddingMedium)
+        )
 
-    val commonTextFieldModifier = Modifier
-        .fillMaxWidth()
-        .padding(bottom = dimensions.paddingMedium)
+        HorizontalDivider(color = colorScheme.outlineVariant)
+        Spacer(modifier = Modifier.height(dimensions.paddingMedium))
 
-    val emailIsError = isEditMode && profileData.email.isBlank()
-    val phoneIsError = isEditMode && profileData.phoneNumberWithoutPrefix.isBlank()
+        // Label Email
+        Text(
+            text = "Email",
+            style = typography.labelMedium,
+            color = colorScheme.onPrimary.copy(alpha = 0.6f)
+        )
+        Text(
+            text = profileData.email,
+            style = typography.bodyLarge,
+            color = colorScheme.onPrimary,
+            modifier = Modifier.padding(top = dimensions.paddingExtraSmall, bottom = dimensions.paddingMedium)
+        )
 
-    val textFieldErrorColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = colorScheme.primary,
-        unfocusedBorderColor = colorScheme.outline,
-        focusedLabelColor = colorScheme.primary,
-        unfocusedLabelColor = colorScheme.onSurfaceVariant,
-        cursorColor = colorScheme.primary,
+        HorizontalDivider(color = colorScheme.outlineVariant)
+        Spacer(modifier = Modifier.height(dimensions.paddingMedium))
 
-        disabledTextColor = colorScheme.onSurface.copy(alpha = 0.7f),
-        disabledBorderColor = colorScheme.outline.copy(alpha = 0.5f),
-        disabledLabelColor = colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-
-        errorBorderColor = colorScheme.error,
-        errorLabelColor = colorScheme.error,
-        errorCursorColor = colorScheme.error,
-        errorSupportingTextColor = colorScheme.error
-    )
-
-    val prefixTextFieldColors = OutlinedTextFieldDefaults.colors(
-        disabledTextColor = colorScheme.onSurface.copy(alpha = 0.7f),
-        disabledBorderColor = colorScheme.outline.copy(alpha = 0.5f),
-        disabledLabelColor = colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-        focusedBorderColor = colorScheme.primary,
-        unfocusedBorderColor = colorScheme.outline,
-        focusedLabelColor = colorScheme.primary,
-        unfocusedLabelColor = colorScheme.onSurfaceVariant,
-    )
-
-    // Campo Email modificabile
-    OutlinedTextField(
-        value = profileData.email,
-        onValueChange = onEmailChange,
-        label = { Text("Email") },
-        enabled = isEditMode,
-        modifier = commonTextFieldModifier,
-        singleLine = true,
-        isError = emailIsError,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-        colors = textFieldErrorColors,
-        textStyle = typography.bodyLarge
-    )
-
-    // Campo Telefono modificabile
-    Row(verticalAlignment = Alignment.Top) {
-        ExposedDropdownMenuBox(
-            expanded = prefixDropdownExpanded && isEditMode,
-            onExpandedChange = { if (isEditMode) prefixDropdownExpanded = !prefixDropdownExpanded },
-            modifier = Modifier.padding(end = dimensions.spacingSmall)
-        ) {
-            OutlinedTextField(
-                value = "${profileData.selectedPrefix.flagEmoji} ${profileData.selectedPrefix.prefix}",
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Pref.") },
-                enabled = isEditMode,
-                modifier = Modifier
-                    .menuAnchor()
-                    .width(dimensions.prefixWidth),
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = prefixDropdownExpanded && isEditMode) },
-                colors = prefixTextFieldColors,
-                textStyle = typography.bodyLarge
-            )
-            ExposedDropdownMenu(
-                expanded = prefixDropdownExpanded && isEditMode,
-                onDismissRequest = { prefixDropdownExpanded = false }
-            ) {
-                availablePhonePrefixes.forEach { prefix ->
-                    DropdownMenuItem(
-                        text = { Text("${prefix.flagEmoji} ${prefix.displayName}") },
-                        onClick = {
-                            onPhonePrefixChange(prefix)
-                            prefixDropdownExpanded = false
-                        }
-                    )
-                }
-            }
+        // Label Telefono
+        Text(
+            text = "Telefono",
+            style = typography.labelMedium,
+            color = colorScheme.onPrimary.copy(alpha = 0.6f)
+        )
+        val phoneDisplay = if (profileData.phoneNumberWithoutPrefix.isNotBlank()) {
+            "${profileData.selectedPrefix.prefix} ${profileData.phoneNumberWithoutPrefix}"
+        } else {
+            "Non specificato"
         }
 
-        OutlinedTextField(
-            value = profileData.phoneNumberWithoutPrefix,
-            onValueChange = { newValue ->
-                if (newValue.all { it.isDigit() } && newValue.length <= 10) {
-                    onPhoneNumberWithoutPrefixChange(newValue)
-                }
-            },
-            label = { Text("Numero") },
-            enabled = isEditMode,
-            modifier = Modifier.weight(1f),
-            singleLine = true,
-            isError = phoneIsError,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            colors = textFieldErrorColors,
-            textStyle = typography.bodyLarge
+        Text(
+            text = phoneDisplay,
+            style = typography.bodyLarge,
+            color = colorScheme.onPrimary,
+            modifier = Modifier.padding(top = dimensions.paddingExtraSmall)
         )
     }
 }
 
 @Composable
 private fun ProfileOtherOptions(
-    isEditMode: Boolean,
+    profileData: ProfileData,
     typography: Typography,
     colorScheme: ColorScheme,
     navController: NavController,
@@ -520,7 +382,6 @@ private fun ProfileOtherOptions(
             text = "I tuoi immobili",
             icon = Icons.Default.NightsStay,
             onClick = { navController.navigate(Screen.YourPropertyScreen.route) },
-            enabled = !isEditMode,
             dimensions = dimensions,
             colorScheme = colorScheme
         )
@@ -529,12 +390,11 @@ private fun ProfileOtherOptions(
             icon = Icons.Default.NightsStay,
             onClick = { navController.navigate(
                 Screen.ApartmentListingScreen.buildRoute(
-                    idUtentePath = "",
+                    idUtentePath = profileData.email,
                     comunePath = "",
                     ricercaPath = ""
                 )
             ) },
-            enabled = !isEditMode,
             dimensions = dimensions,
             colorScheme = colorScheme
         )
@@ -542,9 +402,8 @@ private fun ProfileOtherOptions(
             text = "Richieste appuntamenti",
             icon = Icons.Default.NightsStay,
             onClick = { navController.navigate(
-                Screen.RequestsScreen.withIdUtente("")
+                Screen.RequestsScreen.withIdUtente(profileData.email)
             ) },
-            enabled = !isEditMode,
             dimensions = dimensions,
             colorScheme = colorScheme
         )
@@ -556,46 +415,30 @@ fun ProfileOptionRow(
     text: String,
     icon: ImageVector,
     onClick: () -> Unit,
-    enabled: Boolean,
     dimensions: Dimensions,
     colorScheme: ColorScheme = MaterialTheme.colorScheme,
     typography: Typography = MaterialTheme.typography
 ) {
-    val contentColor = if (enabled) colorScheme.onSurface else colorScheme.onSurface.copy(alpha = 0.38f)
-    val iconColor = if (enabled) colorScheme.primary else colorScheme.onSurface.copy(alpha = 0.38f)
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = enabled, onClick = onClick)
+            .clickable(onClick = onClick)
             .padding(vertical = dimensions.paddingMedium),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = null, tint = iconColor)
+        Icon(icon, contentDescription = null, tint = colorScheme.primary)
         Spacer(modifier = Modifier.width(dimensions.spacingMedium))
-        Text(text, style = typography.bodyLarge, modifier = Modifier.weight(1f), color = contentColor)
-        Icon(Icons.AutoMirrored.Filled.ArrowRight, contentDescription = "Vai a $text", tint = contentColor)
+        Text(text, style = typography.bodyLarge, modifier = Modifier.weight(1f), color = colorScheme.onSurface)
+        Icon(Icons.AutoMirrored.Filled.ArrowRight, contentDescription = "Vai a $text", tint = colorScheme.onSurface)
     }
 }
 
 @Composable
 private fun ProfileActionButtons(
-    isEditMode: Boolean,
-    canSaveChanges: Boolean,
-    onSaveClick: () -> Unit,
     onLogoutClick: () -> Unit,
     onDeleteProfileClick: () -> Unit,
     dimensions: Dimensions
 ) {
-    if (isEditMode) {
-        AppPrimaryButton(
-            onClick = onSaveClick,
-            text = "Salva Modifiche",
-            enabled = canSaveChanges,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(dimensions.spacingMedium))
-    }
     AppPrimaryButton(
         onClick = onLogoutClick,
         text = "Esci Dal Profilo",
@@ -605,16 +448,62 @@ private fun ProfileActionButtons(
     AppRedButton(
         onClick = onDeleteProfileClick,
         text = "Elimina Profilo",
-        enabled = !isEditMode,
         modifier = Modifier.fillMaxWidth()
     )
 }
 
+// --- PREVIEW AGGIORNATA ---
 @Preview(showBackground = true, device = "spec:width=390dp,height=844dp,dpi=460")
 @Composable
 fun ProfileScreenPreview() {
     val navController = rememberNavController()
+
+    // Creiamo dei dati fittizi per la preview
+    // Nota: Uso il costruttore predefinito di ProfileData che hai definito tu con i valori di default
+    // (Lorenzo, ecc.) oppure ne instanzio uno nuovo.
+    val mockData = ProfileData(
+        name = "Mario Rossi",
+        email = "mario.rossi@unina.it",
+        // selectedPrefix userà il default se non specificato
+        phoneNumberWithoutPrefix = "3339998877"
+    )
+
     DietiEstatesTheme {
-        ProfileScreen(navController = navController)
+        // Chiamiamo la versione STATELESS passandogli i dati mockati
+        ProfileScreenContent(
+            navController = navController,
+            uiState = ProfileUiState.Success(mockData),
+            onLogout = {},
+            onDelete = {},
+            onRetry = {}
+        )
+    }
+}
+
+// --- PREVIEW AGGIORNATA ---
+@Preview(showBackground = true, device = "spec:width=390dp,height=844dp,dpi=460", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun DarkProfileScreenPreview() {
+    val navController = rememberNavController()
+
+    // Creiamo dei dati fittizi per la preview
+    // Nota: Uso il costruttore predefinito di ProfileData che hai definito tu con i valori di default
+    // (Lorenzo, ecc.) oppure ne instanzio uno nuovo.
+    val mockData = ProfileData(
+        name = "Mario Rossi",
+        email = "mario.rossi@unina.it",
+        // selectedPrefix userà il default se non specificato
+        phoneNumberWithoutPrefix = "3339998877"
+    )
+
+    DietiEstatesTheme {
+        // Chiamiamo la versione STATELESS passandogli i dati mockati
+        ProfileScreenContent(
+            navController = navController,
+            uiState = ProfileUiState.Success(mockData),
+            onLogout = {},
+            onDelete = {},
+            onRetry = {}
+        )
     }
 }

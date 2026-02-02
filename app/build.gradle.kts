@@ -76,6 +76,17 @@ dependencies {
     // Coil (Per caricare le immagini dagli URL/Byte)
     implementation(libs.coil.compose)
 
+    // Retrofit (Network)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0") // O Moshi/Kotlinx.serialization
+
+    // Coil (Caricamento Immagini asincrono)
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Lifecycle ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
+
     // Coroutines (Per gestire le chiamate asincrone)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
@@ -86,6 +97,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.compose.runtime.livedata)
+    implementation(libs.androidx.compose.material3)
 
     // Debug
     debugImplementation(libs.ui.tooling)

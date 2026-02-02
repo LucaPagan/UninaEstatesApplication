@@ -1,22 +1,51 @@
 package com.dieti.dietiestates25.data.remote
 
+import java.time.LocalDate
+
 // --- IMMOBILI ---
+
 data class ImmobileDTO(
     val id: String,
-    val titolo: String,
-    val prezzo: Int,
-    val tipologia: String?,
-    val localita: String?,
-    val superficie: Int?,
-    val stanze: Int?,
-    val bagni: Int?,
+    val tipoVendita: Boolean,
+    val categoria: String?,
+    val indirizzo: String?,
+    val prezzo: Int?,
+    val mq: Int?,
+    val descrizione: String?,
+    // FIX: Cambiato da LocalDate? a String? per compatibilità col Service
+    val annoCostruzione: String?,
+    val immagini: List<ImmagineDto> = emptyList(),
+    val ambienti: List<AmbienteDto> = emptyList()
+)
+
+data class ImmagineDto(
+    val id: Int,
+    val url: String
+)
+
+data class AmbienteDto(
+    val tipologia: String,
+    val numero: Int
+)
+
+// DTO per la richiesta (Ricezione dati dall'app)
+data class ImmobileCreateRequest(
+    val tipoVendita: Boolean,
+    val categoria: String?,
+    val indirizzo: String?,
+    val mq: Int?,
     val piano: Int?,
     val ascensore: Boolean?,
-    val mq: Int?,
-    val descrizione: String,
-    val coverImageId: Int?,
-    val isVendita: Boolean,
-    val proprietarioId: String
+    val arredamento: String?,
+    val climatizzazione: Boolean?,
+    val esposizione: String?,
+    val statoProprieta: String?,
+    // FIX: Cambiato da LocalDate? a String? per permettere il parsing manuale
+    val annoCostruzione: String?,
+    val prezzo: Int?,
+    val speseCondominiali: Int?,
+    val descrizione: String?,
+    val ambienti: List<AmbienteDto> = emptyList()
 )
 
 data class ImmobileDetailDTO(
@@ -42,26 +71,6 @@ data class ImmobileDetailDTO(
     val disponibilita: Boolean,
     val descrizione: String?,
     val immaginiIds: List<Int>
-)
-
-data class ImmobileCreateRequest(
-    val proprietarioId: String,
-    val tipoVendita: Boolean,
-    val categoria: String,
-    val tipologia: String,
-    val localita: String,
-    val mq: Int,
-    val piano: Int,
-    val ascensore: Boolean,
-    val dettagli: String,
-    val arredamento: String,
-    val climatizzazione: Boolean,
-    val esposizione: String,
-    val tipoProprieta: String,
-    val statoProprieta: String,
-    val prezzo: Int,
-    val speseCondominiali: Int,
-    val descrizione: String
 )
 
 // --- UTENTI ---

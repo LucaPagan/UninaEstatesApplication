@@ -10,62 +10,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.dieti.dietiestates25.R
-import com.dieti.dietiestates25.ui.components.AppSecondaryButton
-import com.dieti.dietiestates25.ui.components.ClickableSearchBar
-import com.dieti.dietiestates25.ui.components.AppBottomNavigation
-import com.dieti.dietiestates25.ui.components.AppPropertyCard
-import com.dieti.dietiestates25.ui.components.AppTopBar
-import com.dieti.dietiestates25.ui.components.PropertyShowcaseSection
+import com.dieti.dietiestates25.data.remote.RetrofitClient
+import com.dieti.dietiestates25.ui.components.*
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.AppGradients
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import kotlinx.coroutines.delay
-
-// --- CLASSE DATI MOCK (Sostituisce il DTO del Backend) ---
-data class ImmobileMock(
-    val id: String,
-    val prezzo: Int,
-    val localita: String?,
-    val tipologia: String,
-    val mq: Int
-)
 
 @Composable
 fun HomeScreen(
     navController: NavController,
-    idUtente: String = "sconosciuto"
+    idUtente: String = "sconosciuto",
+    viewModel: HomeViewModel = viewModel()
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
     val comune = "Napoli"
 
-    // --- GESTIONE STATO LOCALE (Sostituisce il ViewModel) ---
-    var immobili by remember { mutableStateOf<List<ImmobileMock>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) } // Parte true per simulare il caricamento iniziale
-
-    // --- CARICAMENTO DATI SIMULATO ---
-    LaunchedEffect(Unit) {
-        // Simula ritardo di rete
-        delay(2000)
-
-        // Dati finti
-        immobili = listOf(
-            ImmobileMock("1", 350000, "Napoli, Vomero", "Appartamento", 110),
-            ImmobileMock("2", 1200000, "Napoli, Posillipo", "Villa", 250),
-            ImmobileMock("3", 180000, "Napoli, Centro Storico", "Monolocale", 50),
-            ImmobileMock("4", 450000, "Napoli, Chiaia", "Attico", 130)
-        )
-
-        isLoading = false
-    }
-    // -------------------------------
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -102,52 +67,90 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
-                // Se sta caricando mostriamo una rotella, altrimenti la lista
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = colorScheme.primary)
+                when (val state = uiState) {
+                    is HomeUiState.Loading -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = colorScheme.primary)
+                        }
                     }
-                } else {
-                    PropertyShowcaseSection(
-                        title = "Immobili in evidenza",
-                        items = immobili,
-                        itemContent = { property ->
-                            // Mappatura oggetto locale -> UI Component
-                            AppPropertyCard(
-                                modifier = Modifier
-                                    .width(dimensions.propertyCardHeight)
-                                    .height(dimensions.circularIconSize), // Verifica layout originale
-                                price = "€ ${property.prezzo}",
-                                // Placeholder statico
-                                imageResId = R.drawable.property1,
-                                address = property.localita ?: "N/A",
-                                details = listOfNotNull(property.tipologia, "${property.mq} mq"),
-                                onClick = {
-                                    // Navigazione finta verso dettaglio
-                                    navController.navigate(Screen.PropertyScreen.route)
-                                },
-                                actionButton = null,
-                                horizontalMode = false,
-                                imageHeightVerticalRatio = 0.55f,
-                                elevationDp = Dimensions.elevationSmall
-                            )
-                        },
-                        onSeeAllClick = {
-                            navController.navigate(
-                                Screen.ApartmentListingScreen.buildRoute(
-                                    idUtentePath = idUtente,
-                                    comunePath = comune,
-                                    ricercaPath = ""
+
+                    is HomeUiState.Error -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(dimensions.paddingLarge),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "Qualcosa è andato storto.",
+                                    color = colorScheme.error,
+                                    style = typography.titleSmall
                                 )
-                            )
-                        },
-                        listContentPadding = PaddingValues(horizontal = dimensions.paddingLarge)
-                    )
+                                Text(
+                                    text = state.message,
+                                    color = colorScheme.onSurfaceVariant,
+                                    style = typography.bodySmall,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(onClick = { viewModel.fetchImmobili() }) {
+                                    Text("Riprova")
+                                }
+                            }
+                        }
+                    }
+
+                    is HomeUiState.Success -> {
+                        PropertyShowcaseSection(
+                            title = "Immobili in evidenza",
+                            items = state.immobili,
+                            itemContent = { property ->
+
+                                // Construct Image URL using the helper
+                                // Requires property.immagini to be defined in FrontendModels.kt
+                                val imageUrl = if (property.immagini.isNotEmpty()) {
+                                    RetrofitClient.getImageUrl(property.immagini[0].id) + "/raw"
+                                } else null
+
+                                AppPropertyCard(
+                                    modifier = Modifier
+                                        .width(dimensions.propertyCardHeight)
+                                        .height(dimensions.circularIconSize),
+                                    price = "€ ${property.prezzo ?: "Tratt."}",
+                                    imageUrl = imageUrl,
+                                    // Use 'indirizzo' and 'categoria' as defined in FrontendModels.kt
+                                    address = property.indirizzo ?: "Zona non specificata",
+                                    details = listOfNotNull(
+                                        property.categoria,
+                                        property.mq?.let { "$it mq" }
+                                    ),
+                                    onClick = {
+                                        navController.navigate(Screen.PropertyScreen.route)
+                                    },
+                                    actionButton = null,
+                                    horizontalMode = false,
+                                    imageHeightVerticalRatio = 0.55f,
+                                    elevationDp = Dimensions.elevationSmall
+                                )
+                            },
+                            onSeeAllClick = {
+                                navController.navigate(
+                                    Screen.ApartmentListingScreen.buildRoute(
+                                        idUtentePath = idUtente,
+                                        comunePath = comune,
+                                        ricercaPath = ""
+                                    )
+                                )
+                            },
+                            listContentPadding = PaddingValues(horizontal = dimensions.paddingLarge)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
@@ -162,7 +165,6 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
-                // Pulsante Manager
                 TextButton(
                     onClick = { navController.navigate(Screen.ManagerScreen.withIdUtente(idUtente)) },
                     modifier = Modifier
@@ -219,14 +221,5 @@ fun HomeScreenPostAdSection(
             },
             modifier = Modifier.fillMaxWidth()
         )
-    }
-}
-
-@Preview(showBackground = true, device = "id:pixel_4")
-@Composable
-fun PreviewHomeScreen() {
-    DietiEstatesTheme {
-        val navController = rememberNavController()
-        HomeScreen(navController = navController, idUtente = "Danilo")
     }
 }
