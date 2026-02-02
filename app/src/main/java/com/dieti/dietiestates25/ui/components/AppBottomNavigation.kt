@@ -30,7 +30,7 @@ sealed class BottomNavItem(val route: String, val icon: ImageVector, val label: 
 @Composable
 fun AppBottomNavigation(
     navController: NavController,
-    idUtente: String = "sconosciuto",
+    idUtente: String,
     // New lambda to intercept navigation attempts. Defaults to 'true' to avoid breaking other screens.
     onNavigateAttempt: () -> Boolean = { true }
 ) {
@@ -57,7 +57,8 @@ fun AppBottomNavigation(
                 selected = selected,
                 onNavigateAttempt = onNavigateAttempt, // Pass the lambda down
                 colorScheme = colorScheme,
-                dimension = dimension
+                dimension = dimension,
+                idUtente = idUtente
             )
         }
     }
@@ -72,6 +73,7 @@ fun RowScope.AddItem(
     item: BottomNavItem,
     navController: NavController,
     selected: Boolean,
+    idUtente: String,
     onNavigateAttempt: () -> Boolean, // Receive the lambda
     colorScheme: ColorScheme,
     dimension: Dimensions
@@ -82,14 +84,19 @@ fun RowScope.AddItem(
     Box(
         modifier = Modifier
             .weight(1f)
-            .then(if (selected) {
-                Modifier
-                    .padding(horizontal = dimension.paddingSmall, vertical = dimension.paddingExtraSmall)
-                    .clip(RoundedCornerShape(dimension.cornerRadiusLarge))
-                    .background(colorScheme.onPrimary.copy(alpha = 0.2f))
-            } else {
-                Modifier
-            })
+            .then(
+                if (selected) {
+                    Modifier
+                        .padding(
+                            horizontal = dimension.paddingSmall,
+                            vertical = dimension.paddingExtraSmall
+                        )
+                        .clip(RoundedCornerShape(dimension.cornerRadiusLarge))
+                        .background(colorScheme.onPrimary.copy(alpha = 0.2f))
+                } else {
+                    Modifier
+                }
+            )
     ) {
         this@AddItem.NavigationBarItem(
             icon = {
@@ -113,13 +120,16 @@ fun RowScope.AddItem(
                     // Call the interceptor lambda first
                     if (onNavigateAttempt()) {
                         // If it returns true, proceed with navigation
-                        val route = if (item.route == Screen.HomeScreen.route) {
-                            "${item.route}/utente" // Handle user argument for home
-                        } else {
-                            item.route
+                        val finalRoute = when (item) {
+                            // Home e Profilo richiedono l'ID Utente
+                            BottomNavItem.Home -> "${item.route}/$idUtente"
+                            BottomNavItem.Profile -> "${item.route}/$idUtente"
+                            BottomNavItem.Notifications -> "${item.route}/$idUtente"
+                            // Notifiche (e altre future senza argomenti) usano la rotta base
+                            else -> item.route
                         }
-                        navController.navigate(route) {
-                            // Standard navigation logic to avoid building up a large back stack
+
+                        navController.navigate(finalRoute) {
                             popUpTo(navController.graph.startDestinationId)
                             launchSingleTop = true
                         }

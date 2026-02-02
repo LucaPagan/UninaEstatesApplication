@@ -5,10 +5,10 @@ import com.dieti.dietiestates25.data.model.modelsource.PhonePrefix
 
 
 data class ProfileData(
-    val name: String = "Lorenzo",
-    val email: String = "LorenzoTrignano@gmail.com",
+    val name: String,
+    val email: String,
     val selectedPrefix: PhonePrefix = DefaultPhonePrefix,
-    val phoneNumberWithoutPrefix: String = "123456789"
+    val phoneNumberWithoutPrefix: String
 ) {
     val fullPhoneNumber: String
         get() = "${selectedPrefix.prefix}${phoneNumberWithoutPrefix}"
