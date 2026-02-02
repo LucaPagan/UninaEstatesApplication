@@ -97,6 +97,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.compose.runtime.livedata)
+    implementation(libs.androidx.compose.animation.core)
 
     // Debug
     debugImplementation(libs.ui.tooling)

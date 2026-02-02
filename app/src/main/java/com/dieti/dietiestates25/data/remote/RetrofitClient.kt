@@ -10,14 +10,29 @@ import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
 interface DietiEstatesApi {
-    // Defines the GET call to fetch the list of properties
     @GET("api/immobili")
-    suspend fun getImmobili(): List<ImmobileDTO>
+    suspend fun getImmobili(
+        @Query("query") query: String? = null,
+        @Query("tipoVendita") tipoVendita: Boolean? = null,
+        @Query("minPrezzo") minPrezzo: Int? = null,
+        @Query("maxPrezzo") maxPrezzo: Int? = null,
+        @Query("minMq") minMq: Int? = null,
+        @Query("maxMq") maxMq: Int? = null,
+        @Query("bagni") bagni: Int? = null,
+        @Query("condizione") condizione: String? = null,
+        @Query("lat") lat: Double? = null,
+        @Query("lon") lon: Double? = null,
+        @Query("radiusKm") radiusKm: Double? = null
+    ): List<ImmobileDTO>
 
-    // Defines the POST call to create a property with images
+    // NUOVO: Ottiene suggerimenti comuni
+    @GET("api/immobili/cities")
+    suspend fun getComuni(@Query("query") query: String): List<String>
+
     @Multipart
     @POST("api/immobili")
     suspend fun creaImmobile(

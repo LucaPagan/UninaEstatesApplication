@@ -15,38 +15,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import com.dieti.dietiestates25.data.model.FilterModel
+import com.dieti.dietiestates25.data.model.FilterOriginScreen
+import com.dieti.dietiestates25.data.remote.ImmobileDTO
 import com.dieti.dietiestates25.ui.components.AppPropertyViewButton
 import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
+import com.dieti.dietiestates25.ui.features.search.SearchFilterScreen
 import com.dieti.dietiestates25.ui.navigation.Screen
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
-import kotlinx.coroutines.delay
-
-// --- DATI MOCK LOCALI (Sostituiscono DTO e Modelli Esterni) ---
-data class FilterModelMock(
-    val priceMin: Float? = null,
-    val priceMax: Float? = null,
-    val rooms: Int? = null
-)
-
-data class ImmobileMock(
-    val id: String,
-    val titolo: String,
-    val prezzo: String,
-    val localita: String,
-    val superficie: Int,
-    val stanze: Int,
-    val bagni: Int,
-    val imageUrl: String? = null
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,46 +36,30 @@ fun ApartmentListingScreen(
     navController: NavController,
     idUtente: String,
     comune: String,
-    ricerca: String
+    ricerca: String,
+    filters: FilterModel? = null, // Filtri passati dalla navigazione
+    viewModel: ApartmentListingViewModel = viewModel()
 ) {
     val dimensions = Dimensions
     val colorScheme = MaterialTheme.colorScheme
 
-    // --- GESTIONE STATO LOCALE (Sostituisce ViewModel) ---
-    var isLoading by remember { mutableStateOf(true) }
-    var immobili by remember { mutableStateOf<List<ImmobileMock>>(emptyList()) }
-    var activeFilters by remember { mutableStateOf<FilterModelMock?>(null) }
+    // Stato dal ViewModel
+    val immobili by viewModel.immobili.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
 
-    // Bottom Sheet State
+    // Stato locale per i filtri (inizialmente quelli passati, poi modificabili)
+    var activeFilters by remember { mutableStateOf(filters) }
+
+    // Bottom Sheet
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var showFilterSheet by remember { mutableStateOf(false) }
 
-    // --- CARICAMENTO DATI SIMULATO ---
+    // Caricamento Iniziale
     LaunchedEffect(comune, ricerca, activeFilters) {
-        isLoading = true
-        delay(1500) // Simula chiamata API
-
-        // Generazione dati mock
-        val baseList = listOf(
-            ImmobileMock("1", "Trilocale Vista Mare", "350.000", comune, 110, 3, 2, "https://picsum.photos/400/300"),
-            ImmobileMock("2", "Villa Indipendente", "850.000", comune, 250, 6, 3, "https://picsum.photos/400/301"),
-            ImmobileMock("3", "Monolocale Centro", "120.000", comune, 45, 1, 1, "https://picsum.photos/400/302"),
-            ImmobileMock("4", "Attico Panoramico", "550.000", comune, 160, 4, 2, "https://picsum.photos/400/303"),
-            ImmobileMock("5", "Bilocale Ristrutturato", "210.000", comune, 70, 2, 1, "https://picsum.photos/400/304")
-        )
-
-        // Simulazione filtraggio
-        immobili = if (activeFilters != null) {
-            // Se ci sono filtri, mostriamo un sottoinsieme casuale per simulare il risultato
-            baseList.shuffled().take(3)
-        } else {
-            baseList
-        }
-
-        isLoading = false
+        viewModel.loadImmobili(comune, ricerca, activeFilters)
     }
 
-    // Sfondo Gradiente
     val gradientColors = arrayOf(
         0.0f to colorScheme.primary,
         0.20f to colorScheme.background,
@@ -106,9 +72,9 @@ fun ApartmentListingScreen(
             .fillMaxSize()
             .background(Brush.verticalGradient(colorStops = gradientColors))
     ) {
-        // --- HEADER BAR ---
+        // --- HEADER ---
         GeneralHeaderBar(
-            title = comune,
+            title = if (ricerca.isNotBlank()) "$comune - $ricerca" else comune,
             onBackClick = { navController.popBackStack() },
             actions = {
                 Box {
@@ -131,17 +97,20 @@ fun ApartmentListingScreen(
             }
         )
 
-        // --- CONTENT AREA ---
+        // --- CONTENT ---
         if (isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = colorScheme.onPrimary)
+            }
+        } else if (error != null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(text = error ?: "Errore sconosciuto", color = colorScheme.error)
             }
         } else if (immobili.isEmpty()) {
             EmptyStateView(comune, activeFilters) {
                 activeFilters = null // Reset filtri
             }
         } else {
-            // Lista dei risultati
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(
@@ -151,7 +120,7 @@ fun ApartmentListingScreen(
                 verticalArrangement = Arrangement.spacedBy(dimensions.paddingMedium)
             ) {
                 item {
-                    ResultsHeader(count = immobili.size, activeFilters = activeFilters, comune = comune)
+                    ResultsHeader(count = immobili.size, activeFilters = activeFilters != null, comune = comune)
                 }
 
                 items(items = immobili, key = { it.id }) { property ->
@@ -166,7 +135,7 @@ fun ApartmentListingScreen(
         }
     }
 
-    // --- BOTTOM SHEET FILTRI (MOCK CONTENT) ---
+    // --- BOTTOM SHEET FILTRI (REALE) ---
     if (showFilterSheet) {
         ModalBottomSheet(
             onDismissRequest = { showFilterSheet = false },
@@ -183,49 +152,32 @@ fun ApartmentListingScreen(
                     .defaultMinSize(minHeight = 400.dp)
                     .statusBarsPadding()
                     .navigationBarsPadding()
-                    .padding(16.dp)
             ) {
-                // Placeholder per i filtri (dato che SearchFilterScreen era una dipendenza esterna)
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Filtri di Ricerca", style = MaterialTheme.typography.titleLarge)
-                    Spacer(Modifier.height(16.dp))
-                    Text("Simulazione interfaccia filtri...")
-                    Spacer(Modifier.height(32.dp))
-
-                    // Bottone Applica Mock
-                    Button(
-                        onClick = {
-                            // Attiva un filtro fittizio
-                            activeFilters = FilterModelMock(priceMax = 500000f)
-                            showFilterSheet = false
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Applica Filtri (Mock)")
-                    }
-
-                    Spacer(Modifier.height(8.dp))
-
-                    // Bottone Reset Mock
-                    TextButton(
-                        onClick = {
-                            activeFilters = null
-                            showFilterSheet = false
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Resetta")
-                    }
-                }
+                // Riusiamo la schermata dei filtri esistente
+                SearchFilterScreen(
+                    navController = navController,
+                    idUtente = idUtente,
+                    comune = comune,
+                    ricercaQueryText = ricerca,
+                    initialFilters = activeFilters,
+                    onNavigateBack = { showFilterSheet = false },
+                    onApplyFilters = { newFilters ->
+                        activeFilters = newFilters
+                        showFilterSheet = false
+                        // Il LaunchedEffect ricaricherà automaticamente i dati
+                    },
+                    isFullScreenContext = false,
+                    originScreen = FilterOriginScreen.APARTMENT_LISTING
+                )
             }
         }
     }
 }
 
-// --- COMPONENTI UI DI SUPPORTO ---
+// --- UTILS UI ---
 
 @Composable
-fun ResultsHeader(count: Int, activeFilters: FilterModelMock?, comune: String) {
+fun ResultsHeader(count: Int, activeFilters: Boolean, comune: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -234,13 +186,13 @@ fun ResultsHeader(count: Int, activeFilters: FilterModelMock?, comune: String) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Annunci a $comune",
+            text = "Risultati", // O "Annunci a $comune"
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        if (activeFilters != null) {
+        if (activeFilters) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
             ) {
@@ -256,7 +208,7 @@ fun ResultsHeader(count: Int, activeFilters: FilterModelMock?, comune: String) {
 }
 
 @Composable
-fun EmptyStateView(comune: String, activeFilters: FilterModelMock?, onReset: () -> Unit) {
+fun EmptyStateView(comune: String, activeFilters: FilterModel?, onReset: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -286,36 +238,45 @@ fun EmptyStateView(comune: String, activeFilters: FilterModelMock?, onReset: () 
 }
 
 @Composable
-fun RealPropertyCard(immobile: ImmobileMock, onClick: () -> Unit) {
+fun RealPropertyCard(immobile: ImmobileDTO, onClick: () -> Unit) {
+    val dimensions = Dimensions
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(280.dp)
             .clickable { onClick() },
-        shape = RoundedCornerShape(Dimensions.cornerRadiusMedium),
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimensions.elevationSmall),
+        shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensions.elevationSmall),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column {
-            // Immagine
+            // Immagine (Parte Superiore)
             Box(modifier = Modifier.weight(0.6f)) {
+                // Usiamo l'URL della prima immagine se presente
+                val imageUrl = immobile.immagini.firstOrNull()?.url
+
                 AsyncImage(
-                    model = immobile.imageUrl,
+                    model = imageUrl,
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.LightGray), // Colore di fallback
+                        .background(Color.LightGray),
                     contentScale = ContentScale.Crop
                 )
 
-                // Prezzo overlay
+                // Prezzo Overlay
                 Surface(
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                    shape = RoundedCornerShape(topStart = Dimensions.cornerRadiusMedium, bottomEnd = Dimensions.cornerRadiusMedium),
+                    shape = RoundedCornerShape(topStart = dimensions.cornerRadiusMedium, bottomEnd = dimensions.cornerRadiusMedium),
                     modifier = Modifier.align(Alignment.TopStart)
                 ) {
+                    val prezzoFormat = if (immobile.tipoVendita)
+                        "€ ${immobile.prezzo?.let { String.format("%,d", it) } ?: "-"}"
+                    else
+                        "€ ${immobile.prezzo}/mese"
+
                     Text(
-                        text = "€ ${immobile.prezzo}",
+                        text = prezzoFormat,
                         style = MaterialTheme.typography.labelLarge,
                         color = Color.White,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -323,7 +284,7 @@ fun RealPropertyCard(immobile: ImmobileMock, onClick: () -> Unit) {
                 }
             }
 
-            // Dettagli
+            // Dettagli (Parte Inferiore)
             Column(
                 modifier = Modifier
                     .weight(0.4f)
@@ -332,16 +293,18 @@ fun RealPropertyCard(immobile: ImmobileMock, onClick: () -> Unit) {
             ) {
                 Column {
                     Text(
-                        text = immobile.titolo,
+                        text = immobile.categoria ?: "Immobile",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = immobile.localita,
+                        text = immobile.indirizzo ?: immobile.descrizione ?: "",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
 
@@ -351,9 +314,11 @@ fun RealPropertyCard(immobile: ImmobileMock, onClick: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val detailsList = mutableListOf<String>()
-                    detailsList.add("${immobile.superficie}mq")
-                    detailsList.add("${immobile.stanze} stanze")
-                    detailsList.add("${immobile.bagni} bagni")
+                    immobile.mq?.let { detailsList.add("${it}mq") }
+
+                    // Conta stanze (Ambienti non 'BAGNO' o 'CUCINA' se vuoi essere specifico, oppure totale)
+                    // Per semplicità qui mostriamo solo mq e bagni se disponibili
+                    // Se vuoi contare le stanze: immobile.ambienti.sumOf { it.numero }
 
                     Text(
                         text = detailsList.joinToString(" • "),
@@ -366,19 +331,5 @@ fun RealPropertyCard(immobile: ImmobileMock, onClick: () -> Unit) {
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true, device = "id:pixel_4")
-@Composable
-fun PreviewApartmentListingScreen() {
-    val navController = rememberNavController()
-    DietiEstatesTheme {
-        ApartmentListingScreen(
-            navController = navController,
-            idUtente = "Danilo",
-            comune = "Napoli",
-            ricerca = "Centro"
-        )
     }
 }

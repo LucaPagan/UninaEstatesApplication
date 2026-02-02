@@ -343,7 +343,8 @@ fun PropertySellScreen(
                                 prezzo = prezzo.toIntOrNull(),
                                 speseCondominiali = speseCondominiali.toIntOrNull(),
                                 descrizione = descrizione,
-                                ambienti = addedAmbienti.toList()
+                                ambienti = addedAmbienti.toList(),
+                                localita = "",
                             )
                             // Corrected Call: Added 'onSuccess = {}'
                             viewModel.submitAd(context, request, selectedImageUris, onSuccess = {})
