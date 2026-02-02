@@ -20,7 +20,10 @@ data class PropertyMarker(
     val condition: String = "",
     val isAvailable: Boolean = true,
     val priceValue: Float,
-    val surfaceValue: Float
+    val surfaceValue: Float,
+    val scuola: Boolean = false,
+    val parco: Boolean = false,
+    val servizioPubblico: Boolean = false
 
 ) {
     companion object {

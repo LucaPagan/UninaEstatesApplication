@@ -12,10 +12,16 @@ data class ImmobileDTO(
     val prezzo: Int?,
     val mq: Int?,
     val descrizione: String?,
-    // FIX: Cambiato da LocalDate? a String? per compatibilità col Service
     val annoCostruzione: String?,
     val immagini: List<ImmagineDto> = emptyList(),
-    val ambienti: List<AmbienteDto> = emptyList()
+    val ambienti: List<AmbienteDto> = emptyList(),
+
+    // Nuovi campi dal Backend
+    val lat: Double? = null,
+    val long: Double? = null,
+    val parco: Boolean = false,
+    val scuola: Boolean = false,
+    val servizioPubblico: Boolean = false
 )
 
 data class ImmagineDto(
@@ -38,10 +44,12 @@ data class ImmobileSummaryDTO(
 )
 
 // DTO per la richiesta (Ricezione dati dall'app)
+// DTO per creazione (già presente, lo riporto per completezza se serve)
 data class ImmobileCreateRequest(
     val tipoVendita: Boolean,
     val categoria: String?,
     val indirizzo: String?,
+    val localita: String?,
     val mq: Int?,
     val piano: Int?,
     val ascensore: Boolean?,
@@ -49,12 +57,23 @@ data class ImmobileCreateRequest(
     val climatizzazione: Boolean?,
     val esposizione: String?,
     val statoProprieta: String?,
-    // FIX: Cambiato da LocalDate? a String? per permettere il parsing manuale
     val annoCostruzione: String?,
     val prezzo: Int?,
     val speseCondominiali: Int?,
     val descrizione: String?,
     val ambienti: List<AmbienteDto> = emptyList()
+)
+data class ImmobileSearchFilters(
+    val query: String? = null,
+    val tipoVendita: Boolean? = null,
+    val minPrezzo: Int? = null,
+    val maxPrezzo: Int? = null,
+    val minMq: Int? = null,
+    val maxMq: Int? = null,
+    val minStanze: Int? = null,
+    val maxStanze: Int? = null,
+    val bagni: Int? = null,
+    val condizione: String? = null
 )
 
 data class ImmobileDetailDTO(

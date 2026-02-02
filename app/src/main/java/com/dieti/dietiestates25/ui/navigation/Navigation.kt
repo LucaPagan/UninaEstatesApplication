@@ -1,5 +1,6 @@
 package com.dieti.dietiestates25.ui.navigation
 
+import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
@@ -8,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.dieti.dietiestates25.data.model.FilterModel
 import com.dieti.dietiestates25.ui.features.property.ApartmentListingScreen
 import com.dieti.dietiestates25.ui.features.home.HomeScreen
 import com.dieti.dietiestates25.ui.features.manager.ManagerScreen
@@ -38,19 +40,15 @@ fun Navigation(
 
     NavHost(navController = navController, startDestination = startDestination) {
 
-        // 1. Welcome Screen INTRO (Prima apertura assoluta)
-        // Questa è la rotta che chiamiamo dal MainActivity nel caso "isFirstRun == true"
         composable("welcome_intro_screen") {
             WelcomeScreen(navController = navController)
         }
 
-        // 2. Welcome Screen CON ID (La vecchia rotta, se ti serve per altri scopi, altrimenti puoi toglierla)
         composable("welcome_view/{userId}") { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId")
             WelcomeScreen(navController = navController, idUtente = userId)
         }
 
-        // 3. Login
         composable(route = Screen.LoginScreen.route) {
             LoginScreen(navController = navController)
         }
@@ -95,20 +93,17 @@ fun Navigation(
                 navArgument("ricercaQueryText") { type = NavType.StringType; defaultValue = "ricerca" }
             )
         ) { entry ->
-            val idUtenteArg = entry.arguments?.getString("idUtente") ?: "utente"
-            val comuneArg = entry.arguments?.getString("comune") ?: "napoli"
-            val ricercaQueryTextArg = entry.arguments?.getString("ricercaQueryText") ?: "ricerca"
-
             SearchFilterScreen(
                 navController = navController,
-                idUtente = idUtenteArg,
-                comune = comuneArg,
-                ricercaQueryText = ricercaQueryTextArg,
+                idUtente = entry.arguments?.getString("idUtente") ?: "utente",
+                comune = entry.arguments?.getString("comune") ?: "napoli",
+                ricercaQueryText = entry.arguments?.getString("ricercaQueryText") ?: "ricerca",
                 onNavigateBack = { navController.popBackStack() },
-                onApplyFilters = { /* Logica filtri */ }
+                onApplyFilters = { /* Logica filtri gestita internamente */ }
             )
         }
 
+        // --- FIX FILTER PASSING HERE ---
         composable(
             route = Screen.ApartmentListingScreen.route + "/{idUtente}/{comune}/{ricerca}" +
                     "?purchaseType={purchaseType}&minPrice={minPrice}&maxPrice={maxPrice}" +
@@ -129,11 +124,37 @@ fun Navigation(
                 navArgument("condition") { type = NavType.StringType; nullable = true; defaultValue = null }
             )
         ) { entry ->
+            // Ricostruiamo l'oggetto FilterModel dagli argomenti per passarlo alla Screen
+            val purchaseType = entry.arguments?.getString("purchaseType")
+            val minPrice = entry.arguments?.getFloat("minPrice")?.takeIf { it != -1f }
+            val maxPrice = entry.arguments?.getFloat("maxPrice")?.takeIf { it != -1f }
+            val minSurface = entry.arguments?.getFloat("minSurface")?.takeIf { it != -1f }
+            val maxSurface = entry.arguments?.getFloat("maxSurface")?.takeIf { it != -1f }
+            val minRooms = entry.arguments?.getInt("minRooms")?.takeIf { it != -1 }
+            val maxRooms = entry.arguments?.getInt("maxRooms")?.takeIf { it != -1 }
+            val bathrooms = entry.arguments?.getInt("bathrooms")?.takeIf { it != -1 }
+            val condition = entry.arguments?.getString("condition")
+
+            val filters = if (purchaseType != null || minPrice != null || maxPrice != null) {
+                FilterModel(
+                    purchaseType = purchaseType,
+                    minPrice = minPrice,
+                    maxPrice = maxPrice,
+                    minSurface = minSurface,
+                    maxSurface = maxSurface,
+                    minRooms = minRooms,
+                    maxRooms = maxRooms,
+                    bathrooms = bathrooms,
+                    condition = condition
+                )
+            } else null
+
             ApartmentListingScreen(
                 navController = navController,
                 idUtente = entry.arguments?.getString("idUtente") ?: "utente",
                 comune = entry.arguments?.getString("comune") ?: "Napoli",
-                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"
+                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca",
+                filters = filters // Passiamo i filtri ricostruiti
             )
         }
 
@@ -186,11 +207,21 @@ fun Navigation(
                 navArgument("condition") { type = NavType.StringType; nullable = true; defaultValue = null }
             )
         ) { entry ->
+            // Ricostruzione filtri anche per la mappa
+            val purchaseType = entry.arguments?.getString("purchaseType")
+            val minPrice = entry.arguments?.getFloat("minPrice")?.takeIf { it != -1f }
+            val maxPrice = entry.arguments?.getFloat("maxPrice")?.takeIf { it != -1f }
+            // ... (gli altri parametri mappa li gestisci già nel ViewModel se necessario)
+
+            // Qui passo null o un oggetto FilterModel semplificato se serve
+            val filters = if (purchaseType != null) FilterModel(purchaseType = purchaseType, minPrice = minPrice, maxPrice = maxPrice) else null
+
             MapSearchScreen(
                 navController = navController,
                 idUtente = entry.arguments?.getString("idUtente") ?: "utente",
                 comune = entry.arguments?.getString("comune") ?: "Napoli",
-                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"
+                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca",
+                // filters = filters (se MapSearchScreen li accetta nel costruttore)
             )
         }
 
@@ -214,11 +245,18 @@ fun Navigation(
                 navArgument("condition") { type = NavType.StringType; nullable = true; defaultValue = null }
             )
         ) { entry ->
+            // Anche qui ricostruzione filtri per passarli avanti se necessario
+            val purchaseType = entry.arguments?.getString("purchaseType")
+            val minPrice = entry.arguments?.getFloat("minPrice")?.takeIf { it != -1f }
+            val maxPrice = entry.arguments?.getFloat("maxPrice")?.takeIf { it != -1f }
+            val filters = if (purchaseType != null) FilterModel(purchaseType = purchaseType, minPrice = minPrice, maxPrice = maxPrice) else null
+
             SearchTypeSelectionScreen(
                 navController = navController,
                 idUtente = entry.arguments?.getString("idUtente") ?: "utente",
                 comune = entry.arguments?.getString("comune") ?: "Napoli",
-                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca"
+                ricerca = entry.arguments?.getString("ricerca") ?: "ricerca",
+                filters = filters
             )
         }
 

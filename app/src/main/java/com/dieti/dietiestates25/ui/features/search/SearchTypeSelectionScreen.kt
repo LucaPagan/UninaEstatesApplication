@@ -25,7 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -47,41 +46,17 @@ fun SearchTypeSelectionScreen(
     idUtente: String,
     comune: String,
     ricerca: String,
+    filters: FilterModel? = null // Parametro aggiunto per risolvere l'errore di compilazione
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
 
+    // Debugging della navigazione (opzionale)
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val initialFiltersFromNav = remember(Unit) {
-        currentBackStackEntry?.arguments?.let { args ->
-            val pType = args.getString("purchaseType")
-            val mPrice = args.getFloat("minPrice").takeIf { it != -1f && it != 0f }
-            val mxPrice = args.getFloat("maxPrice").takeIf { it != -1f }
-            val mSurf = args.getFloat("minSurface").takeIf { it != -1f && it != 0f }
-            val mxSurf = args.getFloat("maxSurface").takeIf { it != -1f }
-            val mRooms = args.getInt("minRooms").takeIf { it != -1 }
-            val mxRooms = args.getInt("maxRooms").takeIf { it != -1 }
-            val baths = args.getInt("bathrooms").takeIf { it != -1 }
-            val cond = args.getString("condition")
-
-            if (pType != null || mPrice != null || mxPrice != null || mSurf != null || mxSurf != null || mRooms != null || mxRooms != null || baths != null || cond != null) {
-                FilterModel(
-                    purchaseType = pType, minPrice = mPrice, maxPrice = mxPrice,
-                    minSurface = mSurf, maxSurface = mxSurf, minRooms = mRooms,
-                    maxRooms = mxRooms, bathrooms = baths, condition = cond
-                )
-            } else { null }
-        }
-    }
-
     LaunchedEffect(currentBackStackEntry) {
         currentBackStackEntry?.let { entry ->
             println("Current destination: ${entry.destination.route}")
-            println("Previous back stack entry exists: ${navController.previousBackStackEntry != null}")
-            navController.previousBackStackEntry?.let { prev ->
-                println("Previous destination: ${prev.destination.route}")
-            }
         }
     }
 
@@ -100,8 +75,6 @@ fun SearchTypeSelectionScreen(
         SearchTypeSelectionTopBar(
             title = "Scegli Visualizzazione",
             onNavigationClick = {
-                println("Current route: ${navController.currentDestination?.route}")
-                println("Previous route: ${navController.previousBackStackEntry?.destination?.route}")
                 navController.popBackStack()
             }
         )
@@ -136,7 +109,7 @@ fun SearchTypeSelectionScreen(
                             idUtentePath = idUtente,
                             comunePath = comune,
                             ricercaPath = ricerca,
-                            filters = initialFiltersFromNav
+                            filters = filters // Passiamo i filtri ricevuti
                         )
                     )
                 },
@@ -150,7 +123,12 @@ fun SearchTypeSelectionScreen(
                 text = "Visualizza su Mappa",
                 onClick = {
                     navController.navigate(
-                        Screen.MapSearchScreen.buildRoute(idUtente, comune, ricerca, initialFiltersFromNav)
+                        Screen.MapSearchScreen.buildRoute(
+                            idUtentePath = idUtente,
+                            comunePath = comune,
+                            ricercaPath = ricerca,
+                            filters = filters // Passiamo i filtri ricevuti
+                        )
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -163,7 +141,7 @@ fun SearchTypeSelectionScreen(
                 text = "Visualizza per Stazioni Metro",
                 onClick = {
                     // TODO: Naviga alla schermata di ricerca per metro con i filtri
-                    // navController.navigate(Screen.MetroSearchScreen.buildRoute(idUtente, comune, ricercaQueryText, appliedFilters))
+                    // navController.navigate(Screen.MetroSearchScreen.buildRoute(idUtente, comune, ricercaQueryText, filters))
                 },
                 modifier = Modifier.fillMaxWidth(),
                 icon = Icons.Filled.Train
@@ -229,6 +207,7 @@ fun PreviewSearchTypeSelectionScreen() {
             idUtente = "previewUser",
             comune = "Napoli",
             ricerca = "Centro",
+            filters = null
         )
     }
 }
