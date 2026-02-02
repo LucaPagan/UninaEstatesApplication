@@ -26,8 +26,6 @@ sealed class RegisterState {
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private val userPrefs = UserPreferences(application.applicationContext)
-
-    // Assicurati che AuthApiService sia importato correttamente
     private val apiService = RetrofitClient.retrofit.create(AuthApiService::class.java)
 
     private val _state = MutableLiveData<RegisterState>(RegisterState.Idle)
@@ -53,21 +51,19 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
-                Log.d("AUTH_DEBUG", "Inizio chiamata Registrazione...")
+                Log.d("AUTH_DEBUG", "Inizio Registrazione...")
                 val response = apiService.registrazione(request)
                 if (response.isSuccessful && response.body() != null) {
                     val utente = response.body()!!
-                    Log.d("AUTH_DEBUG", "Registrazione OK. Utente: ${utente.id}")
 
+                    // FIX LOOP: Salviamo sessione e flag Primo Avvio
                     salvaSessioneCompleta(utente)
 
                     _state.value = RegisterState.Success(utente)
                 } else {
-                    Log.e("AUTH_DEBUG", "Errore Registrazione API: ${response.code()}")
                     _state.value = RegisterState.Error("Errore reg: ${response.code()}")
                 }
             } catch (e: Exception) {
-                Log.e("AUTH_DEBUG", "Eccezione Registrazione", e)
                 _state.value = RegisterState.Error("Errore rete: ${e.message}")
             }
         }
@@ -84,66 +80,49 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
-                Log.d("AUTH_DEBUG", "Inizio chiamata Login per $email...")
+                Log.d("AUTH_DEBUG", "Inizio Login...")
                 val response = apiService.login(request)
                 if (response.isSuccessful && response.body() != null) {
                     val utente = response.body()!!
-                    Log.d("AUTH_DEBUG", "Login OK. Utente ricevuto: ${utente.id}")
 
-                    // Salvataggio critico
+                    // FIX LOOP: Salviamo sessione e flag Primo Avvio
                     salvaSessioneCompleta(utente)
 
                     _state.value = RegisterState.Success(utente)
                 } else {
                     val errorBody = response.errorBody()?.string() ?: "Errore sconosciuto"
-                    Log.e("AUTH_DEBUG", "Errore Login API: $errorBody")
                     _state.value = RegisterState.Error("Login fallito: $errorBody")
                 }
             } catch (e: Exception) {
-                Log.e("AUTH_DEBUG", "Eccezione Login", e)
                 _state.value = RegisterState.Error("Errore connessione: ${e.message}")
             }
         }
     }
 
+    // --- FUNZIONE HELPER AGGIUNTA (CRITICA PER IL FIX) ---
     private suspend fun salvaSessioneCompleta(utente: UtenteResponseDTO) {
-        Log.d("AUTH_DEBUG", ">>> INIZIO Salvataggio Sessione Completa")
-
         // 1. Memoria volatile
         RetrofitClient.loggedUserEmail = utente.email
-        Log.d("AUTH_DEBUG", "1. RetrofitClient email impostata: ${utente.email}")
 
-        // 2. DataStore (Preferenze asincrone)
-        try {
-            userPrefs.saveUserData(utente.id, utente.email)
-            Log.d("AUTH_DEBUG", "2. DataStore UserData salvato.")
+        // 2. DataStore (UserPrefs) - Salviamo dati utente e flag PRIMO AVVIO
+        userPrefs.saveUserData(utente.id, utente.email)
+        userPrefs.setFirstRunCompleted() // <--- Questo impedisce il ritorno all'Intro!
 
-            userPrefs.setFirstRunCompleted()
-            Log.d("AUTH_DEBUG", "3. DataStore FirstRunCompleted impostato (Intro disattivata).")
-        } catch (e: Exception) {
-            Log.e("AUTH_DEBUG", "ERRORE SALVATAGGIO DATASTORE", e)
-        }
+        // 3. SessionManager (SharedPreferences) - Per MainActivity e Profile
+        SessionManager.saveUserSession(
+            getApplication(),
+            utente.id,
+            "${utente.nome} ${utente.cognome}"
+        )
 
-        // 3. SessionManager (Preferenze sincrone per MainActivity e Profile)
-        try {
-            SessionManager.saveUserSession(
-                getApplication(),
-                utente.id,
-                "${utente.nome} ${utente.cognome}"
-            )
-            Log.d("AUTH_DEBUG", "4. SessionManager salvato. Verifica ID: ${SessionManager.getUserId(getApplication())}")
-        } catch (e: Exception) {
-            Log.e("AUTH_DEBUG", "ERRORE SALVATAGGIO SESSIONMANAGER", e)
-        }
-
-        Log.d("AUTH_DEBUG", ">>> FINE Salvataggio Sessione Completa")
+        Log.d("AUTH_DEBUG", "Sessione salvata completamente. FirstRunCompleted=true, ID=${utente.id}")
     }
 
     fun logout() {
         viewModelScope.launch {
-            Log.d("AUTH_DEBUG", "Eseguo Logout...")
             userPrefs.clearUser()
             RetrofitClient.loggedUserEmail = null
+            // Pulizia completa
             SessionManager.logout(getApplication())
         }
     }

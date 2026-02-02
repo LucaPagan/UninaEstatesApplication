@@ -21,19 +21,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.dieti.dietiestates25.ui.components.AppIconDisplay
+import com.dieti.dietiestates25.ui.navigation.Screen // Import necessario per la navigazione corretta
 import com.dieti.dietiestates25.ui.theme.AppGradients
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
-// Importa il tuo ViewModel e lo Stato
-// Assicurati che i package siano corretti nel tuo progetto
-// import com.dieti.dietiestates25.ui.viewmodel.AuthViewModel
-// import com.dieti.dietiestates25.ui.state.RegisterState
-
 @Composable
 fun RegisterScreen(
     navController: NavController? = null,
-    // Iniettiamo il ViewModel qui. Se usi Hilt sarà hiltViewModel(), altrimenti viewModel() standard
     viewModel: AuthViewModel = viewModel()
 ) {
     // Stati UI locali per i campi di testo
@@ -59,15 +54,12 @@ fun RegisterScreen(
                 val userId = state.utente.id
                 Toast.makeText(context, "Benvenuto ${state.utente.nome}!", Toast.LENGTH_SHORT).show()
 
-                // Navigazione alla WelcomeView passando l'ID
-                // Assicurati che nel tuo NavHost la rotta sia definita come "welcome_view/{userId}"
-                navController?.navigate("welcome_view/$userId") {
-                    // Opzionale: Rimuove la schermata di registrazione dal backstack così se torna indietro esce dall'app o va al login
-                    popUpTo("register_screen") { inclusive = true }
+                // FIX LOOP: Navigazione verso la Home (invece di welcome_view)
+                // Usiamo Screen.HomeScreen.route per coerenza con il resto dell'app
+                navController?.navigate(Screen.HomeScreen.route + "/$userId") {
+                    // Rimuove TUTTO (Intro, Register) dalla storia per evitare loop indietro
+                    popUpTo(0) { inclusive = true }
                 }
-
-                // Resettiamo lo stato per evitare loop se si torna indietro (opzionale)
-                //viewModel.resetState()
             }
             is RegisterState.Error -> {
                 Toast.makeText(context, state.errore, Toast.LENGTH_LONG).show()
@@ -96,7 +88,7 @@ fun RegisterScreen(
             // Bottoni Login/Sign Up
             Row(modifier = Modifier.padding(bottom = Dimensions.spacingLarge)) {
                 Button(
-                    onClick = { navController?.navigate("login_screen") }, // Naviga al login
+                    onClick = { navController?.navigate(Screen.LoginScreen.route) }, // Usa la rotta corretta
                     colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary)
                 ) {
                     Text("Login", color = colorScheme.onPrimary)

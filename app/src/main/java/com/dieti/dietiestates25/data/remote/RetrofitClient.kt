@@ -43,9 +43,9 @@ interface DietiEstatesApi {
 
 object RetrofitClient {
     // 10.0.2.2 è l'indirizzo speciale per localhost dell'emulatore
-    // 10.53.69.219 è l'indirizzo dell'hotspot di Danilo
+    // 10.84.50.219 è l'indirizzo dell'hotspot di Danilo
     // 192.168.1.11 è l'indirizzo del wifi di casa Scala
-    private const val BASE_URL = "http://192.168.1.11:8080/"
+    private const val BASE_URL = "http://10.84.50.219:8080/"
 
     // Variabile statica per l'email (volatile)
     var loggedUserEmail: String? = null
