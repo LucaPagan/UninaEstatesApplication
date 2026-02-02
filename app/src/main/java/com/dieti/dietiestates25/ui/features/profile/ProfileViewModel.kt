@@ -8,7 +8,6 @@ import com.dieti.dietiestates25.data.model.ProfileData
 import com.dieti.dietiestates25.data.model.modelsource.PhonePrefix
 import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.dieti.dietiestates25.data.remote.UtenteResponseDTO
-import com.dieti.dietiestates25.ui.features.profile.ProfileApiService
 import com.dieti.dietiestates25.ui.utils.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +18,8 @@ sealed class ProfileUiState {
     object Loading : ProfileUiState()
     data class Success(val data: ProfileData) : ProfileUiState()
     data class Error(val message: String) : ProfileUiState()
+    // Nuovo stato per segnalare l'avvenuta cancellazione
+    object UserDeleted : ProfileUiState()
 }
 
 class ProfileViewModel : ViewModel() {
@@ -38,59 +39,72 @@ class ProfileViewModel : ViewModel() {
         PhonePrefix("+49", "🇩🇪", "Germania")
     )
 
-    // FIX: Aggiunto il parametro navUserId per compatibilità con ProfileScreen
     fun loadUserProfile(context: Context, navUserId: String? = null) {
         viewModelScope.launch {
             _uiState.value = ProfileUiState.Loading
-
             val sessionUserId = SessionManager.getUserId(context)
 
-            // Log per debuggare la situazione "Zombie"
-            Log.e("PROFILE_DEBUG", "------------------------------------------------")
-            Log.e("PROFILE_DEBUG", "ID Sessione: '$sessionUserId'")
-            Log.e("PROFILE_DEBUG", "ID Navigazione: '$navUserId'")
-
-            // 1. Logica di selezione ID
-            // Diamo priorità alla Sessione. Se è null, controlliamo la Navigazione.
-            // (Utile se la sessione si perde ma la navigazione ha ancora l'ID in memoria)
             val finalUserId = if (!sessionUserId.isNullOrEmpty()) {
                 sessionUserId
             } else if (!navUserId.isNullOrEmpty() && navUserId != "utente" && navUserId != "{idUtente}") {
-                Log.w("PROFILE_DEBUG", "Sessione vuota! Tento fallback su NavID: $navUserId")
                 navUserId
             } else {
                 null
             }
 
             if (finalUserId.isNullOrEmpty()) {
-                Log.e("PROFILE_DEBUG", "ERRORE: Nessun ID valido trovato.")
-                _uiState.value = ProfileUiState.Error("Sessione scaduta o ID mancante.\nEffettua nuovamente il login.")
+                _uiState.value = ProfileUiState.Error("Sessione scaduta. Effettua il login.")
                 return@launch
             }
 
             try {
-                Log.d("PROFILE_DEBUG", "Chiamata API a: api/utenti/$finalUserId")
-
                 val response = profileService.getUserProfile(finalUserId)
-
                 if (response.isSuccessful && response.body() != null) {
                     val dto = response.body()!!
-                    Log.d("PROFILE_DEBUG", "Successo! DTO ricevuto.")
-
                     val profileData = mapDtoToProfileData(dto)
                     _uiState.value = ProfileUiState.Success(profileData)
                 } else {
-                    Log.e("PROFILE_DEBUG", "Errore API. Codice: ${response.code()}")
                     if (response.code() == 404) {
-                        // Messaggio specifico per aiutare a capire il problema dei dati disallineati
-                        _uiState.value = ProfileUiState.Error("Errore 404: Utente non trovato sul server.\n(ID salvato non valido: $finalUserId)")
+                        // Se l'utente non esiste più, puliamo tutto
+                        SessionManager.logout(context)
+                        _uiState.value = ProfileUiState.Error("Utente non trovato (404). Logout eseguito.")
                     } else {
                         _uiState.value = ProfileUiState.Error("Errore API: ${response.code()}")
                     }
                 }
             } catch (e: Exception) {
-                Log.e("PROFILE_DEBUG", "Eccezione di rete", e)
                 _uiState.value = ProfileUiState.Error("Errore connessione: ${e.message}")
+            }
+        }
+    }
+
+    // --- NUOVA FUNZIONE ELIMINAZIONE ---
+    fun deleteProfile(context: Context) {
+        viewModelScope.launch {
+            _uiState.value = ProfileUiState.Loading
+            val userId = SessionManager.getUserId(context)
+
+            if (userId.isNullOrEmpty()) {
+                _uiState.value = ProfileUiState.Error("Impossibile eliminare: ID utente mancante.")
+                return@launch
+            }
+
+            try {
+                Log.d("PROFILE_DEBUG", "Eliminazione utente: $userId")
+                val response = profileService.deleteUser(userId)
+
+                if (response.isSuccessful) {
+                    Log.d("PROFILE_DEBUG", "Utente eliminato con successo dal DB.")
+                    // Logout locale per pulire le preferenze
+                    SessionManager.logout(context)
+                    // Segnaliamo alla UI che è stato cancellato
+                    _uiState.value = ProfileUiState.UserDeleted
+                } else {
+                    _uiState.value = ProfileUiState.Error("Errore eliminazione: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("PROFILE_DEBUG", "Errore rete eliminazione", e)
+                _uiState.value = ProfileUiState.Error("Errore rete: ${e.message}")
             }
         }
     }
@@ -99,6 +113,7 @@ class ProfileViewModel : ViewModel() {
         val fullPhone = dto.telefono ?: ""
         val foundPrefix = availablePrefixes.firstOrNull { fullPhone.startsWith(it.prefix) }
         val fullName = "${dto.nome} ${dto.cognome}".trim()
+        val preferitiList = dto.preferiti
 
         return if (foundPrefix != null) {
             ProfileData(
@@ -115,5 +130,9 @@ class ProfileViewModel : ViewModel() {
                 phoneNumberWithoutPrefix = fullPhone
             )
         }
+    }
+
+    fun logout(context: Context) {
+        SessionManager.logout(context)
     }
 }

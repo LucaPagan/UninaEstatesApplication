@@ -82,6 +82,20 @@ fun ProfileScreen(
         viewModel.loadUserProfile(context, idUtente)
     }
 
+    // --- GESTIONE STATO CANCELLAZIONE ---
+    // Se lo stato diventa UserDeleted, navighiamo via
+    LaunchedEffect(uiState) {
+        if (uiState is ProfileUiState.UserDeleted) {
+            Toast.makeText(context, "Profilo eliminato definitivamente.", Toast.LENGTH_LONG).show()
+            // Usiamo il logout completo di AuthViewModel per pulire DataStore se necessario,
+            // poi navighiamo al Login
+            authViewModel.logout() // Pulisce residui
+            navController.navigate(Screen.LoginScreen.route) {
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
+
     val onLogout = {
         authViewModel.logout()
         Toast.makeText(context, "Logout effettuato", Toast.LENGTH_SHORT).show()
@@ -91,13 +105,11 @@ fun ProfileScreen(
     }
 
     val onDelete = {
-        scope.launch {
-            Toast.makeText(context, "Profilo eliminato (Simulato)", Toast.LENGTH_SHORT).show()
-            navController.navigate(Screen.LoginScreen.route) {
+        viewModel.deleteProfile(context)
+        Toast.makeText(context, "Profilo eliminato", Toast.LENGTH_SHORT).show()
+        navController.navigate(Screen.LoginScreen.route) {
                 popUpTo(0) { inclusive = true }
-            }
         }
-        Unit
     }
 
     val onRetry = { viewModel.loadUserProfile(context, idUtente) }
@@ -170,54 +182,37 @@ fun ProfileScreenContent(
                         CircularProgressIndicator(color = colorScheme.primary)
                     }
                 }
+                is ProfileUiState.UserDeleted -> {
+                    // Stato transitorio, gestito dal LaunchedEffect, mostra loading o nulla
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = colorScheme.error)
+                    }
+                }
                 is ProfileUiState.Error -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.padding(dimensions.paddingLarge)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = colorScheme.error,
-                                modifier = Modifier.height(48.dp).width(48.dp)
-                            )
+                            Icon(Icons.Default.Warning, null, tint = colorScheme.error, modifier = Modifier.height(48.dp).width(48.dp))
                             Spacer(modifier = Modifier.height(dimensions.spacingMedium))
-                            Text(
-                                text = "Ops! Qualcosa non va.",
-                                style = typography.titleMedium,
-                                color = colorScheme.onSurface
-                            )
+                            Text("Ops! Qualcosa non va.", style = typography.titleMedium, color = colorScheme.onSurface)
 
                             val displayError = if (uiState.message.contains("404")) {
-                                "Utente non trovato sul server.\nL'ID salvato non è più valido.\nEffettua il logout per aggiornare."
+                                "Utente non trovato sul server.\nL'ID salvato non è più valido.\nEffettua il logout."
                             } else {
                                 uiState.message
                             }
 
-                            Text(
-                                text = displayError,
-                                color = colorScheme.error,
-                                style = typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(vertical = dimensions.paddingSmall)
-                            )
+                            Text(displayError, color = colorScheme.error, style = typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = dimensions.paddingSmall))
                             Spacer(modifier = Modifier.height(dimensions.spacingLarge))
 
                             if (!uiState.message.contains("404")) {
-                                AppPrimaryButton(
-                                    onClick = onRetry,
-                                    text = "Riprova",
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                AppPrimaryButton(onClick = onRetry, text = "Riprova", modifier = Modifier.fillMaxWidth())
                                 Spacer(modifier = Modifier.height(dimensions.spacingMedium))
                             }
 
-                            AppRedButton(
-                                onClick = onLogout,
-                                text = "Logout e cambia utente",
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            AppRedButton(onClick = onLogout, text = "Logout e cambia utente", modifier = Modifier.fillMaxWidth())
                         }
                     }
                 }
@@ -226,22 +221,10 @@ fun ProfileScreenContent(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = { focusManager.clearFocus() }
-                            )
+                            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = {})
                             .verticalScroll(rememberScrollState())
                     ) {
-                        ProfileInnerContent(
-                            profileData = data,
-                            onLogoutClick = { showLogoutDialog = true },
-                            onDeleteClick = { showDeleteDialog = true },
-                            typography = typography,
-                            colorScheme = colorScheme,
-                            navController = navController,
-                            dimensions = dimensions
-                        )
+                        ProfileInnerContent(data, { showLogoutDialog = true }, { showDeleteDialog = true }, typography, colorScheme, navController, dimensions)
                     }
                 }
             }
