@@ -55,6 +55,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val response = apiService.registrazione(request)
                 if (response.isSuccessful && response.body() != null) {
                     val utente = response.body()!!
+
+                    // FIX LOOP: Salviamo sessione e flag Primo Avvio
                     salvaSessioneCompleta(utente)
                     _state.value = RegisterState.Success(utente)
                 } else {
@@ -129,6 +131,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // --- FUNZIONE HELPER AGGIUNTA (CRITICA PER IL FIX) ---
     private suspend fun salvaSessioneCompleta(utente: UtenteResponseDTO) {
         RetrofitClient.loggedUserEmail = utente.email
 
@@ -148,12 +151,28 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         } catch (e: Exception) {
             Log.e("AUTH_DEBUG", "ERRORE SALVATAGGIO SESSIONMANAGER", e)
         }
+        // 1. Memoria volatile
+        RetrofitClient.loggedUserEmail = utente.email
+
+        // 2. DataStore (UserPrefs) - Salviamo dati utente e flag PRIMO AVVIO
+        userPrefs.saveUserData(utente.id, utente.email)
+        userPrefs.setFirstRunCompleted() // <--- Questo impedisce il ritorno all'Intro!
+
+        // 3. SessionManager (SharedPreferences) - Per MainActivity e Profile
+        SessionManager.saveUserSession(
+            getApplication(),
+            utente.id,
+            "${utente.nome} ${utente.cognome}"
+        )
+
+        Log.d("AUTH_DEBUG", "Sessione salvata completamente. FirstRunCompleted=true, ID=${utente.id}")
     }
 
     fun logout() {
         viewModelScope.launch {
             userPrefs.clearUser()
             RetrofitClient.loggedUserEmail = null
+            // Pulizia completa
             SessionManager.logout(getApplication())
         }
     }
