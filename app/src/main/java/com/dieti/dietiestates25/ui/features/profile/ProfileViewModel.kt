@@ -42,6 +42,7 @@ class ProfileViewModel : ViewModel() {
 
     companion object {
         private const val ROLE_MANAGER = "MANAGER"
+        private val DEFAULT_PREFIX = PhonePrefix("+39", "🇮🇹", "Italia")
     }
 
     fun loadUserProfile(context: Context, navUserId: String? = null) {
@@ -141,7 +142,6 @@ class ProfileViewModel : ViewModel() {
         val fullPhone = dto.telefono ?: ""
         val foundPrefix = availablePrefixes.firstOrNull { fullPhone.startsWith(it.prefix) }
         val fullName = "${dto.nome} ${dto.cognome}".trim()
-        val defaultPrefix = availablePrefixes.firstOrNull() ?: PhonePrefix("+39", "🇮🇹", "Italia")
 
         return if (foundPrefix != null) {
             ProfileData(
@@ -154,7 +154,7 @@ class ProfileViewModel : ViewModel() {
             ProfileData(
                 name = fullName,
                 email = dto.email,
-                selectedPrefix = defaultPrefix,
+                selectedPrefix = availablePrefixes.firstOrNull() ?: DEFAULT_PREFIX,
                 phoneNumberWithoutPrefix = fullPhone
             )
         }
@@ -162,13 +162,12 @@ class ProfileViewModel : ViewModel() {
 
     private fun mapAgenteDtoToProfileData(dto: AgenteDTO): ProfileData {
         val fullName = "${dto.nome} ${dto.cognome}".trim()
-        val defaultPrefix = availablePrefixes.firstOrNull() ?: PhonePrefix("+39", "🇮🇹", "Italia")
-        // Managers (agents) don't have a phone number in their DTO
-        // Use empty string for phone number
+        // AgenteDTO lacks the 'telefono' field, so we use an empty phone number
+        // for manager profiles
         return ProfileData(
             name = fullName,
             email = dto.email,
-            selectedPrefix = defaultPrefix,
+            selectedPrefix = availablePrefixes.firstOrNull() ?: DEFAULT_PREFIX,
             phoneNumberWithoutPrefix = ""
         )
     }
