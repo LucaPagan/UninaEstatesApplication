@@ -9,14 +9,13 @@ data class ImmobileDTO(
     val tipoVendita: Boolean,
     val categoria: String?,
     val indirizzo: String?,
+    val localita: String? = null,
     val prezzo: Int?,
     val mq: Int?,
     val descrizione: String?,
     val annoCostruzione: String?,
     val immagini: List<ImmagineDto> = emptyList(),
     val ambienti: List<AmbienteDto> = emptyList(),
-
-    // Nuovi campi dal Backend
     val lat: Double? = null,
     val long: Double? = null,
     val parco: Boolean = false,
@@ -34,7 +33,7 @@ data class AmbienteDto(
     val numero: Int
 )
 
-// DTO Semplificato per i Preferiti (Nuovo)
+// DTO Semplificato per i Preferiti
 data class ImmobileSummaryDTO(
     val id: String,
     val titolo: String?,
@@ -43,8 +42,7 @@ data class ImmobileSummaryDTO(
     val urlImmagine: String?
 )
 
-// DTO per la richiesta (Ricezione dati dall'app)
-// DTO per creazione (già presente, lo riporto per completezza se serve)
+// DTO per la richiesta creazione
 data class ImmobileCreateRequest(
     val tipoVendita: Boolean,
     val categoria: String?,
@@ -62,18 +60,6 @@ data class ImmobileCreateRequest(
     val speseCondominiali: Int?,
     val descrizione: String?,
     val ambienti: List<AmbienteDto> = emptyList()
-)
-data class ImmobileSearchFilters(
-    val query: String? = null,
-    val tipoVendita: Boolean? = null,
-    val minPrezzo: Int? = null,
-    val maxPrezzo: Int? = null,
-    val minMq: Int? = null,
-    val maxMq: Int? = null,
-    val minStanze: Int? = null,
-    val maxStanze: Int? = null,
-    val bagni: Int? = null,
-    val condizione: String? = null
 )
 
 data class ImmobileDetailDTO(
@@ -93,7 +79,7 @@ data class ImmobileDetailDTO(
     val esposizione: String?,
     val tipoProprieta: String?,
     val statoProprieta: String?,
-    val annoCostruzione: String?, // Arriverà come "YYYY-MM-DD"
+    val annoCostruzione: String?,
     val prezzo: Int?,
     val speseCondominiali: Int?,
     val disponibilita: Boolean,
@@ -102,6 +88,7 @@ data class ImmobileDetailDTO(
 )
 
 // --- UTENTI ---
+
 data class UtenteRegistrazioneRequest(
     val nome: String,
     val cognome: String,
@@ -110,14 +97,17 @@ data class UtenteRegistrazioneRequest(
     val telefono: String?
 )
 
+// --- MODIFICA QUI: Aggiunto agenziaNome ---
 data class UtenteResponseDTO(
     val id: String,
     val nome: String,
     val cognome: String,
     val email: String,
     val telefono: String?,
-    // Aggiunto per ricevere i preferiti dal backend
-    val preferiti: List<ImmobileSummaryDTO> = emptyList()
+    val ruolo: String,
+    val preferiti: List<ImmobileSummaryDTO> = emptyList(),
+    // Nuovo campo per gestire i dati del Manager
+    val agenziaNome: String? = null
 )
 
 data class UserUpdateRequest(
@@ -127,12 +117,13 @@ data class UserUpdateRequest(
 )
 
 // --- APPUNTAMENTI ---
+
 data class AppuntamentoRequest(
     val utenteId: String,
     val immobileId: String,
     val agenteId: String,
-    val data: String, // Formato "YYYY-MM-DD"
-    val orario: String // Formato "HH:mm"
+    val data: String,
+    val orario: String
 )
 
 data class ProposalResponseRequest(
@@ -141,14 +132,16 @@ data class ProposalResponseRequest(
 
 data class AppuntamentoDTO(
     val id: String,
-    val data: String, // "YYYY-MM-DD"
-    val ora: String,  // "HH:mm"
-    val stato: String, // "PROGRAMMATO", "COMPLETATO", "CANCELLATO"
+    val utenteId: String?, // Aggiunto nullable per sicurezza
+    val data: String,
+    val ora: String,
+    val stato: String,
     val immobileId: String?,
     val titoloImmobile: String?
 )
 
 // --- OFFERTE ---
+
 data class OffertaRequest(
     val utenteId: String,
     val immobileId: String,
@@ -164,17 +157,18 @@ data class OffertaDTO(
 )
 
 // --- NOTIFICHE ---
+
 data class NotificationDTO(
     val id: String,
     val titolo: String,
     val corpo: String?,
-    val data: String, // ISO date string
+    val data: String,
     val letto: Boolean,
     val tipo: String = "INFO"
 )
 
 data class NotificationDetailDTO(
-    val id: String, // UUID
+    val id: String,
     val titolo: String,
     val corpo: String?,
     val data: String,
@@ -183,11 +177,12 @@ data class NotificationDetailDTO(
     val mittenteNome: String?,
     val mittenteTipo: String?,
     val isProposta: Boolean = false,
-    val immobileId: String? = null, // UUID
+    val immobileId: String? = null,
     val prezzoProposto: Double? = null
 )
 
 // --- AUTH ---
+
 data class LoginRequest(
     val email: String,
     val password: String
@@ -217,6 +212,7 @@ data class AuthResponse(
 )
 
 // --- AGENZIE E AGENTI ---
+
 data class AgenziaDTO(
     val nome: String
 )

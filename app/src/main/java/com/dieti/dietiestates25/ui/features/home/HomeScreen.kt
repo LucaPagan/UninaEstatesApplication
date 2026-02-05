@@ -164,20 +164,6 @@ fun HomeScreen(
                 )
 
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
-
-                TextButton(
-                    onClick = { navController.navigate(Screen.ManagerScreen.withIdUtente(idUtente)) },
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(horizontal = dimensions.paddingLarge)
-                ) {
-                    Text(
-                        text = "Vai alla Home del Manager",
-                        color = colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
             }
         }
     }

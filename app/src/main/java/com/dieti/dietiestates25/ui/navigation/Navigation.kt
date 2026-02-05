@@ -12,7 +12,6 @@ import androidx.navigation.navArgument
 import com.dieti.dietiestates25.data.model.FilterModel
 import com.dieti.dietiestates25.ui.features.property.ApartmentListingScreen
 import com.dieti.dietiestates25.ui.features.home.HomeScreen
-import com.dieti.dietiestates25.ui.features.manager.ManagerScreen
 import com.dieti.dietiestates25.ui.features.notification.NotificationScreen
 import com.dieti.dietiestates25.ui.features.profile.ProfileScreen
 import com.dieti.dietiestates25.ui.features.property.PropertySellScreen
@@ -29,7 +28,6 @@ import com.dieti.dietiestates25.ui.features.property.EditPropertyScreen
 import com.dieti.dietiestates25.ui.features.search.FullScreenMapScreen
 import com.dieti.dietiestates25.ui.features.search.SearchTypeSelectionScreen
 import com.dieti.dietiestates25.ui.features.property.YourPropertyScreen
-import com.dieti.dietiestates25.ui.features.manager.RequestsScreen
 import com.dieti.dietiestates25.ui.features.auth.RegisterScreen
 
 @Composable
@@ -76,13 +74,6 @@ fun Navigation(
             arguments = listOf(navArgument("idUtente") { type = NavType.StringType; defaultValue = "utente" })
         ) { entry ->
             PropertySellScreen(navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente")
-        }
-
-        composable(
-            route = Screen.ManagerScreen.route + "/{idUtente}",
-            arguments = listOf(navArgument("idUtente") { type = NavType.StringType; defaultValue = "utente" })
-        ) { entry ->
-            ManagerScreen(navController = navController, idUtente = entry.arguments?.getString("idUtente") ?: "utente")
         }
 
         composable(
@@ -288,6 +279,5 @@ fun Navigation(
         composable(route = Screen.AppointmentDetailScreen.route){ AppointmentDetailScreen(navController = navController, appointmentId = "") }
         composable(route = Screen.YourPropertyScreen.route) { YourPropertyScreen(navController = navController, idUtente = "") }
         composable(route = Screen.EditPropertyScreen.route) { EditPropertyScreen(navController = navController) }
-        composable(route = Screen.RequestsScreen.route + "/{idUtente}") { RequestsScreen(navController = navController) }
     }
 }
