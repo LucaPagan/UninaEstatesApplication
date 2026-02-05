@@ -8,7 +8,8 @@ data class ProfileData(
     val name: String,
     val email: String,
     val selectedPrefix: PhonePrefix = DefaultPhonePrefix,
-    val phoneNumberWithoutPrefix: String
+    val phoneNumberWithoutPrefix: String,
+    val agenziaNome: String? = null
 ) {
     val fullPhoneNumber: String
         get() = "${selectedPrefix.prefix}${phoneNumberWithoutPrefix}"
