@@ -55,13 +55,16 @@ fun MapSearchScreen(
     val error by viewModel.error.collectAsState()
 
     // Stato Mappa
-    val initialMapCenter = remember(comune) {
-        // Default provvisorio su Napoli, idealmente geocodifichi il comune all'avvio o usi il primo risultato
+    val initialMapCenter = remember {
+        // Default provvisorio su Napoli, verrà aggiornato dai risultati
         LatLng(40.8518, 14.2681)
     }
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(initialMapCenter, 12f)
     }
+
+    // Flag per gestire la centratura automatica della mappa sui risultati
+    var hasCenteredOnResults by remember { mutableStateOf(false) }
 
     // Filtri
     var showFilterSheet by remember { mutableStateOf(false) }
@@ -75,28 +78,32 @@ fun MapSearchScreen(
                 val pType = args.getString("purchaseType")
                 val mPrice = args.getFloat("minPrice").takeIf { it != -1f && it != 0f }
                 val mxPrice = args.getFloat("maxPrice").takeIf { it != -1f }
-                // ... altri mapping uguali ...
+                // ... altri mapping ...
 
                 if (pType != null || mPrice != null || mxPrice != null) {
                     appliedFilters = FilterModel(
                         purchaseType = pType, minPrice = mPrice, maxPrice = mxPrice
-                        // ... assegna altri ...
                     )
                 }
             }
         }
     }
 
-    // Caricamento iniziale
+    // Caricamento iniziale e reset centratura se cambiano i parametri di ricerca
     LaunchedEffect(comune, ricerca, appliedFilters) {
+        hasCenteredOnResults = false // Resetta il flag per permettere la centratura sui nuovi risultati
         viewModel.loadProperties(query = "$comune $ricerca", filters = appliedFilters)
     }
 
-    // Se abbiamo risultati e la mappa è appena caricata, centra sul primo risultato
+    // Logica di centratura automatica sui risultati
     LaunchedEffect(properties) {
-        if (properties.isNotEmpty() && !cameraPositionState.isMoving) {
-            // Opzionale: muovi camera solo se è la prima ricerca
-            // cameraPositionState.move(CameraUpdateFactory.newLatLng(properties[0].position))
+        if (properties.isNotEmpty() && !hasCenteredOnResults && !cameraPositionState.isMoving) {
+            val firstProperty = properties.first()
+            cameraPositionState.animate(
+                CameraUpdateFactory.newLatLngZoom(firstProperty.position, 13f),
+                1000
+            )
+            hasCenteredOnResults = true
         }
     }
 
@@ -140,14 +147,14 @@ fun MapSearchScreen(
                     ExtendedFloatingActionButton(
                         onClick = {
                             val center = cameraPositionState.position.target
-                            // Calcola raggio approssimativo in base allo zoom (semplificato)
+                            // Calcola raggio approssimativo in base allo zoom
                             val radiusKm = 150000.0 / Math.pow(2.0, cameraPositionState.position.zoom.toDouble()) / 1000.0
 
                             viewModel.loadProperties(
                                 query = "",
                                 filters = appliedFilters,
                                 searchArea = center,
-                                radiusKm = radiusKm.coerceAtLeast(1.0) // Minimo 1km
+                                radiusKm = radiusKm.coerceAtLeast(1.0)
                             )
                         },
                         containerColor = colorScheme.primaryContainer,
@@ -158,9 +165,10 @@ fun MapSearchScreen(
 
                     FloatingActionButton(
                         onClick = {
-                            // Reset filtri
+                            // Reset filtri e torna alla ricerca originale
                             appliedFilters = null
                             selectedProperty = null
+                            hasCenteredOnResults = false // Permette di ri-centrare
                             viewModel.loadProperties("$comune $ricerca")
                         },
                         containerColor = colorScheme.secondaryContainer
@@ -174,7 +182,10 @@ fun MapSearchScreen(
                 GoogleMap(
                     modifier = Modifier.padding(innerPadding).fillMaxSize(),
                     cameraPositionState = cameraPositionState,
-                    uiSettings = MapUiSettings(zoomControlsEnabled = false),
+                    uiSettings = MapUiSettings(
+                        zoomControlsEnabled = false,
+                        mapToolbarEnabled = false
+                    ),
                     onMapClick = { selectedProperty = null }
                 ) {
                     properties.forEach { property ->
@@ -204,13 +215,31 @@ fun MapSearchScreen(
                         modifier = Modifier.align(Alignment.Center),
                         color = colorScheme.primary
                     )
+                } else if (properties.isEmpty() && error == null) {
+                    // Messaggio se non ci sono risultati
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 80.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        color = colorScheme.surfaceVariant.copy(alpha = 0.9f)
+                    ) {
+                        Text(
+                            text = "Nessun immobile in questa zona",
+                            modifier = Modifier.padding(16.dp),
+                            style = typography.bodyMedium
+                        )
+                    }
                 }
 
-                // Preview Immobile
+                // Preview Immobile (Card in basso)
                 selectedProperty?.let { property ->
                     PropertyPreviewInfoWindow(
                         property = property,
-                        onClick = { navController.navigate(Screen.PropertyScreen.route) }, // Passa ID immobile reale qui
+                        onClick = {
+                            // NAVIGAZIONE IMPLEMENTATA: Passa l'ID corretto alla PropertyScreen
+                            navController.navigate(Screen.PropertyScreen.withId(property.id))
+                        },
                         onClose = { selectedProperty = null },
                         dimensions = dimensions,
                         typography = typography,
@@ -241,11 +270,13 @@ fun MapSearchScreen(
                         onApplyFilters = { filterData ->
                             appliedFilters = filterData
                             showFilterSheet = false
+                            hasCenteredOnResults = false // Reset per centrare sui nuovi risultati filtrati
                             // Ricarica con nuovi filtri
                             viewModel.loadProperties(
                                 query = "$comune $ricerca",
                                 filters = filterData,
-                                searchArea = if (ricerca.isEmpty()) cameraPositionState.position.target else null
+                                // Se la ricerca è vuota (solo mappa), usa il centro attuale, altrimenti usa la query
+                                searchArea = if (ricerca.isEmpty() && comune.isEmpty()) cameraPositionState.position.target else null
                             )
                         },
                         isFullScreenContext = false,

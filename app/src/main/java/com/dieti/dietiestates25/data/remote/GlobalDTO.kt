@@ -1,6 +1,7 @@
 package com.dieti.dietiestates25.data.remote
 
 import java.time.LocalDate
+import java.util.UUID
 
 // --- IMMOBILI ---
 
@@ -9,14 +10,25 @@ data class ImmobileDTO(
     val tipoVendita: Boolean,
     val categoria: String?,
     val indirizzo: String?,
+    val localita: String? = null,
     val prezzo: Int?,
     val mq: Int?,
     val descrizione: String?,
     val annoCostruzione: String?,
+
+    // Nuovi campi dettagliati aggiunti per risolvere gli errori
+    val piano: Int? = null,
+    val ascensore: Boolean? = null,
+    val arredamento: String? = null,
+    val climatizzazione: Boolean? = null,
+    val esposizione: String? = null,
+    val statoProprieta: String? = null,
+    val speseCondominiali: Int? = null,
+
     val immagini: List<ImmagineDto> = emptyList(),
     val ambienti: List<AmbienteDto> = emptyList(),
 
-    // Nuovi campi dal Backend
+    // Parametri Geografici e Servizi
     val lat: Double? = null,
     val long: Double? = null,
     val parco: Boolean = false,
@@ -217,14 +229,50 @@ data class AuthResponse(
 )
 
 // --- AGENZIE E AGENTI ---
-data class AgenziaDTO(
-    val nome: String
+data class CreateAdminRequest(
+    val email: String,
+    val password: String
 )
 
-data class AgenteDTO(
-    val id: String,
+data class CreateAgenteRequest(
     val nome: String,
     val cognome: String,
     val email: String,
-    val agenziaNome: String
+    val password: String,
+    val agenziaId: String, // UUID come stringa
+    val isCapo: Boolean
 )
+
+data class ChangePasswordRequest(
+    val adminId: String, // UUID come stringa
+    val oldPassword: String,
+    val newPassword: String
+)
+
+// NUOVO: Risposta login admin
+data class AdminLoginResponse(
+    val id: String,
+    val email: String,
+    val role: String
+)
+
+data class CreateAgenziaRequest(
+    val nome: String,
+    val indirizzo: String,
+    val adminId: String
+)
+
+data class AgenziaOptionDTO(
+    val id: String,
+    val nome: String,
+    val haCapo: Boolean
+) {
+    // Utile per debug o log
+    override fun toString(): String = nome
+}
+
+// --- DTO per Dropdown ---
+data class AdminOptionDTO(val id: String, val email: String)
+
+// --- DTO per Cambio Password ---
+data class ChangeMyPasswordRequest(val oldPassword: String, val newPassword: String)

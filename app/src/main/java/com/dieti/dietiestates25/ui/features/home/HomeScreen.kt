@@ -3,17 +3,23 @@ package com.dieti.dietiestates25.ui.features.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.dieti.dietiestates25.ui.components.*
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.AppGradients
@@ -28,14 +34,17 @@ fun HomeScreen(
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
-    val comune = "Napoli"
+    val comuneDefault = "Napoli"
 
     val uiState by viewModel.uiState.collectAsState()
+
+    // Controllo se l'utente è l'Admin (basato sull'ID impostato al login)
+    val isAdmin = idUtente == "ADMIN_SESSION"
 
     Scaffold(
         topBar = {
             AppTopBar(
-                title = "Bentornato",
+                title = if (isAdmin) "Bentornato Admin" else "Bentornato",
                 showAppIcon = true,
                 colorScheme = colorScheme,
                 typography = typography,
@@ -69,84 +78,48 @@ fun HomeScreen(
 
                 when (val state = uiState) {
                     is HomeUiState.Loading -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator(color = colorScheme.primary)
                         }
                     }
-
                     is HomeUiState.Error -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(dimensions.paddingLarge),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "Qualcosa è andato storto.",
-                                    color = colorScheme.error,
-                                    style = typography.titleSmall
-                                )
-                                Text(
-                                    text = state.message,
-                                    color = colorScheme.onSurfaceVariant,
-                                    style = typography.bodySmall,
-                                    textAlign = TextAlign.Center
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Button(onClick = { viewModel.fetchImmobili() }) {
-                                    Text("Riprova")
-                                }
-                            }
+                        Box(modifier = Modifier.fillMaxWidth().padding(dimensions.paddingLarge), contentAlignment = Alignment.Center) {
+                            Text(text = "Errore caricamento dati.", color = colorScheme.error)
                         }
                     }
-
                     is HomeUiState.Success -> {
+                        // 1. RICERCHE RECENTI
+                        if (state.ricercheRecenti.isNotEmpty()) {
+                            RecentSearchesSection(
+                                recentSearches = state.ricercheRecenti,
+                                onSearchClick = { query ->
+                                    navController.navigate(
+                                        Screen.SearchTypeSelectionScreen.buildRoute(idUtente, query, "")
+                                    )
+                                },
+                                dimensions = dimensions, typography = typography, colorScheme = colorScheme
+                            )
+                            Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
+                        }
+
+                        // 2. IMMOBILI EVIDENZA
                         PropertyShowcaseSection(
                             title = "Immobili in evidenza",
                             items = state.immobili,
                             itemContent = { property ->
-
-                                // Construct Image URL using the helper
-                                // Requires property.immagini to be defined in FrontendModels.kt
-                                val imageUrl = if (property.immagini.isNotEmpty()) {
-                                    RetrofitClient.getImageUrl(property.immagini[0].id) + "/raw"
-                                } else null
-
+                                val imageUrl = viewModel.getImmobileMainImageUrl(property)
                                 AppPropertyCard(
-                                    modifier = Modifier
-                                        .width(dimensions.propertyCardHeight)
-                                        .height(dimensions.circularIconSize),
-                                    price = "€ ${property.prezzo ?: "Tratt."}",
+                                    modifier = Modifier.width(dimensions.propertyCardHeight).height(dimensions.circularIconSize),
+                                    price = "€ ${property.prezzo?.let { String.format("%,d", it) } ?: "Tratt."}",
                                     imageUrl = imageUrl,
-                                    // Use 'indirizzo' and 'categoria' as defined in FrontendModels.kt
                                     address = property.indirizzo ?: "Zona non specificata",
-                                    details = listOfNotNull(
-                                        property.categoria,
-                                        property.mq?.let { "$it mq" }
-                                    ),
-                                    onClick = {
-                                        navController.navigate(Screen.PropertyScreen.route)
-                                    },
-                                    actionButton = null,
-                                    horizontalMode = false,
-                                    imageHeightVerticalRatio = 0.55f,
-                                    elevationDp = Dimensions.elevationSmall
+                                    details = listOfNotNull(property.categoria, property.mq?.let { "$it mq" }),
+                                    onClick = { navController.navigate(Screen.PropertyScreen.withId(property.id)) },
+                                    horizontalMode = false
                                 )
                             },
                             onSeeAllClick = {
-                                navController.navigate(
-                                    Screen.ApartmentListingScreen.buildRoute(
-                                        idUtentePath = idUtente,
-                                        comunePath = comune,
-                                        ricercaPath = ""
-                                    )
-                                )
+                                navController.navigate(Screen.ApartmentListingScreen.buildRoute(idUtente, comuneDefault, ""))
                             },
                             listContentPadding = PaddingValues(horizontal = dimensions.paddingLarge)
                         )
@@ -163,21 +136,70 @@ fun HomeScreen(
                     colorScheme = colorScheme
                 )
 
+                // --- TASTO SPECIALE PER ADMIN ---
+                if (isAdmin) {
+                    Spacer(modifier = Modifier.height(dimensions.spacingLarge))
+                    Button(
+                        onClick = {
+                            // FIX: Ora naviga alla vera Dashboard Admin, non al Manager
+                            navController.navigate(Screen.AdminDashboardScreen.route)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = dimensions.paddingLarge),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorScheme.tertiary)
+                    ) {
+                        Icon(Icons.Default.AdminPanelSettings, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("VAI ALLA DASHBOARD ADMIN")
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
-                TextButton(
-                    onClick = { navController.navigate(Screen.ManagerScreen.withIdUtente(idUtente)) },
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(horizontal = dimensions.paddingLarge)
-                ) {
-                    Text(
-                        text = "Vai alla Home del Manager",
-                        color = colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
+            }
+        }
+    }
+}
+
+@Composable
+fun RecentSearchesSection(
+    recentSearches: List<String>,
+    onSearchClick: (String) -> Unit,
+    dimensions: Dimensions,
+    typography: Typography,
+    colorScheme: ColorScheme
+) {
+    Column {
+        Text(
+            text = "Ultime Ricerche",
+            style = typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = colorScheme.onBackground,
+            modifier = Modifier.padding(horizontal = dimensions.paddingLarge)
+        )
+        Spacer(modifier = Modifier.height(dimensions.spacingMedium))
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = dimensions.paddingLarge),
+            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
+        ) {
+            items(recentSearches) { query ->
+                Card(
+                    onClick = { onSearchClick(query) },
+                    shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
+                    colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier.width(160.dp).height(100.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(dimensions.paddingMedium),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Icon(Icons.Default.History, null, tint = colorScheme.primary)
+                        Text(text = query, style = typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    }
+                }
             }
         }
     }
@@ -194,31 +216,16 @@ fun HomeScreenPostAdSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = dimensions.paddingLarge)
-            .padding(vertical = dimensions.paddingLarge),
+            .padding(horizontal = dimensions.paddingLarge, vertical = dimensions.paddingLarge),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Vuoi vendere o affittare il tuo immobile?",
-            color = colorScheme.onBackground,
-            style = typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center
-        )
+        Text("Vuoi vendere o affittare il tuo immobile?", color = colorScheme.onBackground, style = typography.titleMedium, fontWeight = FontWeight.SemiBold)
         Spacer(modifier = Modifier.height(dimensions.spacingSmall))
-        Text(
-            text = "Inserisci il tuo annuncio in pochi semplici passaggi.",
-            color = colorScheme.onBackground.copy(alpha = 0.8f),
-            style = typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = dimensions.paddingSmall)
-        )
+        Text("Inserisci il tuo annuncio in pochi semplici passaggi.", color = colorScheme.onBackground.copy(alpha = 0.8f), style = typography.bodyMedium)
         Spacer(modifier = Modifier.height(dimensions.spacingLarge))
         AppSecondaryButton(
             text = "Pubblica annuncio",
-            onClick = {
-                navController.navigate(Screen.PropertySellScreen.withIdUtente(idUtente))
-            },
+            onClick = { navController.navigate(Screen.PropertySellScreen.withIdUtente(idUtente)) },
             modifier = Modifier.fillMaxWidth()
         )
     }
