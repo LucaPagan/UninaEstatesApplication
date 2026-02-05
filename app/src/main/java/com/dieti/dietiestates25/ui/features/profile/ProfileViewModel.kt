@@ -40,6 +40,10 @@ class ProfileViewModel : ViewModel() {
         PhonePrefix("+49", "🇩🇪", "Germania")
     )
 
+    companion object {
+        private const val ROLE_MANAGER = "MANAGER"
+    }
+
     fun loadUserProfile(context: Context, navUserId: String? = null) {
         viewModelScope.launch {
             _uiState.value = ProfileUiState.Loading
@@ -61,7 +65,7 @@ class ProfileViewModel : ViewModel() {
 
             try {
                 // Check user role and call appropriate endpoint
-                val profileData = if (userRole == "MANAGER") {
+                val profileData = if (userRole == ROLE_MANAGER) {
                     // For managers, use the agent profile endpoint
                     val response = profileService.getAgenteProfile(finalUserId)
                     if (response.isSuccessful && response.body() != null) {
@@ -137,6 +141,7 @@ class ProfileViewModel : ViewModel() {
         val fullPhone = dto.telefono ?: ""
         val foundPrefix = availablePrefixes.firstOrNull { fullPhone.startsWith(it.prefix) }
         val fullName = "${dto.nome} ${dto.cognome}".trim()
+        val defaultPrefix = availablePrefixes.firstOrNull() ?: PhonePrefix("+39", "🇮🇹", "Italia")
 
         return if (foundPrefix != null) {
             ProfileData(
@@ -149,7 +154,7 @@ class ProfileViewModel : ViewModel() {
             ProfileData(
                 name = fullName,
                 email = dto.email,
-                selectedPrefix = availablePrefixes.first(),
+                selectedPrefix = defaultPrefix,
                 phoneNumberWithoutPrefix = fullPhone
             )
         }
@@ -157,12 +162,13 @@ class ProfileViewModel : ViewModel() {
 
     private fun mapAgenteDtoToProfileData(dto: AgenteDTO): ProfileData {
         val fullName = "${dto.nome} ${dto.cognome}".trim()
+        val defaultPrefix = availablePrefixes.firstOrNull() ?: PhonePrefix("+39", "🇮🇹", "Italia")
         // Managers (agents) don't have a phone number in their DTO
         // Use empty string for phone number
         return ProfileData(
             name = fullName,
             email = dto.email,
-            selectedPrefix = availablePrefixes.first(),
+            selectedPrefix = defaultPrefix,
             phoneNumberWithoutPrefix = ""
         )
     }
