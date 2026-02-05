@@ -9,6 +9,7 @@ import com.dieti.dietiestates25.data.model.modelsource.PhonePrefix
 import com.dieti.dietiestates25.data.remote.AgenteDTO
 import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.dieti.dietiestates25.data.remote.UtenteResponseDTO
+import com.dieti.dietiestates25.data.remote.AgenteDTO
 import com.dieti.dietiestates25.ui.utils.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +40,11 @@ class ProfileViewModel : ViewModel() {
         PhonePrefix("+33", "🇫🇷", "Francia"),
         PhonePrefix("+49", "🇩🇪", "Germania")
     )
+
+    companion object {
+        private const val ROLE_MANAGER = "MANAGER"
+        private val DEFAULT_PREFIX = PhonePrefix("+39", "🇮🇹", "Italia")
+    }
 
     fun loadUserProfile(context: Context, navUserId: String? = null) {
         viewModelScope.launch {
@@ -91,6 +97,8 @@ class ProfileViewModel : ViewModel() {
                         }
                     }
                 }
+                
+                _uiState.value = ProfileUiState.Success(profileData)
             } catch (e: Exception) {
                 _uiState.value = ProfileUiState.Error("Errore connessione: ${e.message}")
             }
@@ -128,11 +136,10 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    private fun mapDtoToProfileData(dto: UtenteResponseDTO): ProfileData {
+    private fun mapUtenteDtoToProfileData(dto: UtenteResponseDTO): ProfileData {
         val fullPhone = dto.telefono ?: ""
         val foundPrefix = availablePrefixes.firstOrNull { fullPhone.startsWith(it.prefix) }
         val fullName = "${dto.nome} ${dto.cognome}".trim()
-        val preferitiList = dto.preferiti
 
         return if (foundPrefix != null) {
             ProfileData(
