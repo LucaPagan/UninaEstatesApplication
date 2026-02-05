@@ -8,6 +8,7 @@ import com.dieti.dietiestates25.data.model.ProfileData
 import com.dieti.dietiestates25.data.model.modelsource.PhonePrefix
 import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.dieti.dietiestates25.data.remote.UtenteResponseDTO
+import com.dieti.dietiestates25.data.remote.AgenteDTO
 import com.dieti.dietiestates25.ui.utils.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,6 +44,7 @@ class ProfileViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = ProfileUiState.Loading
             val sessionUserId = SessionManager.getUserId(context)
+            val userRole = SessionManager.getUserRole(context)
 
             val finalUserId = if (!sessionUserId.isNullOrEmpty()) {
                 sessionUserId
@@ -58,20 +60,42 @@ class ProfileViewModel : ViewModel() {
             }
 
             try {
-                val response = profileService.getUserProfile(finalUserId)
-                if (response.isSuccessful && response.body() != null) {
-                    val dto = response.body()!!
-                    val profileData = mapDtoToProfileData(dto)
-                    _uiState.value = ProfileUiState.Success(profileData)
-                } else {
-                    if (response.code() == 404) {
-                        // Se l'utente non esiste più, puliamo tutto
-                        SessionManager.logout(context)
-                        _uiState.value = ProfileUiState.Error("Utente non trovato (404). Logout eseguito.")
+                // Check user role and call appropriate endpoint
+                val profileData = if (userRole == "MANAGER") {
+                    // For managers, use the agent profile endpoint
+                    val response = profileService.getAgenteProfile(finalUserId)
+                    if (response.isSuccessful && response.body() != null) {
+                        val agenteDto = response.body()!!
+                        mapAgenteDtoToProfileData(agenteDto)
                     } else {
-                        _uiState.value = ProfileUiState.Error("Errore API: ${response.code()}")
+                        if (response.code() == 404) {
+                            SessionManager.logout(context)
+                            _uiState.value = ProfileUiState.Error("Agente non trovato (404). Logout eseguito.")
+                            return@launch
+                        } else {
+                            _uiState.value = ProfileUiState.Error("Errore API: ${response.code()}")
+                            return@launch
+                        }
+                    }
+                } else {
+                    // For regular users, use the user profile endpoint
+                    val response = profileService.getUserProfile(finalUserId)
+                    if (response.isSuccessful && response.body() != null) {
+                        val dto = response.body()!!
+                        mapUtenteDtoToProfileData(dto)
+                    } else {
+                        if (response.code() == 404) {
+                            SessionManager.logout(context)
+                            _uiState.value = ProfileUiState.Error("Utente non trovato (404). Logout eseguito.")
+                            return@launch
+                        } else {
+                            _uiState.value = ProfileUiState.Error("Errore API: ${response.code()}")
+                            return@launch
+                        }
                     }
                 }
+                
+                _uiState.value = ProfileUiState.Success(profileData)
             } catch (e: Exception) {
                 _uiState.value = ProfileUiState.Error("Errore connessione: ${e.message}")
             }
@@ -109,11 +133,10 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    private fun mapDtoToProfileData(dto: UtenteResponseDTO): ProfileData {
+    private fun mapUtenteDtoToProfileData(dto: UtenteResponseDTO): ProfileData {
         val fullPhone = dto.telefono ?: ""
         val foundPrefix = availablePrefixes.firstOrNull { fullPhone.startsWith(it.prefix) }
         val fullName = "${dto.nome} ${dto.cognome}".trim()
-        val preferitiList = dto.preferiti
 
         return if (foundPrefix != null) {
             ProfileData(
@@ -130,6 +153,18 @@ class ProfileViewModel : ViewModel() {
                 phoneNumberWithoutPrefix = fullPhone
             )
         }
+    }
+
+    private fun mapAgenteDtoToProfileData(dto: AgenteDTO): ProfileData {
+        val fullName = "${dto.nome} ${dto.cognome}".trim()
+        // Managers (agents) don't have a phone number in their DTO
+        // Use empty string for phone number
+        return ProfileData(
+            name = fullName,
+            email = dto.email,
+            selectedPrefix = availablePrefixes.first(),
+            phoneNumberWithoutPrefix = ""
+        )
     }
 
     fun logout(context: Context) {
