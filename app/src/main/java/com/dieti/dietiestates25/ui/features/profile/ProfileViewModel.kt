@@ -66,6 +66,7 @@ class ProfileViewModel : ViewModel() {
 
             try {
                 // Check user role and call appropriate endpoint
+                // userRole defaults to "UTENTE" if null in SessionManager
                 val profileData = if (userRole == ROLE_MANAGER) {
                     // For managers, use the agent profile endpoint
                     val response = profileService.getAgenteProfile(finalUserId)
