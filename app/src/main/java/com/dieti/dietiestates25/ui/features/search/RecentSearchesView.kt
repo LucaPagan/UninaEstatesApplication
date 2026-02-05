@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @Composable
@@ -39,7 +40,7 @@ fun RecentSearchesView(
             ) {
                 Text(
                     text = "Nessuna ricerca recente.",
-                    color = colorScheme.onBackground.copy(alpha = 0.7f),
+                    color = colorScheme.onBackground.copy(alpha = 0.5f),
                     style = typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = dimensions.paddingLarge)
@@ -106,12 +107,12 @@ fun RecentSearchItem(
             )
         }
         IconButton(
-            onClick = onClearClick, 
-            modifier = Modifier.size(dimensions.iconSizeMedium + dimensions.spacingSmall)
+            onClick = onClearClick,
+            modifier = Modifier.size(48.dp) // Target size comoda
         ) {
             Icon(
                 imageVector = Icons.Default.Clear,
-                contentDescription = "Cancella ricerca recente",
+                contentDescription = "Cancella",
                 tint = colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 modifier = Modifier.size(dimensions.iconSizeSmall)
             )

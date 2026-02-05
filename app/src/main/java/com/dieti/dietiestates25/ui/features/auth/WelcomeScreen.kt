@@ -11,21 +11,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel // Import necessario
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.R
 import com.dieti.dietiestates25.ui.components.AppIconDisplay
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.AppGradients
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.theme.TealDeep
-
-// Assicurati di importare il ViewModel corretto
-// import com.dieti.dietiestates25.ui.viewmodel.AuthViewModel
 
 private const val WELCOME_IMAGE_WIDTH_FRACTION = 0.9f
 private const val WELCOME_IMAGE_ASPECT_RATIO = 1f / 0.8f
@@ -113,14 +107,15 @@ fun WelcomeScreen(
 
                 Spacer(modifier = Modifier.weight(0.3f))
 
-                // --- MODIFICA FONDAMENTALE QUI ---
+                // --- BOTTONE INIZIA ---
                 AppPrimaryButton(
                     text = "Inizia ora",
                     onClick = {
-                        // 1. Diciamo al sistema che la Welcome Screen è stata vista
+                        // 1. Diciamo al sistema che la Welcome Screen è stata vista (Setta FirstRun = false)
                         viewModel.completaWelcomeScreen()
 
                         // 2. Navighiamo al Login rimuovendo la Welcome dal backstack
+                        // Nota: Usiamo la stringa della rotta definita nel NavHost per Welcome
                         navController.navigate(Screen.LoginScreen.route) {
                             popUpTo("welcome_intro_screen") { inclusive = true }
                         }

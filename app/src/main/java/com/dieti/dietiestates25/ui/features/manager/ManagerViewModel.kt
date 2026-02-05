@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dieti.dietiestates25.data.model.Appointment
 import com.dieti.dietiestates25.data.model.AppointmentIconType
-import com.dieti.dietiestates25.data.remote.AgenziaDTO
 import com.dieti.dietiestates25.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

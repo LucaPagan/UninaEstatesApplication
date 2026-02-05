@@ -24,6 +24,7 @@ import coil.compose.AsyncImage
 import com.dieti.dietiestates25.data.model.FilterModel
 import com.dieti.dietiestates25.data.model.FilterOriginScreen
 import com.dieti.dietiestates25.data.remote.ImmobileDTO
+import com.dieti.dietiestates25.data.remote.RetrofitClient // Usiamo il client per l'URL helper
 import com.dieti.dietiestates25.ui.components.AppPropertyViewButton
 import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 import com.dieti.dietiestates25.ui.features.search.SearchFilterScreen
@@ -37,25 +38,21 @@ fun ApartmentListingScreen(
     idUtente: String,
     comune: String,
     ricerca: String,
-    filters: FilterModel? = null, // Filtri passati dalla navigazione
+    filters: FilterModel? = null,
     viewModel: ApartmentListingViewModel = viewModel()
 ) {
     val dimensions = Dimensions
     val colorScheme = MaterialTheme.colorScheme
 
-    // Stato dal ViewModel
     val immobili by viewModel.immobili.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    // Stato locale per i filtri (inizialmente quelli passati, poi modificabili)
     var activeFilters by remember { mutableStateOf(filters) }
 
-    // Bottom Sheet
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var showFilterSheet by remember { mutableStateOf(false) }
 
-    // Caricamento Iniziale
     LaunchedEffect(comune, ricerca, activeFilters) {
         viewModel.loadImmobili(comune, ricerca, activeFilters)
     }
@@ -72,7 +69,6 @@ fun ApartmentListingScreen(
             .fillMaxSize()
             .background(Brush.verticalGradient(colorStops = gradientColors))
     ) {
-        // --- HEADER ---
         GeneralHeaderBar(
             title = if (ricerca.isNotBlank()) "$comune - $ricerca" else comune,
             onBackClick = { navController.popBackStack() },
@@ -97,7 +93,6 @@ fun ApartmentListingScreen(
             }
         )
 
-        // --- CONTENT ---
         if (isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = colorScheme.onPrimary)
@@ -107,9 +102,7 @@ fun ApartmentListingScreen(
                 Text(text = error ?: "Errore sconosciuto", color = colorScheme.error)
             }
         } else if (immobili.isEmpty()) {
-            EmptyStateView(comune, activeFilters) {
-                activeFilters = null // Reset filtri
-            }
+            EmptyStateView(comune, activeFilters) { activeFilters = null }
         } else {
             LazyColumn(
                 modifier = Modifier.weight(1f),
@@ -127,6 +120,7 @@ fun ApartmentListingScreen(
                     RealPropertyCard(
                         immobile = property,
                         onClick = {
+                            // FIX: Chiamata corretta alla navigazione usando la funzione definita in Screen.kt
                             navController.navigate(Screen.PropertyScreen.withId(property.id))
                         }
                     )
@@ -135,16 +129,12 @@ fun ApartmentListingScreen(
         }
     }
 
-    // --- BOTTOM SHEET FILTRI (REALE) ---
     if (showFilterSheet) {
         ModalBottomSheet(
             onDismissRequest = { showFilterSheet = false },
             sheetState = sheetState,
             containerColor = colorScheme.background,
-            shape = RoundedCornerShape(
-                topStart = dimensions.cornerRadiusLarge,
-                topEnd = dimensions.cornerRadiusLarge
-            )
+            shape = RoundedCornerShape(topStart = dimensions.cornerRadiusLarge, topEnd = dimensions.cornerRadiusLarge)
         ) {
             Box(
                 modifier = Modifier
@@ -153,7 +143,6 @@ fun ApartmentListingScreen(
                     .statusBarsPadding()
                     .navigationBarsPadding()
             ) {
-                // Riusiamo la schermata dei filtri esistente
                 SearchFilterScreen(
                     navController = navController,
                     idUtente = idUtente,
@@ -164,7 +153,6 @@ fun ApartmentListingScreen(
                     onApplyFilters = { newFilters ->
                         activeFilters = newFilters
                         showFilterSheet = false
-                        // Il LaunchedEffect ricaricherà automaticamente i dati
                     },
                     isFullScreenContext = false,
                     originScreen = FilterOriginScreen.APARTMENT_LISTING
@@ -174,28 +162,21 @@ fun ApartmentListingScreen(
     }
 }
 
-// --- UTILS UI ---
-
 @Composable
 fun ResultsHeader(count: Int, activeFilters: Boolean, comune: String) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Risultati", // O "Annunci a $comune"
+            text = "Risultati",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
-
         if (activeFilters) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-            ) {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                 Text(
                     text = "$count trovati",
                     style = MaterialTheme.typography.bodySmall,
@@ -209,29 +190,16 @@ fun ResultsHeader(count: Int, activeFilters: Boolean, comune: String) {
 
 @Composable
 fun EmptyStateView(comune: String, activeFilters: FilterModel?, onReset: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+    Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(
-                text = if (activeFilters != null)
-                    "Nessun immobile trovato con questi filtri."
-                else
-                    "Nessun immobile disponibile a \"$comune\".",
+                text = if (activeFilters != null) "Nessun immobile trovato con questi filtri." else "Nessun immobile disponibile a \"$comune\".",
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface
             )
             if (activeFilters != null) {
-                Button(onClick = onReset) {
-                    Text("Resetta Filtri")
-                }
+                Button(onClick = onReset) { Text("Resetta Filtri") }
             }
         }
     }
@@ -250,45 +218,29 @@ fun RealPropertyCard(immobile: ImmobileDTO, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column {
-            // Immagine (Parte Superiore)
             Box(modifier = Modifier.weight(0.6f)) {
-                // Usiamo l'URL della prima immagine se presente
-                val imageUrl = immobile.immagini.firstOrNull()?.url
+                // FIX: Uso dell'URL helper sicuro
+                val imageUrl = immobile.immagini.firstOrNull()?.url?.let { RetrofitClient.getFullUrl(it) }
 
                 AsyncImage(
                     model = imageUrl,
                     contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.LightGray),
+                    modifier = Modifier.fillMaxSize().background(Color.LightGray),
                     contentScale = ContentScale.Crop
                 )
 
-                // Prezzo Overlay
                 Surface(
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
                     shape = RoundedCornerShape(topStart = dimensions.cornerRadiusMedium, bottomEnd = dimensions.cornerRadiusMedium),
                     modifier = Modifier.align(Alignment.TopStart)
                 ) {
-                    val prezzoFormat = if (immobile.tipoVendita)
-                        "€ ${immobile.prezzo?.let { String.format("%,d", it) } ?: "-"}"
-                    else
-                        "€ ${immobile.prezzo}/mese"
-
-                    Text(
-                        text = prezzoFormat,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color.White,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
+                    val prezzoFormat = if (immobile.tipoVendita) "€ ${immobile.prezzo?.let { String.format("%,d", it) } ?: "-"}" else "€ ${immobile.prezzo}/mese"
+                    Text(text = prezzoFormat, style = MaterialTheme.typography.labelLarge, color = Color.White, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                 }
             }
 
-            // Dettagli (Parte Inferiore)
             Column(
-                modifier = Modifier
-                    .weight(0.4f)
-                    .padding(12.dp),
+                modifier = Modifier.weight(0.4f).padding(12.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
@@ -300,7 +252,7 @@ fun RealPropertyCard(immobile: ImmobileDTO, onClick: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = immobile.indirizzo ?: immobile.descrizione ?: "",
+                        text = immobile.indirizzo ?: immobile.localita ?: "Zona non specificata",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -315,10 +267,8 @@ fun RealPropertyCard(immobile: ImmobileDTO, onClick: () -> Unit) {
                 ) {
                     val detailsList = mutableListOf<String>()
                     immobile.mq?.let { detailsList.add("${it}mq") }
-
-                    // Conta stanze (Ambienti non 'BAGNO' o 'CUCINA' se vuoi essere specifico, oppure totale)
-                    // Per semplicità qui mostriamo solo mq e bagni se disponibili
-                    // Se vuoi contare le stanze: immobile.ambienti.sumOf { it.numero }
+                    val bagni = immobile.ambienti.filter { it.tipologia.contains("bagno", ignoreCase = true) }.sumOf { it.numero }
+                    if (bagni > 0) detailsList.add("$bagni bagni")
 
                     Text(
                         text = detailsList.joinToString(" • "),

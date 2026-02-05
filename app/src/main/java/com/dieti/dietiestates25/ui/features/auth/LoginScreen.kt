@@ -59,13 +59,17 @@ fun LoginScreen(
     LaunchedEffect(authState) {
         when (val state = authState) {
             is RegisterState.Success -> {
-                val userId = state.utente.id
-                Toast.makeText(context, "Benvenuto ${state.utente.nome}!", Toast.LENGTH_SHORT).show()
-
-                // Navigazione verso la Home passando l'ID
-                // popUpTo(0) rimuove Login e Intro dal tasto "Indietro"
-                navController?.navigate(Screen.HomeScreen.route + "/$userId") {
-                    popUpTo(0) { inclusive = true }
+                // Controllo se è un Amministratore (basato sul flag nel DTO o sull'ID speciale)
+                if (state.utente.id == "ADMIN_SESSION") {
+                    // REINDIRIZZA DIRETTAMENTE ALLA DASHBOARD ADMIN
+                    navController?.navigate(Screen.AdminDashboardScreen.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                } else {
+                    // Utente normale -> Home
+                    navController?.navigate(Screen.HomeScreen.withIdUtente(state.utente.id)) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             }
             is RegisterState.Error -> {

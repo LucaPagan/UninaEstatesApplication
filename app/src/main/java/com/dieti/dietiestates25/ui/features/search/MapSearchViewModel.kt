@@ -3,6 +3,7 @@ package com.dieti.dietiestates25.ui.features.search
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dieti.dietiestates25.R // Importante per accedere alle risorse
 import com.dieti.dietiestates25.data.model.FilterModel
 import com.dieti.dietiestates25.data.model.PropertyMarker
 import com.dieti.dietiestates25.data.remote.ImmobileDTO
@@ -85,26 +86,29 @@ class MapSearchViewModel : ViewModel() {
             "€${prezzo}/mese"
         }
 
+        // FIX: Costruzione URL sicura usando getFullUrl
+        val finalImageUrl = immagini.firstOrNull()?.url?.let {
+            RetrofitClient.getFullUrl(it)
+        }
+
         return PropertyMarker(
             id = id,
             position = LatLng(lat, long),
             title = categoria ?: "Immobile",
             price = priceFormatted,
             type = categoria ?: "",
-            // Usiamo l'URL della prima immagine se c'è, altrimenti una risorsa default gestita dal Marker UI
-            // Nota: PropertyMarker originale usava Int per drawable, dovrai adattarlo per String url o gestire il loading
-            // Per ora usiamo un placeholder o un indice se la classe PropertyMarker usa Int
-            imageRes = 0, // Placeholder, la UI userà Coil con l'URL immagine
-            imageUrl = immagini.firstOrNull()?.url?.let { RetrofitClient.getImageUrl(immagini[0].id) },
+            // FIX CRITICO: 0 causava il crash ResourceNotFoundException.
+            // Usiamo una risorsa valida come fallback/placeholder.
+            imageRes = R.drawable.ic_launcher_foreground,
+            imageUrl = finalImageUrl,
             description = descrizione ?: "",
             surface = "$mq m²",
-            bathrooms = 0, // Dato non sempre presente nel DTO lista base, ma puoi aggiungerlo
+            bathrooms = 0,
             bedrooms = 0,
             purchaseType = if (tipoVendita) "vendita" else "affitto",
             condition = "",
             priceValue = prezzo?.toFloat() ?: 0f,
             surfaceValue = mq?.toFloat() ?: 0f,
-            // Info servizi
             parco = parco,
             scuola = scuola,
             servizioPubblico = servizioPubblico

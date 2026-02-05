@@ -15,12 +15,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 sealed class HomeUiState {
-    object Loading : HomeUiState()
-    data class Success(val immobili: List<ImmobileDTO>) : HomeUiState()
+    data object Loading : HomeUiState()
+    data class Success(
+        val immobili: List<ImmobileDTO>,
+        val ricercheRecenti: List<String> = emptyList() // Aggiunto campo per le ricerche
+    ) : HomeUiState()
     data class Error(val message: String) : HomeUiState()
 }
 
-// Cambiato in AndroidViewModel per avere accesso al Context (Application)
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
@@ -35,35 +37,57 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun initializeAndFetch() {
         viewModelScope.launch {
-            // 1. Ripristina la sessione se persa (es. dopo riavvio processo)
             if (RetrofitClient.loggedUserEmail == null) {
                 val savedEmail = userPrefs.userEmail.first()
                 if (savedEmail != null) {
                     RetrofitClient.loggedUserEmail = savedEmail
-                    Log.d("HomeViewModel", "Sessione ripristinata: $savedEmail")
                 }
             }
-
-            // 2. Ora scarica i dati
-            fetchImmobili()
+            fetchData()
         }
     }
 
     fun fetchImmobili() {
+        fetchData()
+    }
+
+    private fun fetchData() {
         viewModelScope.launch {
             _uiState.value = HomeUiState.Loading
             try {
-                val response = api.getImmobili()
-                _uiState.value = HomeUiState.Success(response)
+                // Eseguiamo le chiamate in parallelo o sequenza rapida
+                val immobiliResponse = api.getImmobili()
+
+                // Fetch ricerche recenti (solo se loggato, ma l'API gestisce lato server l'auth)
+                val ricercheResponse = try {
+                    if (RetrofitClient.loggedUserEmail != null) {
+                        api.getRicercheRecenti()
+                    } else {
+                        emptyList()
+                    }
+                } catch (e: Exception) {
+                    Log.e("HomeVM", "Errore cronologia", e)
+                    emptyList()
+                }
+
+                _uiState.value = HomeUiState.Success(
+                    immobili = immobiliResponse,
+                    ricercheRecenti = ricercheResponse
+                )
             } catch (e: Exception) {
-                Log.e("HomeViewModel", "Errore fetch immobili", e)
+                Log.e("HomeViewModel", "Errore fetch dati", e)
                 val msg = if (e.message?.contains("ECONNREFUSED") == true) {
-                    "Impossibile connettersi al Server. Verifica che il backend sia avviato."
+                    "Impossibile connettersi al Server."
                 } else {
                     "Errore: ${e.message}"
                 }
                 _uiState.value = HomeUiState.Error(msg)
             }
         }
+    }
+
+    fun getImmobileMainImageUrl(immobile: ImmobileDTO): String? {
+        val relativeUrl = immobile.immagini.firstOrNull()?.url ?: return null
+        return RetrofitClient.getFullUrl(relativeUrl)
     }
 }
