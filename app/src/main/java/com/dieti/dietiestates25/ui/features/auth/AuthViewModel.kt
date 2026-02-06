@@ -15,7 +15,6 @@ import com.dieti.dietiestates25.ui.utils.SessionManager
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-// --- REGISTER STATE ---
 sealed class RegisterState {
     object Idle : RegisterState()
     object Loading : RegisterState()
@@ -34,13 +33,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     init {
         viewModelScope.launch {
             val savedEmail = userPrefs.userEmail.first()
-            if (savedEmail != null) {
-                RetrofitClient.loggedUserEmail = savedEmail
-            }
+            if (savedEmail != null) RetrofitClient.loggedUserEmail = savedEmail
         }
     }
 
-    // Registrazione Utente (Invariata)
+    // REGISTRAZIONE
     fun eseguiRegistrazione(nome: String, cognome: String, email: String, pass: String, telefono: String?) {
         if (nome.isBlank() || email.isBlank() || pass.isBlank()) {
             _state.value = RegisterState.Error("Compila tutti i campi obbligatori")
@@ -55,8 +52,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val response = apiService.registrazione(request)
                 if (response.isSuccessful && response.body() != null) {
                     val utente = response.body()!!
-
-                    // FIX LOOP: Salviamo sessione e flag Primo Avvio
+                    // La registrazione restituisce ID e Ruolo REALI dal backend
                     salvaSessioneCompleta(utente)
                     _state.value = RegisterState.Success(utente)
                 } else {
@@ -68,7 +64,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Login Unificato (Prova Utente -> poi Admin)
+    // LOGIN UNIFICATO
     fun eseguiLogin(email: String, pass: String, ricordami: Boolean) {
         if (email.isBlank() || pass.isBlank()) {
             _state.value = RegisterState.Error("Inserisci email e password")
@@ -79,110 +75,56 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         val request = LoginRequest(email, pass)
 
         viewModelScope.launch {
-            // STEP 1: Tentativo Login Utente Standard
-            var loginUtenteSuccess = false
             try {
-                Log.d("AUTH_DEBUG", "Tentativo Login UTENTE per $email...")
-                val responseUser = apiService.login(request)
+                // Chiamiamo L'UNICO endpoint di login.
+                // Il backend (AuthService) ora sa distinguere Admin, Manager e Utenti internamente.
+                val response = apiService.login(request)
 
-                if (responseUser.isSuccessful && responseUser.body() != null) {
-                    val utente = responseUser.body()!!
-                    Log.d("AUTH_DEBUG", "Login UTENTE riuscito: ${utente.id}")
+                if (response.isSuccessful && response.body() != null) {
+                    val utente = response.body()!!
+
+                    Log.d("AUTH_DEBUG", "Login Successo. ID: ${utente.id}, Ruolo: ${utente.ruolo}")
+
+                    // Salviamo i dati REALI. Non modifichiamo nulla.
                     salvaSessioneCompleta(utente)
+
                     _state.value = RegisterState.Success(utente)
-                    loginUtenteSuccess = true
                 } else {
-                    Log.d("AUTH_DEBUG", "Login UTENTE fallito (${responseUser.code()}).")
+                    val errorBody = response.errorBody()?.string() ?: "Errore ${response.code()}"
+                    _state.value = RegisterState.Error(errorBody) // Mostriamo l'errore del backend (es. "Password errata")
                 }
             } catch (e: Exception) {
-                Log.w("AUTH_DEBUG", "Errore tecnico Login Utente (proseguo con Admin): ${e.message}")
-            }
-
-            // STEP 2: Se fallisce utente, prova Login Admin
-            if (!loginUtenteSuccess) {
-                Log.d("AUTH_DEBUG", "Tentativo Login ADMIN...")
-                try {
-                    val responseAdmin = apiService.loginAdmin(request)
-
-                    if (responseAdmin.isSuccessful && responseAdmin.body() != null) {
-                        val admin = responseAdmin.body()!!
-                        Log.d("AUTH_DEBUG", "Login ADMIN riuscito: ${admin.id}")
-
-                        val adminUserMock = UtenteResponseDTO(
-                            id = "ADMIN_SESSION",
-                            nome = "Amministratore",
-                            cognome = "Sistema",
-                            email = admin.email,
-                            telefono = null,
-                            preferiti = emptyList(),
-                            ruolo = "ADMIN"
-                        )
-
-                        salvaSessioneCompleta(adminUserMock)
-                        _state.value = RegisterState.Success(adminUserMock)
-                    } else {
-                        Log.e("AUTH_DEBUG", "Login ADMIN fallito: ${responseAdmin.code()}")
-                        _state.value = RegisterState.Error("Credenziali non valide")
-                    }
-                } catch (e: Exception) {
-                    Log.e("AUTH_DEBUG", "Errore Login Admin", e)
-                    _state.value = RegisterState.Error("Errore Login: ${e.message}")
-                }
+                _state.value = RegisterState.Error("Errore connessione: ${e.message}")
             }
         }
     }
 
-    // --- FUNZIONE HELPER AGGIUNTA (CRITICA PER IL FIX) ---
     private suspend fun salvaSessioneCompleta(utente: UtenteResponseDTO) {
         RetrofitClient.loggedUserEmail = utente.email
-
         try {
             userPrefs.saveUserData(utente.id, utente.email)
             userPrefs.setFirstRunCompleted()
-        } catch (e: Exception) {
-            Log.e("AUTH_DEBUG", "ERRORE SALVATAGGIO DATASTORE", e)
-        }
 
-        try {
+            // Salviamo nel SessionManager.
+            // Questi dati verranno usati da tutta l'app (es. HomeScreen per mostrare i tasti Manager)
             SessionManager.saveUserSession(
                 getApplication(),
-                utente.id,
+                utente.id,       // UUID
                 "${utente.nome} ${utente.cognome}",
-                        utente.ruolo
+                utente.ruolo     // "ADMIN", "MANAGER", "UTENTE"
             )
         } catch (e: Exception) {
-            Log.e("AUTH_DEBUG", "ERRORE SALVATAGGIO SESSIONMANAGER", e)
+            Log.e("AUTH_DEBUG", "Errore salvataggio sessione", e)
         }
-        // 1. Memoria volatile
-        RetrofitClient.loggedUserEmail = utente.email
-        userPrefs.saveUserData(utente.id, utente.email)
-        userPrefs.setFirstRunCompleted()
-
-        // Passiamo il ruolo ricevuto dal DTO (sarà "UTENTE" o "MANAGER")
-        SessionManager.saveUserSession(
-            getApplication(),
-            utente.id,
-            "${utente.nome} ${utente.cognome}",
-            utente.ruolo
-        )
-
-        Log.d("AUTH_DEBUG", "Sessione salvata. Ruolo: ${utente.ruolo}")
     }
 
     fun logout() {
         viewModelScope.launch {
             userPrefs.clearUser()
             RetrofitClient.loggedUserEmail = null
-            // Pulizia completa
             SessionManager.logout(getApplication())
         }
     }
 
-    fun completaWelcomeScreen() {
-        viewModelScope.launch {
-            userPrefs.setFirstRunCompleted()
-        }
-    }
-
-    val userLoggedFlow = userPrefs.userId
+    fun completaWelcomeScreen() { viewModelScope.launch { userPrefs.setFirstRunCompleted() } }
 }

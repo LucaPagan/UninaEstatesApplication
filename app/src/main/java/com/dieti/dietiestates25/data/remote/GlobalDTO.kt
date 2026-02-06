@@ -278,3 +278,9 @@ data class AdminOptionDTO(val id: String, val email: String)
 
 // --- DTO per Cambio Password ---
 data class ChangeMyPasswordRequest(val oldPassword: String, val newPassword: String)
+
+data class AgenteDTO(
+    val id: String,
+    val nome: String,
+    val cognome: String,
+)
