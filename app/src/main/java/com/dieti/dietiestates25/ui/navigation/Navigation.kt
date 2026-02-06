@@ -29,6 +29,7 @@ import com.dieti.dietiestates25.ui.features.search.FullScreenMapScreen
 import com.dieti.dietiestates25.ui.features.search.SearchTypeSelectionScreen
 import com.dieti.dietiestates25.ui.features.property.YourPropertyScreen
 import com.dieti.dietiestates25.ui.features.auth.RegisterScreen
+import com.dieti.dietiestates25.ui.features.manager.ManagerScreen
 
 @Composable
 fun Navigation(
@@ -218,8 +219,9 @@ fun Navigation(
             PropertySellScreen(navController, idUtente = entry.arguments?.getString("idUtente") ?: "")
         }
 
-        composable(Screen.AppointmentDetailScreen.route) { AppointmentDetailScreen(navController, appointmentId = "") }
-        composable(Screen.YourPropertyScreen.route) { YourPropertyScreen(navController, idUtente = "") }
-        composable(Screen.EditPropertyScreen.route) { EditPropertyScreen(navController) }
+        composable(route = Screen.AppointmentDetailScreen.route){ AppointmentDetailScreen(navController = navController, appointmentId = "") }
+        composable(route = Screen.YourPropertyScreen.route) { YourPropertyScreen(navController = navController, idUtente = "") }
+        composable(route = Screen.EditPropertyScreen.route) { EditPropertyScreen(navController = navController) }
+        //composable(route = Screen.RequestsScreen.route + "/{idUtente}") { RequestsScreen(navController = navController) }
     }
 }
