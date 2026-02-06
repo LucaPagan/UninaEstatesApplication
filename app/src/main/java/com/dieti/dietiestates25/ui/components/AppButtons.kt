@@ -9,6 +9,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Apartment
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -547,5 +550,66 @@ fun SegmentedButton(
             text = text,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
+    }
+}
+
+/**
+ * Pulsante speciale in stile "Manager" (Bordo spesso, sfondo trasparente).
+ * Replica il design richiesto: Icona SX - Testo Bold - Freccia DX
+ */
+@Composable
+fun ManagerMenuButton(
+    text: String,
+    onClick: () -> Unit,
+    icon: ImageVector = Icons.Default.Apartment, // Icona di default (Immobile)
+    modifier: Modifier = Modifier,
+    colorScheme: ColorScheme = MaterialTheme.colorScheme,
+    typography: Typography = MaterialTheme.typography,
+    dimensions: Dimensions = Dimensions
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()//64.dp
+            .height(dimensions.buttonSize ), // Altezza maggiorata per impatto visivo
+        shape = RoundedCornerShape(dimensions.cornerRadiusLarge),
+        // Bordo spesso (2.dp) usando il colore onSurface (Grigio/Bianco a seconda del tema)
+        border = BorderStroke(dimensions.borderStrokeSmall, colorScheme.onSurface),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = Color.Transparent, // Background trasparente
+            contentColor = colorScheme.onSurface // Testo e icone adattati al tema
+        ),
+        contentPadding = PaddingValues(horizontal = dimensions.paddingMedium)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Icona a Sinistra
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(dimensions.iconSizeMedium),
+                tint = colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.width(dimensions.spacingMedium))
+
+            // Testo Centrale
+            Text(
+                text = text,
+                style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.weight(1f),
+                color = colorScheme.onSurface
+            )
+
+            // Chevron a Destra
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = colorScheme.onSurface,
+                modifier = Modifier.size(dimensions.iconSizeMedium)
+            )
+        }
     }
 }

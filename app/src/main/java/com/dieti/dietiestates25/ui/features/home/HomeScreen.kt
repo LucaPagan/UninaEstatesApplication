@@ -136,27 +136,6 @@ fun HomeScreen(
                     colorScheme = colorScheme
                 )
 
-                // --- TASTO SPECIALE PER ADMIN ---
-                if (isAdmin) {
-                    Spacer(modifier = Modifier.height(dimensions.spacingLarge))
-                    Button(
-                        onClick = {
-                            // FIX: Ora naviga alla vera Dashboard Admin, non al Manager
-                            navController.navigate(Screen.AdminDashboardScreen.route)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = dimensions.paddingLarge),
-                        colors = ButtonDefaults.buttonColors(containerColor = colorScheme.tertiary)
-                    ) {
-                        Icon(Icons.Default.AdminPanelSettings, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("VAI ALLA DASHBOARD ADMIN")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
-
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
             }
         }

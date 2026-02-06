@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,6 +50,7 @@ import com.dieti.dietiestates25.ui.components.LogoutConfirmAlertDialog
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
 import com.dieti.dietiestates25.ui.components.AppTopBar
+import com.dieti.dietiestates25.ui.components.ManagerMenuButton // Assicurati di avere questo componente
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.data.model.ProfileData
@@ -63,7 +62,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    idUtente: String?, // NUOVO PARAMETRO: Riceviamo l'ID da fuori
+    idUtente: String?,
     viewModel: ProfileViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel()
 ) {
@@ -73,23 +72,18 @@ fun ProfileScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // RIMOSSO: Non estraiamo più l'ID dal backstack qui, usiamo il parametro idUtente
-
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(idUtente) { // Reagisce al parametro
+    LaunchedEffect(idUtente) {
         Log.d("PROFILE_UI_ENTRY", "Lancio loadUserProfile con ID: $idUtente")
         viewModel.loadUserProfile(context, idUtente)
     }
 
     // --- GESTIONE STATO CANCELLAZIONE ---
-    // Se lo stato diventa UserDeleted, navighiamo via
     LaunchedEffect(uiState) {
         if (uiState is ProfileUiState.UserDeleted) {
             Toast.makeText(context, "Profilo eliminato definitivamente.", Toast.LENGTH_LONG).show()
-            // Usiamo il logout completo di AuthViewModel per pulire DataStore se necessario,
-            // poi navighiamo al Login
-            authViewModel.logout() // Pulisce residui
+            authViewModel.logout() // Pulizia completa
             navController.navigate(Screen.LoginScreen.route) {
                 popUpTo(0) { inclusive = true }
             }
@@ -105,18 +99,17 @@ fun ProfileScreen(
     }
 
     val onDelete = {
+        // CORREZIONE: Chiamiamo SOLO la funzione del VM.
+        // Non navighiamo subito via, aspettiamo che lo stato diventi UserDeleted (vedi LaunchedEffect sopra)
+        // altrimenti rischiamo di navigare prima che il server abbia cancellato.
         viewModel.deleteProfile(context)
-        Toast.makeText(context, "Profilo eliminato", Toast.LENGTH_SHORT).show()
-        navController.navigate(Screen.LoginScreen.route) {
-                popUpTo(0) { inclusive = true }
-        }
     }
 
     val onRetry = { viewModel.loadUserProfile(context, idUtente) }
 
     ProfileScreenContent(
         navController = navController,
-        idUtente = idUtente, // Passiamo l'ID giù alla UI
+        idUtente = idUtente,
         uiState = uiState,
         onLogout = { onLogout() },
         onDelete = onDelete,
@@ -127,7 +120,7 @@ fun ProfileScreen(
 @Composable
 fun ProfileScreenContent(
     navController: NavController,
-    idUtente: String?, // Parametro esplicito anche qui
+    idUtente: String?,
     uiState: ProfileUiState,
     onLogout: () -> Unit,
     onDelete: () -> Unit,
@@ -136,11 +129,14 @@ fun ProfileScreenContent(
     val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
-    val focusManager = LocalFocusManager.current
     val dimensions = Dimensions
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+
+    // --- RECUPERO RUOLO PER UI ---
+    val userRole = remember { SessionManager.getUserRole(context) }
+    val isManager = userRole == "MANAGER"
 
     val gradientColors = listOf(
         colorScheme.primary.copy(alpha = 0.7f),
@@ -149,13 +145,12 @@ fun ProfileScreenContent(
         colorScheme.primary.copy(alpha = 0.6f)
     )
 
-    // Logica di fallback per la BottomBar: se l'ID è null, proviamo SessionManager, altrimenti "utente"
     val currentUserId = idUtente ?: SessionManager.getUserId(context) ?: "utente"
 
     Scaffold(
         topBar = {
             AppTopBar(
-                title = "Profilo Utente",
+                title = if (isManager) "Profilo Manager" else "Profilo Utente",
                 showAppIcon = true,
                 colorScheme = colorScheme,
                 typography = typography,
@@ -183,7 +178,6 @@ fun ProfileScreenContent(
                     }
                 }
                 is ProfileUiState.UserDeleted -> {
-                    // Stato transitorio, gestito dal LaunchedEffect, mostra loading o nulla
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(color = colorScheme.error)
                     }
@@ -224,7 +218,19 @@ fun ProfileScreenContent(
                             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = {})
                             .verticalScroll(rememberScrollState())
                     ) {
-                        ProfileInnerContent(data, { showLogoutDialog = true }, { showDeleteDialog = true }, typography, colorScheme, navController, dimensions)
+                        ProfileInnerContent(
+                            profileData = data,
+                            isManager = isManager, // Passiamo il flag
+                            onManagerPropertiesClick = {
+                                navController.navigate(Screen.YourPropertyScreen.route)
+                            },
+                            onLogoutClick = { showLogoutDialog = true },
+                            onDeleteClick = { showDeleteDialog = true },
+                            typography = typography,
+                            colorScheme = colorScheme,
+                            navController = navController,
+                            dimensions = dimensions
+                        )
                     }
                 }
             }
@@ -262,6 +268,8 @@ fun ProfileScreenContent(
 @Composable
 private fun ProfileInnerContent(
     profileData: ProfileData,
+    isManager: Boolean, // Nuovo parametro
+    onManagerPropertiesClick: () -> Unit,
     onLogoutClick: () -> Unit,
     onDeleteClick: () -> Unit,
     typography: Typography,
@@ -292,6 +300,29 @@ private fun ProfileInnerContent(
         )
 
         Spacer(modifier = Modifier.height(dimensions.spacingLarge))
+
+        // --- SEZIONE MANAGER (Nuovo Pezzo) ---
+        if (isManager) {
+            Text(
+                text = "Gestione",
+                style = typography.titleMedium,
+                modifier = Modifier
+                    .padding(bottom = dimensions.paddingMedium)
+                    .align(Alignment.Start)
+            )
+
+            ManagerMenuButton(
+                text = "Visualizza i miei immobili",
+                onClick = onManagerPropertiesClick,
+                colorScheme = colorScheme,
+                typography = typography,
+                dimensions = dimensions
+            )
+
+            Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
+        }
+        // -------------------------------------
+
         Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
         ProfileActionButtons(
@@ -394,7 +425,6 @@ fun ProfileScreenPreviewLight() {
     val navController = rememberNavController()
     val mockData = ProfileData(name = "Mario Rossi", email = "mario.rossi@unina.it", phoneNumberWithoutPrefix = "3339998877")
     DietiEstatesTheme {
-        // Passiamo null come idUtente per la preview, o un ID finto
         ProfileScreenContent(navController = navController, idUtente = "mock-id", uiState = ProfileUiState.Success(mockData), onLogout = {}, onDelete = {}, onRetry = {})
     }
 }

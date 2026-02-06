@@ -12,7 +12,6 @@ import com.dieti.dietiestates25.data.model.FilterModel
 import com.dieti.dietiestates25.ui.features.admin.*
 import com.dieti.dietiestates25.ui.features.property.ApartmentListingScreen
 import com.dieti.dietiestates25.ui.features.home.HomeScreen
-import com.dieti.dietiestates25.ui.features.manager.ManagerScreen
 import com.dieti.dietiestates25.ui.features.notification.NotificationScreen
 import com.dieti.dietiestates25.ui.features.profile.ProfileScreen
 import com.dieti.dietiestates25.ui.features.property.PropertySellScreen
@@ -29,7 +28,6 @@ import com.dieti.dietiestates25.ui.features.property.EditPropertyScreen
 import com.dieti.dietiestates25.ui.features.search.FullScreenMapScreen
 import com.dieti.dietiestates25.ui.features.search.SearchTypeSelectionScreen
 import com.dieti.dietiestates25.ui.features.property.YourPropertyScreen
-import com.dieti.dietiestates25.ui.features.manager.RequestsScreen
 import com.dieti.dietiestates25.ui.features.auth.RegisterScreen
 
 @Composable
@@ -223,6 +221,5 @@ fun Navigation(
         composable(Screen.AppointmentDetailScreen.route) { AppointmentDetailScreen(navController, appointmentId = "") }
         composable(Screen.YourPropertyScreen.route) { YourPropertyScreen(navController, idUtente = "") }
         composable(Screen.EditPropertyScreen.route) { EditPropertyScreen(navController) }
-        composable("${Screen.RequestsScreen.route}/{idUtente}") { RequestsScreen(navController) }
     }
 }

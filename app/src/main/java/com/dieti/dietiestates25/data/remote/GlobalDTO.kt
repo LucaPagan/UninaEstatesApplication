@@ -128,8 +128,10 @@ data class UtenteResponseDTO(
     val cognome: String,
     val email: String,
     val telefono: String?,
-    // Aggiunto per ricevere i preferiti dal backend
-    val preferiti: List<ImmobileSummaryDTO> = emptyList()
+    val ruolo: String,
+    val preferiti: List<ImmobileSummaryDTO> = emptyList(),
+    // Nuovo campo per gestire i dati del Manager
+    val agenziaNome: String? = null
 )
 
 data class UserUpdateRequest(

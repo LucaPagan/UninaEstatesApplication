@@ -114,7 +114,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                             cognome = "Sistema",
                             email = admin.email,
                             telefono = null,
-                            preferiti = emptyList()
+                            preferiti = emptyList(),
+                            ruolo = "ADMIN"
                         )
 
                         salvaSessioneCompleta(adminUserMock)
@@ -146,26 +147,26 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             SessionManager.saveUserSession(
                 getApplication(),
                 utente.id,
-                "${utente.nome} ${utente.cognome}"
+                "${utente.nome} ${utente.cognome}",
+                        utente.ruolo
             )
         } catch (e: Exception) {
             Log.e("AUTH_DEBUG", "ERRORE SALVATAGGIO SESSIONMANAGER", e)
         }
         // 1. Memoria volatile
         RetrofitClient.loggedUserEmail = utente.email
-
-        // 2. DataStore (UserPrefs) - Salviamo dati utente e flag PRIMO AVVIO
         userPrefs.saveUserData(utente.id, utente.email)
-        userPrefs.setFirstRunCompleted() // <--- Questo impedisce il ritorno all'Intro!
+        userPrefs.setFirstRunCompleted()
 
-        // 3. SessionManager (SharedPreferences) - Per MainActivity e Profile
+        // Passiamo il ruolo ricevuto dal DTO (sarà "UTENTE" o "MANAGER")
         SessionManager.saveUserSession(
             getApplication(),
             utente.id,
-            "${utente.nome} ${utente.cognome}"
+            "${utente.nome} ${utente.cognome}",
+            utente.ruolo
         )
 
-        Log.d("AUTH_DEBUG", "Sessione salvata completamente. FirstRunCompleted=true, ID=${utente.id}")
+        Log.d("AUTH_DEBUG", "Sessione salvata. Ruolo: ${utente.ruolo}")
     }
 
     fun logout() {
