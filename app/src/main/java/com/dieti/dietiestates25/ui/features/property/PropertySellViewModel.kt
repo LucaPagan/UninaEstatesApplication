@@ -5,11 +5,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
-import android.webkit.MimeTypeMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dieti.dietiestates25.data.local.UserPreferences
-import com.dieti.dietiestates25.data.remote.DietiEstatesApi
 import com.dieti.dietiestates25.data.remote.ImmobileCreateRequest
 import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.google.gson.Gson
@@ -33,7 +31,7 @@ sealed class PropertyFormState {
 
 class PropertySellViewModel : ViewModel() {
 
-    private val api: DietiEstatesApi = RetrofitClient.retrofit.create(DietiEstatesApi::class.java)
+    private val api = RetrofitClient.retrofit.create(PropertyApiService::class.java)
     private val gson = Gson()
 
     private val _formState = MutableStateFlow<PropertyFormState>(PropertyFormState.Idle)

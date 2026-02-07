@@ -50,14 +50,12 @@ import com.dieti.dietiestates25.ui.components.LogoutConfirmAlertDialog
 import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.AppRedButton
 import com.dieti.dietiestates25.ui.components.AppTopBar
-import com.dieti.dietiestates25.ui.components.ManagerMenuButton // Assicurati di avere questo componente
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.data.model.ProfileData
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.utils.SessionManager
 import com.dieti.dietiestates25.ui.features.auth.AuthViewModel
-import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileScreen(
@@ -220,10 +218,6 @@ fun ProfileScreenContent(
                     ) {
                         ProfileInnerContent(
                             profileData = data,
-                            isManager = isManager, // Passiamo il flag
-                            onManagerPropertiesClick = {
-                                navController.navigate(Screen.YourPropertyScreen.route)
-                            },
                             onLogoutClick = { showLogoutDialog = true },
                             onDeleteClick = { showDeleteDialog = true },
                             typography = typography,
@@ -268,8 +262,6 @@ fun ProfileScreenContent(
 @Composable
 private fun ProfileInnerContent(
     profileData: ProfileData,
-    isManager: Boolean, // Nuovo parametro
-    onManagerPropertiesClick: () -> Unit,
     onLogoutClick: () -> Unit,
     onDeleteClick: () -> Unit,
     typography: Typography,
@@ -300,30 +292,6 @@ private fun ProfileInnerContent(
         )
 
         Spacer(modifier = Modifier.height(dimensions.spacingLarge))
-
-        // --- SEZIONE MANAGER (Nuovo Pezzo) ---
-        if (isManager) {
-            Text(
-                text = "Gestione",
-                style = typography.titleMedium,
-                modifier = Modifier
-                    .padding(bottom = dimensions.paddingMedium)
-                    .align(Alignment.Start)
-            )
-
-            ManagerMenuButton(
-                text = "Visualizza i miei immobili",
-                onClick = onManagerPropertiesClick,
-                colorScheme = colorScheme,
-                typography = typography,
-                dimensions = dimensions
-            )
-
-            Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
-        }
-        // -------------------------------------
-
-        Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
         ProfileActionButtons(
             onLogoutClick = onLogoutClick,

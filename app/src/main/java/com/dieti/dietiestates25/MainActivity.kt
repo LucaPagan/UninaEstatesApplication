@@ -28,57 +28,39 @@ class MainActivity : ComponentActivity() {
         setContent {
             DietiEstatesTheme {
                 val context = LocalContext.current
-
-                // Stato per la destinazione iniziale
                 var startDestination by remember { mutableStateOf<String?>(null) }
-
-                // Osserviamo se è la prima apertura
                 val isFirstRunState = userPrefs.isFirstRun.collectAsState(initial = null)
 
-                // Recuperiamo la sessione corrente
-                val currentSessionId = SessionManager.getUserId(context)
+                // --- MODIFICA FONDAMENTALE ---
+                // Invece di getUserId(), usiamo validateAndRefreshSession().
+                // Se rememberMe era false, questa funzione restituirà NULL (e farà logout).
+                // Se rememberMe era true ed è valido, restituirà l'ID e resetterà i 30 giorni.
+                val validSessionId = remember { SessionManager.validateAndRefreshSession(context) }
 
-                LaunchedEffect(isFirstRunState.value, currentSessionId) {
+                LaunchedEffect(isFirstRunState.value, validSessionId) {
                     val isFirstRun = isFirstRunState.value
 
-                    Log.d("MAIN_DEBUG", "--------------------------------------")
-                    Log.d("MAIN_DEBUG", "Check Avvio App:")
-                    Log.d("MAIN_DEBUG", "1. Session ID: '$currentSessionId'")
-                    Log.d("MAIN_DEBUG", "2. Is First Run: $isFirstRun")
+                    Log.d("MAIN_DEBUG", "Check Avvio: FirstRun=$isFirstRun, Session=$validSessionId")
 
                     if (isFirstRun != null) {
-                        // CASO 1: C'è una sessione attiva (Utente o Admin)
-                        if (!currentSessionId.isNullOrEmpty()) {
-
-                            // *** FIX CRITICO: Controllo se è l'Admin ***
-                            if (currentSessionId == "ADMIN_SESSION") {
-                                Log.d("MAIN_DEBUG", "DECISIONE: Admin rilevato -> Dashboard Admin")
-                                startDestination = Screen.AdminDashboardScreen.route
-                            } else {
-                                Log.d("MAIN_DEBUG", "DECISIONE: Utente rilevato -> Home")
-                                startDestination = Screen.HomeScreen.withIdUtente(currentSessionId)
-                            }
-
+                        startDestination = if (!validSessionId.isNullOrEmpty()) {
+                            // Utente loggato e sessione valida -> Home
+                            Screen.HomeScreen.withIdUtente(validSessionId)
+                        } else if (isFirstRun) {
+                            // Primo avvio assoluto -> Intro
+                            "welcome_intro_screen"
                         } else {
-                            // CASO 2: Nessuna sessione attiva
-                            if (isFirstRun) {
-                                Log.d("MAIN_DEBUG", "DECISIONE: Prima volta -> Intro (WelcomeScreen)")
-                                startDestination = "welcome_intro_screen"
-                            } else {
-                                Log.d("MAIN_DEBUG", "DECISIONE: Non loggato -> Login")
-                                startDestination = Screen.LoginScreen.route
-                            }
+                            // Sessione scaduta o logout -> Login
+                            Screen.LoginScreen.route
                         }
                     }
                 }
 
-                // Mostra un caricamento finché non decidiamo la destinazione
                 if (startDestination == null) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
                 } else {
-                    // Avvia la navigazione con la destinazione calcolata corretta
                     Navigation(startDestination = startDestination!!)
                 }
             }

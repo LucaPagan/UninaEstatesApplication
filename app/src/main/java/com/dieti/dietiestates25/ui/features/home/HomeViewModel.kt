@@ -5,9 +5,10 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.dieti.dietiestates25.data.local.UserPreferences
-import com.dieti.dietiestates25.data.remote.DietiEstatesApi
 import com.dieti.dietiestates25.data.remote.ImmobileDTO
 import com.dieti.dietiestates25.data.remote.RetrofitClient
+import com.dieti.dietiestates25.ui.features.property.PropertyApiService
+import com.dieti.dietiestates25.ui.features.search.SearchApiService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,7 +29,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    private val api: DietiEstatesApi = RetrofitClient.retrofit.create(DietiEstatesApi::class.java)
+    private val PropertyApi = RetrofitClient.retrofit.create(PropertyApiService::class.java)
+
+    private val SearchApi = RetrofitClient.retrofit.create(SearchApiService::class.java)
+
+
     private val userPrefs = UserPreferences(application)
 
     init {
@@ -56,12 +61,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.value = HomeUiState.Loading
             try {
                 // Eseguiamo le chiamate in parallelo o sequenza rapida
-                val immobiliResponse = api.getImmobili()
+                val immobiliResponse = PropertyApi.getImmobili()
 
                 // Fetch ricerche recenti (solo se loggato, ma l'API gestisce lato server l'auth)
                 val ricercheResponse = try {
                     if (RetrofitClient.loggedUserEmail != null) {
-                        api.getRicercheRecenti()
+                        SearchApi.getRicercheRecenti()
                     } else {
                         emptyList()
                     }

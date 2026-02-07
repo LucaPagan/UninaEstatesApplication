@@ -8,6 +8,7 @@ import com.dieti.dietiestates25.data.model.FilterModel
 import com.dieti.dietiestates25.data.model.PropertyMarker
 import com.dieti.dietiestates25.data.remote.ImmobileDTO
 import com.dieti.dietiestates25.data.remote.RetrofitClient
+import com.dieti.dietiestates25.ui.features.property.PropertyApiService
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +16,7 @@ import kotlinx.coroutines.launch
 
 class MapSearchViewModel : ViewModel() {
 
-    private val api = RetrofitClient.retrofit.create(com.dieti.dietiestates25.data.remote.DietiEstatesApi::class.java)
+    private val PropertyApi = RetrofitClient.retrofit.create(PropertyApiService::class.java)
 
     private val _properties = MutableStateFlow<List<PropertyMarker>>(emptyList())
     val properties = _properties.asStateFlow()
@@ -50,7 +51,7 @@ class MapSearchViewModel : ViewModel() {
                 val lon = searchArea?.longitude
                 val rad = if (searchArea != null) (radiusKm ?: 5.0) else null
 
-                val results = api.getImmobili(
+                val results = PropertyApi.getImmobili(
                     query = finalQuery,
                     tipoVendita = isVendita,
                     minPrezzo = filters?.minPrice?.toInt(),

@@ -18,41 +18,6 @@ import java.util.concurrent.TimeUnit
 // import com.dieti.dietiestates25.BuildConfig
 
 interface DietiEstatesApi {
-    @GET("api/immobili")
-    suspend fun getImmobili(
-        @Query("query") query: String? = null,
-        @Query("tipoVendita") tipoVendita: Boolean? = null,
-        @Query("minPrezzo") minPrezzo: Int? = null,
-        @Query("maxPrezzo") maxPrezzo: Int? = null,
-        @Query("minMq") minMq: Int? = null,
-        @Query("maxMq") maxMq: Int? = null,
-        @Query("bagni") bagni: Int? = null,
-        @Query("condizione") condizione: String? = null,
-        @Query("lat") lat: Double? = null,
-        @Query("lon") lon: Double? = null,
-        @Query("radiusKm") radiusKm: Double? = null
-    ): List<ImmobileDTO>
-
-    @GET("api/immobili/{id}")
-    suspend fun getImmobileById(@Path("id") id: String): ImmobileDTO
-
-    @GET("api/immobili/cities")
-    suspend fun getComuni(@Query("query") query: String): List<String>
-
-    @Multipart
-    @POST("api/immobili")
-    suspend fun creaImmobile(
-        @Part("immobile") immobile: RequestBody,
-        @Part immagini: List<MultipartBody.Part>
-    ): ImmobileDTO
-
-    // --- NUOVI ENDPOINT RICERCA RECENTE ---
-
-    @GET("api/ricerche")
-    suspend fun getRicercheRecenti(): List<String>
-
-    @DELETE("api/ricerche")
-    suspend fun cancellaRicerca(@Query("query") query: String)
 }
 
 object RetrofitClient {

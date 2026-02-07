@@ -174,16 +174,30 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(Dimensions.spacingMedium))
 
+            // Checkbox Remember Me
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(bottom = Dimensions.spacingMedium)
+            ) {
+                Checkbox(
+                    checked = rememberMe,
+                    onCheckedChange = { rememberMe = it },
+                    colors = CheckboxDefaults.colors(checkedColor = colorScheme.primary),
+                    enabled = !isLoading // Sfrutta la variabile isLoading definita sopra
+                )
+                Text("Ricordami", color = colorScheme.onBackground)
+            }
+
             // Bottone Register
             Button(
                 onClick = {
-                    // CHIAMATA AL VIEWMODEL
                     viewModel.eseguiRegistrazione(
                         nome = nome,
                         cognome = cognome,
                         email = email,
                         pass = password,
-                        telefono = numero
+                        telefono = numero,
+                        rememberMe = rememberMe // Passiamo il valore della checkbox
                     )
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary),
@@ -193,22 +207,6 @@ fun RegisterScreen(
                     .padding(bottom = Dimensions.spacingMedium)
             ) {
                 Text(if (isLoading) "Registrazione in corso..." else "Registra", color = colorScheme.onPrimary)
-            }
-
-            // Checkbox Remember Me
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = Dimensions.spacingMedium)
-            ) {
-                Checkbox(
-                    checked = rememberMe,
-                    onCheckedChange = { rememberMe = it },
-                    colors = CheckboxDefaults.colors(checkedColor = colorScheme.primary),
-                    enabled = !isLoading
-                )
-                Text("Ricordami", color = colorScheme.onBackground)
             }
         }
 

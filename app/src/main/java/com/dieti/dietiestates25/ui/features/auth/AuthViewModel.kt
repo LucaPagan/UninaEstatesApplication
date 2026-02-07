@@ -37,8 +37,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // REGISTRAZIONE
-    fun eseguiRegistrazione(nome: String, cognome: String, email: String, pass: String, telefono: String?) {
+    // REGISTRAZIONE: Aggiunto parametro rememberMe
+    fun eseguiRegistrazione(nome: String, cognome: String, email: String, pass: String, telefono: String?, rememberMe: Boolean) {
         if (nome.isBlank() || email.isBlank() || pass.isBlank()) {
             _state.value = RegisterState.Error("Compila tutti i campi obbligatori")
             return
@@ -52,8 +52,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val response = apiService.registrazione(request)
                 if (response.isSuccessful && response.body() != null) {
                     val utente = response.body()!!
-                    // La registrazione restituisce ID e Ruolo REALI dal backend
-                    salvaSessioneCompleta(utente)
+                    // Salvataggio con preferenza rememberMe
+                    salvaSessioneCompleta(utente, rememberMe)
                     _state.value = RegisterState.Success(utente)
                 } else {
                     _state.value = RegisterState.Error("Errore reg: ${response.code()}")
@@ -64,8 +64,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // LOGIN UNIFICATO
-    fun eseguiLogin(email: String, pass: String, ricordami: Boolean) {
+    // LOGIN: Il parametro rememberMe era già presente, ora lo usiamo
+    fun eseguiLogin(email: String, pass: String, rememberMe: Boolean) {
         if (email.isBlank() || pass.isBlank()) {
             _state.value = RegisterState.Error("Inserisci email e password")
             return
@@ -76,22 +76,18 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             try {
-                // Chiamiamo L'UNICO endpoint di login.
-                // Il backend (AuthService) ora sa distinguere Admin, Manager e Utenti internamente.
                 val response = apiService.login(request)
-
                 if (response.isSuccessful && response.body() != null) {
                     val utente = response.body()!!
+                    Log.d("AUTH_DEBUG", "Login Successo. ID: ${utente.id}, RememberMe: $rememberMe")
 
-                    Log.d("AUTH_DEBUG", "Login Successo. ID: ${utente.id}, Ruolo: ${utente.ruolo}")
-
-                    // Salviamo i dati REALI. Non modifichiamo nulla.
-                    salvaSessioneCompleta(utente)
+                    // Passiamo rememberMe alla funzione di salvataggio
+                    salvaSessioneCompleta(utente, rememberMe)
 
                     _state.value = RegisterState.Success(utente)
                 } else {
-                    val errorBody = response.errorBody()?.string() ?: "Errore ${response.code()}"
-                    _state.value = RegisterState.Error(errorBody) // Mostriamo l'errore del backend (es. "Password errata")
+                    val errMsg = response.errorBody()?.string() ?: "Errore ${response.code()}"
+                    _state.value = RegisterState.Error("Credenziali non valide")
                 }
             } catch (e: Exception) {
                 _state.value = RegisterState.Error("Errore connessione: ${e.message}")
@@ -99,19 +95,23 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private suspend fun salvaSessioneCompleta(utente: UtenteResponseDTO) {
+    // Aggiunto parametro rememberMe
+    private suspend fun salvaSessioneCompleta(utente: UtenteResponseDTO, rememberMe: Boolean) {
         RetrofitClient.loggedUserEmail = utente.email
         try {
+            // UserPrefs (DataStore) serve per l'email rapida al login (autocomplete)
+            // Se rememberMe è false, magari non vogliamo salvare l'email per i suggerimenti futuri?
+            // Per ora lo lasciamo per comodità, ma il SessionManager gestisce l'accesso.
             userPrefs.saveUserData(utente.id, utente.email)
             userPrefs.setFirstRunCompleted()
 
-            // Salviamo nel SessionManager.
-            // Questi dati verranno usati da tutta l'app (es. HomeScreen per mostrare i tasti Manager)
+            // Salviamo nel SessionManager con la logica di scadenza
             SessionManager.saveUserSession(
                 getApplication(),
-                utente.id,       // UUID
+                utente.id,
                 "${utente.nome} ${utente.cognome}",
-                utente.ruolo     // "ADMIN", "MANAGER", "UTENTE"
+                utente.ruolo ?: "UTENTE",
+                rememberMe // PASSAGGIO FONDAMENTALE
             )
         } catch (e: Exception) {
             Log.e("AUTH_DEBUG", "Errore salvataggio sessione", e)

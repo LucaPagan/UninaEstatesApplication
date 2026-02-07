@@ -221,7 +221,7 @@ fun Navigation(
 
         composable(route = Screen.AppointmentDetailScreen.route){ AppointmentDetailScreen(navController = navController, appointmentId = "") }
         composable(route = Screen.YourPropertyScreen.route) { YourPropertyScreen(navController = navController, idUtente = "") }
-        composable(route = Screen.EditPropertyScreen.route) { EditPropertyScreen(navController = navController) }
+        composable(route = Screen.EditPropertyScreen.route) { EditPropertyScreen(navController = navController, immobileId = "") }
         //composable(route = Screen.RequestsScreen.route + "/{idUtente}") { RequestsScreen(navController = navController) }
     }
 }
