@@ -44,7 +44,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = if (isAdmin) "Bentornato Admin" else "Bentornato",
+                title = "Bentornato",
                 showAppIcon = true,
                 colorScheme = colorScheme,
                 typography = typography,

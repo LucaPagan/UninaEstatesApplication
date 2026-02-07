@@ -11,7 +11,8 @@ import kotlinx.coroutines.launch
 
 class PropertyViewModel : ViewModel() {
 
-    private val api = RetrofitClient.retrofit.create(com.dieti.dietiestates25.data.remote.DietiEstatesApi::class.java)
+    private val api = RetrofitClient.retrofit.create(PropertyApiService::class.java)
+
 
     private val _property = MutableStateFlow<ImmobileDTO?>(null)
     val property = _property.asStateFlow()

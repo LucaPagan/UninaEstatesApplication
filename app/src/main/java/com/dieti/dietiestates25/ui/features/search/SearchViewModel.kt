@@ -4,9 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dieti.dietiestates25.data.model.FilterModel
-import com.dieti.dietiestates25.data.remote.DietiEstatesApi
 import com.dieti.dietiestates25.data.remote.ImmobileDTO
 import com.dieti.dietiestates25.data.remote.RetrofitClient
+import com.dieti.dietiestates25.ui.features.property.PropertyApiService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +15,11 @@ import kotlinx.coroutines.launch
 
 class SearchViewModel : ViewModel() {
 
-    private val api: DietiEstatesApi = RetrofitClient.retrofit.create(DietiEstatesApi::class.java)
+    private val PropertyApi = RetrofitClient.retrofit.create(PropertyApiService::class.java)
+
+    private val SearchApi = RetrofitClient.retrofit.create(SearchApiService::class.java)
+
+
 
     // Risultati della ricerca (se la ricerca viene effettuata in questa schermata)
     private val _searchResults = MutableStateFlow<List<ImmobileDTO>>(emptyList())
@@ -56,7 +60,7 @@ class SearchViewModel : ViewModel() {
             delay(300) // Attendi 300ms di inattività
             try {
                 // Log.d("SearchViewModel", "Richiedo comuni per: $query")
-                val results = api.getComuni(query)
+                val results = PropertyApi.getComuni(query)
                 _citySuggestions.value = results
             } catch (e: Exception) {
                 Log.e("SearchVM", "Error fetching cities", e)
@@ -78,7 +82,7 @@ class SearchViewModel : ViewModel() {
 
                 // Chiamata al backend. Nota: Il backend salva automaticamente la ricerca in cronologia
                 // se 'query' non è vuota e l'utente è loggato.
-                val results = api.getImmobili(
+                val results = PropertyApi.getImmobili(
                     query = query.ifBlank { null },
                     tipoVendita = isVendita,
                     minPrezzo = filters?.minPrice?.toInt(),
@@ -113,7 +117,7 @@ class SearchViewModel : ViewModel() {
             try {
                 // Recupera le ricerche dal backend (richiede utente loggato)
                 if (RetrofitClient.loggedUserEmail != null) {
-                    val history = api.getRicercheRecenti()
+                    val history = SearchApi.getRicercheRecenti()
                     _recentSearches.value = history
                 }
             } catch (e: Exception) {
@@ -132,7 +136,7 @@ class SearchViewModel : ViewModel() {
 
             // 2. Chiamata al backend per cancellare
             try {
-                api.cancellaRicerca(query)
+                SearchApi.cancellaRicerca(query)
             } catch (e: Exception) {
                 Log.e("SearchVM", "Error deleting history item", e)
                 // Se fallisce, ricarichiamo la lista reale per sincronizzare
