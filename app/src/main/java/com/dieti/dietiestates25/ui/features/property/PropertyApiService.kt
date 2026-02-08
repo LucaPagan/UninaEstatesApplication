@@ -48,7 +48,7 @@ interface PropertyApiService {
 
     // Chiama l'endpoint del Backend che abbiamo appena creato
     @GET("api/immobili/agente/{id}")
-    suspend fun getImmobiliByAgente(@Path("id") id: String): Response<List<ImmobileSummaryDTO>>
+    suspend fun getImmobiliByAgente(@Path("id") id: String): Response<List<ImmobileDTO>>
 
 
     @PUT("api/immobili/{id}")

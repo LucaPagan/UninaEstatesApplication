@@ -221,7 +221,18 @@ fun Navigation(
 
         composable(route = Screen.AppointmentDetailScreen.route){ AppointmentDetailScreen(navController = navController, appointmentId = "") }
         composable(route = Screen.YourPropertyScreen.route) { YourPropertyScreen(navController = navController, idUtente = "") }
-        composable(route = Screen.EditPropertyScreen.route) { EditPropertyScreen(navController = navController, immobileId = "") }
+        composable(
+            // Definiamo la rotta con il placeholder /{immobileId}
+            route = Screen.EditPropertyScreen.route + "/{${Screen.EditPropertyScreen.argId}}",
+            arguments = listOf(
+                navArgument(Screen.EditPropertyScreen.argId) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            // Estraiamo l'ID e lo passiamo alla schermata
+            val immobileId = backStackEntry.arguments?.getString(Screen.EditPropertyScreen.argId) ?: ""
+            EditPropertyScreen(navController = navController, immobileId = immobileId)
+        }
+
         //composable(route = Screen.RequestsScreen.route + "/{idUtente}") { RequestsScreen(navController = navController) }
     }
 }

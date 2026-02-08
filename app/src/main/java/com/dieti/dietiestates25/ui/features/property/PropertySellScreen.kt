@@ -31,7 +31,7 @@ import com.dieti.dietiestates25.data.remote.AmbienteDto
 import com.dieti.dietiestates25.data.remote.ImmobileCreateRequest
 import com.dieti.dietiestates25.ui.components.*
 import com.dieti.dietiestates25.ui.navigation.Screen
-import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.utils.SessionManager // Importante per controllare il ruolo
 
 @Composable
 fun PropertySellScreen(
@@ -44,6 +44,9 @@ fun PropertySellScreen(
     val scrollState = rememberScrollState()
 
     val formState by viewModel.formState.collectAsState()
+
+    // Recuperiamo il ruolo per decidere dove navigare dopo il successo
+    val userRole = remember { SessionManager.getUserRole(context) ?: "UTENTE" }
 
     // --- FORM VARIABLES ---
     var tipoVendita by remember { mutableStateOf("Vendita") }
@@ -94,9 +97,19 @@ fun PropertySellScreen(
             is PropertyFormState.Success -> {
                 Toast.makeText(context, "Annuncio pubblicato con successo!", Toast.LENGTH_LONG).show()
                 viewModel.resetState()
-                navController.navigate(Screen.HomeScreen.withIdUtente(idUtente)) {
-                    // Opzionale: pulisce lo stack per evitare di tornare al form premendo indietro
-                    popUpTo(Screen.HomeScreen.withIdUtente(idUtente)) { inclusive = true }
+
+                // --- FIX NAVIGAZIONE ---
+                if (userRole == "MANAGER" || userRole == "ADMIN") {
+                    // Se sono un Manager, torno alla dashboard manager
+                    navController.navigate(Screen.ManagerScreen.withIdUtente(idUtente)) {
+                        // Rimuove tutto dallo stack fino alla ManagerScreen per forzare il refresh
+                        popUpTo(Screen.ManagerScreen.route) { inclusive = true }
+                    }
+                } else {
+                    // Utente normale
+                    navController.navigate(Screen.HomeScreen.withIdUtente(idUtente)) {
+                        popUpTo(Screen.HomeScreen.withIdUtente(idUtente)) { inclusive = true }
+                    }
                 }
             }
             is PropertyFormState.Error -> {
