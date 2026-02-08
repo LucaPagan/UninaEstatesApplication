@@ -1,22 +1,12 @@
 package com.dieti.dietiestates25.data.remote
 
 import android.util.Log
-import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
-import okhttp3.RequestBody
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.DELETE
-import retrofit2.http.GET
-import retrofit2.http.Multipart
-import retrofit2.http.POST
-import retrofit2.http.Part
-import retrofit2.http.Path
-import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
-// Assicurati di importare BuildConfig se/quando configurerai le varianti di build
-// import com.dieti.dietiestates25.BuildConfig
 
+// Interfaccia segnaposto se la tieni nello stesso file, altrimenti puoi rimuoverla se definita altrove
 interface DietiEstatesApi {
 }
 
@@ -34,23 +24,39 @@ object RetrofitClient {
     @Volatile
     var loggedUserEmail: String? = null
 
+    // --- AGGIUNTA FONDAMENTALE: Variabile per il Token di Autenticazione ---
+    // Questa variabile viene popolata al login o al riavvio dell'app dal SessionManager
+    @Volatile
+    var authToken: String? = null
+
     private val client = OkHttpClient.Builder()
         .addInterceptor { chain ->
             val original = chain.request()
             val builder = original.newBuilder()
 
-            // SICUREZZA: Aggiungi l'header di autenticazione
+            // 1. Header Email (Custom, se usato dal tuo backend)
             loggedUserEmail?.let {
                 builder.header("X-Auth-Email", it)
+            }
+
+            // 2. --- AGGIUNTA FONDAMENTALE: Header Authorization standard ---
+            // Inserisce il token (Basic o Bearer) salvato in memoria
+            authToken?.let {
+                builder.header("Authorization", it)
             }
 
             // LOGGING: Loggare solo in DEBUG per non esporre dati sensibili in produzione
             // if (BuildConfig.DEBUG) {
             Log.d("API_REQ", "${original.method} ${original.url}")
+
             if (loggedUserEmail != null) {
-                Log.d("AUTH_DEBUG", "Auth Header presente per: $loggedUserEmail")
+                Log.d("AUTH_DEBUG", "Header Email presente: $loggedUserEmail")
+            }
+
+            if (authToken != null) {
+                Log.d("AUTH_DEBUG", "Header Authorization presente")
             } else {
-                Log.w("AUTH_DEBUG", "Richiesta effettuata SENZA Auth Header (Utente non loggato?)")
+                Log.w("AUTH_DEBUG", "Richiesta effettuata SENZA Auth Token (Utente non loggato?)")
             }
             // }
 

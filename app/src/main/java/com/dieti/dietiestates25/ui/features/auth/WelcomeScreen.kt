@@ -112,7 +112,7 @@ fun WelcomeScreen(
                     text = "Inizia ora",
                     onClick = {
                         // 1. Diciamo al sistema che la Welcome Screen è stata vista (Setta FirstRun = false)
-                        viewModel.completaWelcomeScreen()
+                        //viewModel.completaWelcomeScreen()
 
                         // 2. Navighiamo al Login rimuovendo la Welcome dal backstack
                         // Nota: Usiamo la stringa della rotta definita nel NavHost per Welcome

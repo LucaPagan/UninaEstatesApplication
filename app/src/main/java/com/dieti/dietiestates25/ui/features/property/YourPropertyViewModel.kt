@@ -3,7 +3,7 @@ package com.dieti.dietiestates25.ui.features.property
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.dieti.dietiestates25.data.remote.ImmobileSummaryDTO
+import com.dieti.dietiestates25.data.remote.ImmobileDTO
 import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.dieti.dietiestates25.ui.utils.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 sealed class YourPropertyState {
     object Idle : YourPropertyState()
     object Loading : YourPropertyState()
-    data class Success(val immobili: List<ImmobileSummaryDTO>) : YourPropertyState()
+    data class Success(val immobili: List<ImmobileDTO>) : YourPropertyState()
     data class Error(val message: String) : YourPropertyState()
 }
 

@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.dieti.dietiestates25.data.local.UserPreferences
 import com.dieti.dietiestates25.data.remote.ImmobileCreateRequest
 import com.dieti.dietiestates25.data.remote.RetrofitClient
+import com.dieti.dietiestates25.ui.utils.SessionManager
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,34 +46,40 @@ class PropertySellViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             _formState.value = PropertyFormState.Loading
-            try {
-                if (RetrofitClient.loggedUserEmail == null) {
+            try {// --- FIX 1: RIPRISTINO SESSIONE COMPLETA ---
+                // Se l'app è stata riavviata, RetrofitClient ha perso email e token.
+                // Li recuperiamo dal SessionManager.
+
+                if (RetrofitClient.loggedUserEmail == null || RetrofitClient.authToken == null) {
                     val userPrefs = UserPreferences(context)
                     val savedEmail = userPrefs.userEmail.first()
-                    if (savedEmail != null) {
+                    val savedToken = SessionManager.getAuthToken(context) // Recupera il token
+
+                    if (savedEmail != null && savedToken != null) {
                         RetrofitClient.loggedUserEmail = savedEmail
+                        RetrofitClient.authToken = savedToken // IMPORTANTE: Ripristina il token per l'Auth Header
+                        Log.d("PropertyViewModel", "Sessione ripristinata. Email: $savedEmail")
                     } else {
-                        _formState.value = PropertyFormState.Error("Utente non loggato.")
+                        _formState.value = PropertyFormState.Error("Sessione scaduta o invalida. Effettua il login.")
                         return@launch
                     }
                 }
 
-                Log.d("PropertyViewModel", "Inizio upload e compressione...")
+                Log.d("PropertyViewModel", "Inizio upload...")
 
                 val jsonString = gson.toJson(request)
                 val immobileBody = jsonString.toRequestBody("application/json".toMediaTypeOrNull())
 
-                // Prepara e comprime le immagini
                 val imageParts = imageUris.mapNotNull { uri ->
                     prepareCompressedFilePart(context, uri)
                 }
 
                 if (imageParts.isEmpty() && imageUris.isNotEmpty()) {
-                    _formState.value = PropertyFormState.Error("Errore durante la compressione delle immagini.")
+                    _formState.value = PropertyFormState.Error("Errore compressione immagini.")
                     return@launch
                 }
 
-                Log.d("PropertyViewModel", "Invio ${imageParts.size} immagini compresse...")
+                // Chiamata API (Ora con il Token corretto nell'Header grazie a RetrofitClient)
                 api.creaImmobile(immobileBody, imageParts)
 
                 _formState.value = PropertyFormState.Success

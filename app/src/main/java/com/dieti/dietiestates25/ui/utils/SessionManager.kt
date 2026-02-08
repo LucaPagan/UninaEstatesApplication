@@ -12,6 +12,9 @@ object SessionManager {
     private const val KEY_USER_ROLE = "user_role"
     private const val KEY_IS_FIRST_RUN = "is_first_run" // Non cancellare mai
 
+    // --- NUOVA CHIAVE FONDAMENTALE PER IL RIPRISTINO API ---
+    private const val KEY_AUTH_TOKEN = "auth_token"
+
     // Nuove chiavi per la gestione scadenza
     private const val KEY_EXPIRY_TIME = "session_expiry_time"
     private const val SESSION_DURATION_MS = 30L * 24 * 60 * 60 * 1000 // 30 Giorni
@@ -34,12 +37,21 @@ object SessionManager {
             editor.putLong(KEY_EXPIRY_TIME, expiryTime)
             Log.d("SessionManager", "Sessione salvata per 30 giorni. Scadenza: $expiryTime")
         } else {
-            // Se "Ricordami" è spento: Mettiamo -1 (o 0) per indicare "Sessione volatile"
+            // Se "Ricordami" è spento: Mettiamo 0 per indicare "Sessione volatile" (valida finché l'app è aperta)
             editor.putLong(KEY_EXPIRY_TIME, 0L)
             Log.d("SessionManager", "Sessione volatile salvata (No Remember Me).")
         }
 
         editor.apply()
+    }
+
+    // --- NUOVI METODI PER IL TOKEN (Usati da AuthViewModel) ---
+    fun saveAuthToken(context: Context, token: String) {
+        getPrefs(context).edit().putString(KEY_AUTH_TOKEN, token).apply()
+    }
+
+    fun getAuthToken(context: Context): String? {
+        return getPrefs(context).getString(KEY_AUTH_TOKEN, null)
     }
 
     /**
@@ -49,10 +61,11 @@ object SessionManager {
     fun validateAndRefreshSession(context: Context): String? {
         val prefs = getPrefs(context)
         val userId = prefs.getString(KEY_USER_ID, null)
+        val token = prefs.getString(KEY_AUTH_TOKEN, null) // Controllo anche il token
         val expiryTime = prefs.getLong(KEY_EXPIRY_TIME, -1L)
 
-        // 1. Se non c'è utente, ritorna null
-        if (userId == null) return null
+        // 1. Se non c'è utente O TOKEN, la sessione è invalida -> ritorna null
+        if (userId == null || token == null) return null
 
         // 2. CASO: Checkbox NON spuntata (expiryTime == 0)
         // Poiché siamo all'avvio dell'app (MainActivity), se era volatile, dobbiamo uscire.
@@ -88,6 +101,7 @@ object SessionManager {
         editor.remove(KEY_USER_NAME)
         editor.remove(KEY_USER_ROLE)
         editor.remove(KEY_EXPIRY_TIME) // Rimuoviamo anche la scadenza
+        editor.remove(KEY_AUTH_TOKEN) // Rimuoviamo il token
         editor.apply()
     }
 

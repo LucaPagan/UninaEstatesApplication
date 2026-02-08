@@ -87,7 +87,11 @@ sealed class Screen(val route: String) {
 
     data object AppointmentDetailScreen : Screen("appointment_detail_screen")
     data object YourPropertyScreen : Screen("your_property_screen")
-    data object EditPropertyScreen : Screen("edit_property_screen")
+    object EditPropertyScreen : Screen("edit_property_screen") {
+        const val argId = "immobileId"
+        // Helper per costruire la rotta con il parametro
+        fun withId(id: String) = "$route/$id"
+    }
     data object RequestsScreen : Screen("requests_screen") {
         fun withIdUtente(idUtente: String): String = "$route/${Uri.encode(idUtente)}"
     }
