@@ -2,7 +2,6 @@ package com.dieti.dietiestates25.ui.features.property
 
 import com.dieti.dietiestates25.data.remote.ImmobileCreateRequest
 import com.dieti.dietiestates25.data.remote.ImmobileDTO
-import com.dieti.dietiestates25.data.remote.ImmobileSummaryDTO
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -26,6 +25,8 @@ interface PropertyApiService {
         @Query("maxPrezzo") maxPrezzo: Int? = null,
         @Query("minMq") minMq: Int? = null,
         @Query("maxMq") maxMq: Int? = null,
+        @Query("minStanze") minStanze: Int? = null, // AGGIUNTO
+        @Query("maxStanze") maxStanze: Int? = null, // AGGIUNTO
         @Query("bagni") bagni: Int? = null,
         @Query("condizione") condizione: String? = null,
         @Query("lat") lat: Double? = null,
@@ -46,10 +47,8 @@ interface PropertyApiService {
         @Part immagini: List<MultipartBody.Part>
     ): ImmobileDTO
 
-    // Chiama l'endpoint del Backend che abbiamo appena creato
     @GET("api/immobili/agente/{id}")
     suspend fun getImmobiliByAgente(@Path("id") id: String): Response<List<ImmobileDTO>>
-
 
     @PUT("api/immobili/{id}")
     suspend fun updateImmobile(

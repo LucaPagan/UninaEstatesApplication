@@ -20,10 +20,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.dieti.dietiestates25.data.model.FilterModel
 import com.dieti.dietiestates25.ui.components.PropertyPreviewInfoWindow
 import com.dieti.dietiestates25.ui.components.CustomPriceMarker
 import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
-import com.dieti.dietiestates25.data.model.FilterModel
 import com.dieti.dietiestates25.data.model.FilterOriginScreen
 import com.dieti.dietiestates25.data.model.PropertyMarker
 import com.dieti.dietiestates25.ui.navigation.Screen

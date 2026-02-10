@@ -24,7 +24,7 @@ import coil.compose.AsyncImage
 import com.dieti.dietiestates25.data.model.FilterModel
 import com.dieti.dietiestates25.data.model.FilterOriginScreen
 import com.dieti.dietiestates25.data.remote.ImmobileDTO
-import com.dieti.dietiestates25.data.remote.RetrofitClient // Usiamo il client per l'URL helper
+import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.dieti.dietiestates25.ui.components.AppPropertyViewButton
 import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 import com.dieti.dietiestates25.ui.features.search.SearchFilterScreen
@@ -120,7 +120,6 @@ fun ApartmentListingScreen(
                     RealPropertyCard(
                         immobile = property,
                         onClick = {
-                            // FIX: Chiamata corretta alla navigazione usando la funzione definita in Screen.kt
                             navController.navigate(Screen.PropertyScreen.withId(property.id))
                         }
                     )
@@ -133,13 +132,20 @@ fun ApartmentListingScreen(
         ModalBottomSheet(
             onDismissRequest = { showFilterSheet = false },
             sheetState = sheetState,
-            containerColor = colorScheme.background,
+            // FIX CRITICO PER IL GIALLO:
+            // 1. containerColor deve essere surface (Bianco)
+            // 2. tonalElevation deve essere 0.dp per impedire che il Giallo del surfaceTint venga applicato
+            containerColor = MaterialTheme.colorScheme.surface,
+            tonalElevation = 0.dp,
+            scrimColor = Color.Black.copy(alpha = 0.5f),
             shape = RoundedCornerShape(topStart = dimensions.cornerRadiusLarge, topEnd = dimensions.cornerRadiusLarge)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    // Rimuoviamo defaultMinSize fisso o lo adattiamo se serve, ma lasciamo che il contenuto decida
                     .defaultMinSize(minHeight = 400.dp)
+                    // statusBarsPadding e navigationBarsPadding sono importanti per non finire sotto le barre di sistema
                     .statusBarsPadding()
                     .navigationBarsPadding()
             ) {
@@ -219,7 +225,6 @@ fun RealPropertyCard(immobile: ImmobileDTO, onClick: () -> Unit) {
     ) {
         Column {
             Box(modifier = Modifier.weight(0.6f)) {
-                // FIX: Uso dell'URL helper sicuro
                 val imageUrl = immobile.immagini.firstOrNull()?.url?.let { RetrofitClient.getFullUrl(it) }
 
                 AsyncImage(
