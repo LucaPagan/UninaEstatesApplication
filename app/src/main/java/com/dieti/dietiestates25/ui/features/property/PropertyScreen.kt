@@ -1,7 +1,6 @@
 package com.dieti.dietiestates25.ui.features.property
 
 import android.content.Context
-import android.content.res.Configuration
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -52,6 +50,7 @@ import com.dieti.dietiestates25.ui.components.*
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.utils.getIconForRoomType
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -475,20 +474,6 @@ fun BadgeItem(text: String, containerColor: Color, contentColor: Color) {
     }
 }
 
-// Helper per mappare la stringa tipologia all'icona Material
-fun getIconForRoomType(type: String): ImageVector {
-    val t = type.lowercase(Locale.ROOT)
-    return when {
-        t.contains("letto") || t.contains("camera") -> Icons.Default.KingBed
-        t.contains("bagno") -> Icons.Default.Bathtub
-        t.contains("cucina") -> Icons.Default.Countertops // Countertops non sempre presente in default, uso fallback sicuro se non hai Extended icons, ma spesso c'è. Altrimenti Kitchen se disponibile. Se non compila, usa Restaurant o altro.
-        t.contains("soggiorno") || t.contains("salone") || t.contains("sala") -> Icons.Default.Weekend
-        t.contains("studio") -> Icons.Default.MenuBook
-        t.contains("balcone") || t.contains("terrazz") -> Icons.Default.Balcony
-        t.contains("garage") || t.contains("auto") -> Icons.Default.Garage
-        else -> Icons.Default.MeetingRoom
-    }
-}
 
 @Composable
 fun PropertyMainFeaturesRow(
@@ -889,13 +874,6 @@ fun ActionButtonsSection(
             .padding(dimensions.paddingMedium),
         verticalArrangement = Arrangement.spacedBy(dimensions.spacingMedium)
     ) {
-        AppSecondaryButton(
-            onClick = { navController.navigate(Screen.AppointmentBookingScreen.route) },
-            text = "Fissa una Visita",
-            icon = Icons.Default.DateRange,
-            iconContentDescription = "Visit",
-            modifier = Modifier.fillMaxWidth()
-        )
         AppSecondaryButton(
             onClick = { navController.navigate(Screen.PriceProposalScreen.route) },
             text = "Fai un'Offerta",

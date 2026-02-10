@@ -34,6 +34,7 @@ playServicesMaps = "19.2.0"
 runtimeLivedata = "1.10.0"
 animationCore = "1.10.1"
 material3Version = "1.4.0"
+foundationVersion = "1.10.2"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -86,6 +87,7 @@ play-services-maps = { group = "com.google.android.gms", name = "play-services-m
 androidx-compose-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 androidx-compose-animation-core = { group = "androidx.compose.animation", name = "animation-core", version.ref = "animationCore" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3Version" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundationVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

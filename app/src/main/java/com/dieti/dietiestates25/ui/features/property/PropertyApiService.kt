@@ -59,4 +59,15 @@ interface PropertyApiService {
 
     @DELETE("api/immobili/{id}")
     suspend fun deleteImmobile(@Path("id") id: String): Response<Unit>
+
+
+    @Multipart
+    @POST("api/immobili/{id}/immagini")
+    suspend fun aggiungiImmagini(
+        @Path("id") id: String,
+        @Part immagini: List<MultipartBody.Part>
+    ): Response<ImmobileDTO>
+
+    @DELETE("api/immobili/immagini/{imageId}")
+    suspend fun eliminaImmagine(@Path("imageId") imageId: Int): Response<Unit>
 }

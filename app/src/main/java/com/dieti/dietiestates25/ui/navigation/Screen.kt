@@ -48,10 +48,6 @@ sealed class Screen(val route: String) {
 
     data object PriceProposalScreen : Screen("price_screen")
 
-    data object AppointmentBookingScreen : Screen("appointment_screen") {
-        fun withId(idProperty: String): String = "$route/${Uri.encode(idProperty)}"
-    }
-
     data object FullScreenMapScreen : Screen("fullscreen_map_screen") {
         fun withPosition(latitude: Double, longitude: Double, zoom: Float): String {
             return "$route/${Uri.encode(latitude.toString())}/${Uri.encode(longitude.toString())}/${Uri.encode(zoom.toString())}"

@@ -10,6 +10,16 @@ import java.io.InputStream
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.roundToInt
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Balcony
+import androidx.compose.material.icons.filled.Bathtub
+import androidx.compose.material.icons.filled.Countertops
+import androidx.compose.material.icons.filled.Garage
+import androidx.compose.material.icons.filled.KingBed
+import androidx.compose.material.icons.filled.MeetingRoom
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Weekend
+import androidx.compose.ui.graphics.vector.ImageVector
 
 object Utils {
 
@@ -136,7 +146,21 @@ fun String.capitalizeFirstLetter(): String {
     return this.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 }
 
-// Potresti aggiungere altre funzioni di utility qui, ad esempio:
-// - Validatori semplici (es. per email, se non usi librerie apposite)
-// - Funzioni per manipolare date (se non usi ThreeTenABP o java.time)
-// - Ecc.
+/**
+ * Funzione condivisa per mappare le stringhe (tipologia stanza) alle Icone Material.
+ * Accessibile da tutte le schermate nel package 'property'.
+ */
+fun getIconForRoomType(type: String): ImageVector {
+    val t = type.lowercase(Locale.ROOT)
+    return when {
+        t.contains("letto") || t.contains("camera") -> Icons.Default.KingBed
+        t.contains("bagno") -> Icons.Default.Bathtub
+        // Countertops è spesso incluso nelle extended, se non lo trovi usa Icons.Default.Kitchen o altro
+        t.contains("cucina") -> Icons.Default.Countertops
+        t.contains("soggiorno") || t.contains("salone") || t.contains("sala") -> Icons.Default.Weekend
+        t.contains("studio") -> Icons.Default.MenuBook
+        t.contains("balcone") || t.contains("terrazz") -> Icons.Default.Balcony
+        t.contains("garage") || t.contains("auto") -> Icons.Default.Garage
+        else -> Icons.Default.MeetingRoom
+    }
+}

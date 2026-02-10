@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import com.dieti.dietiestates25.data.local.UserPreferences
-import com.dieti.dietiestates25.data.remote.RetrofitClient // Importante per ripristinare il token
+import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.dieti.dietiestates25.ui.navigation.Navigation
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
@@ -31,62 +31,54 @@ class MainActivity : ComponentActivity() {
                 val context = LocalContext.current
                 var startDestination by remember { mutableStateOf<String?>(null) }
 
-                // Raccoglie lo stato di "Primo Avvio" dalle preferenze
                 val isFirstRunState = userPrefs.isFirstRun.collectAsState(initial = null)
-
-                // Validazione Sessione: controlla scadenza e restituisce ID se valido
                 val validSessionId = remember { SessionManager.validateAndRefreshSession(context) }
 
                 LaunchedEffect(isFirstRunState.value, validSessionId) {
                     val isFirstRun = isFirstRunState.value
 
-                    Log.d("MAIN_DEBUG", "Check Avvio: FirstRun=$isFirstRun, Session=$validSessionId")
-
-                    // Attendiamo che isFirstRun sia caricato (non null)
                     if (isFirstRun != null) {
-
-                        // 1. Se la sessione è valida (ID recuperato e non scaduta)
+                        // 1. Sessione Valida
                         if (!validSessionId.isNullOrEmpty()) {
 
-                            // RECUPERO DATI CRITICI: Token e Ruolo
+                            // RECUPERO DATI: Token e EMAIL (non nome)
                             val savedToken = SessionManager.getAuthToken(context)
-                            val savedRole = SessionManager.getUserRole(context) // Default "UTENTE"
+                            val savedEmail = SessionManager.getUserEmail(context) // FIX: Usa getUserEmail
+                            val savedRole = SessionManager.getUserRole(context)
 
-                            if (savedToken != null) {
-                                // --- PUNTO FONDAMENTALE ---
-                                // Ripristiniamo il token nel Client HTTP.
-                                // Senza questo, le chiamate API fallirebbero (es. assegnazione immobile).
+                            if (savedToken != null && savedEmail != null) {
+                                // RIPRISTINO RETROFIT CLIENT
                                 RetrofitClient.authToken = savedToken
-                                RetrofitClient.loggedUserEmail = SessionManager.getUserName(context) // O recupera email se salvata
+                                RetrofitClient.loggedUserEmail = savedEmail // Imposta l'email corretta
 
-                                // ROUTING BASATO SUL RUOLO
+                                Log.d("MainActivity", "Sessione ripristinata per $savedEmail ($savedRole)")
+
+                                // Routing
                                 startDestination = when (savedRole) {
                                     "ADMIN" -> Screen.AdminDashboardScreen.route
                                     "MANAGER" -> Screen.ManagerScreen.withIdUtente(validSessionId)
                                     else -> Screen.HomeScreen.withIdUtente(validSessionId)
                                 }
                             } else {
-                                // Se per assurdo abbiamo l'ID ma non il Token, forziamo il login
+                                // Dati incompleti -> Login
                                 startDestination = Screen.LoginScreen.route
                             }
 
                         } else if (isFirstRun) {
-                            // 2. Primo avvio assoluto -> Intro
-                            startDestination = "welcome_intro_screen"
+                            // 2. Primo avvio -> Intro
+                            startDestination = "welcome_intro_screen" // Assicurati che questa rotta esista nel tuo Navigation graph
                         } else {
-                            // 3. Sessione scaduta, logout o rememberMe=false -> Login
+                            // 3. Logout/Scaduto -> Login
                             startDestination = Screen.LoginScreen.route
                         }
                     }
                 }
 
-                // UI di caricamento mentre decidiamo la rotta
                 if (startDestination == null) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
                 } else {
-                    // Avvia la navigazione verso la destinazione calcolata
                     Navigation(startDestination = startDestination!!)
                 }
             }
