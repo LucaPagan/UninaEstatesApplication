@@ -8,14 +8,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -179,14 +177,34 @@ fun RecentSearchesSection(
                     shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
                     colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    modifier = Modifier.width(160.dp).height(100.dp)
+                    // Modifica: Altezza fissa ridotta e larghezza flessibile o fissa più ampia per il testo orizzontale
+                    modifier = Modifier
+                        .height(60.dp)
+                        .widthIn(min = 160.dp, max = 240.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.fillMaxSize().padding(dimensions.paddingMedium),
-                        verticalArrangement = Arrangement.SpaceBetween
+                    // Modifica: Row invece di Column per allineamento orizzontale
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = dimensions.paddingMedium),
+                        verticalAlignment = Alignment.CenterVertically, // Centra verticalmente icona e testo
+                        horizontalArrangement = Arrangement.Start
                     ) {
-                        Icon(Icons.Default.History, null, tint = colorScheme.primary)
-                        Text(text = query, style = typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = null,
+                            tint = colorScheme.primary
+                        )
+
+                        Spacer(modifier = Modifier.width(dimensions.spacingSmall))
+
+                        Text(
+                            text = query,
+                            style = typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1, // Meglio 1 linea per il layout orizzontale
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             }

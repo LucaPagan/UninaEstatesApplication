@@ -8,7 +8,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.dieti.dietiestates25.data.model.FilterModel
 import com.dieti.dietiestates25.ui.features.admin.*
 import com.dieti.dietiestates25.ui.features.property.ApartmentListingScreen
 import com.dieti.dietiestates25.ui.features.home.HomeScreen

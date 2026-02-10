@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +20,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.dieti.dietiestates25.data.remote.AdminOptionDTO
 import com.dieti.dietiestates25.data.remote.AgenziaOptionDTO
+import com.dieti.dietiestates25.ui.components.AppTopBar
+import com.dieti.dietiestates25.ui.theme.Dimensions
+import com.dieti.dietiestates25.ui.theme.typography
 
 // ... (AdminDashboardScreen e AdminActionCard rimangono uguali a prima) ...
 // Per completezza li includo minimizzati o uguali al passo precedente
@@ -33,11 +37,20 @@ fun AdminDashboardScreen(
     onLogout: () -> Unit,
     viewModel: AdminDashboardViewModel = viewModel()
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+    val typography = MaterialTheme.typography
+    val dimensions = Dimensions
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Dashboard Admin") },
-                actions = { IconButton(onClick = { viewModel.logout(); onLogout() }) { Icon(Icons.Default.Logout, "Logout") } }
+            AppTopBar(
+                title = "Dashboard Admin",
+                showAppIcon = true,
+                // Aggiungiamo il tasto logout anche nella TopBar per comodità (opzionale)
+                actionIcon = Icons.Default.Logout,
+                onActionClick = onLogout,
+                colorScheme = colorScheme,
+                typography = typography,
+                dimensions = dimensions
             )
         }
     ) { padding ->

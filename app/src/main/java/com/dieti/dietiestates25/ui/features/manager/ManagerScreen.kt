@@ -54,7 +54,7 @@ fun ManagerScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = "Area Manager",
+                title = "Dashboard Manager",
                 showAppIcon = true,
                 // Aggiungiamo il tasto logout anche nella TopBar per comodità (opzionale)
                 actionIcon = Icons.Default.Logout,

@@ -14,7 +14,6 @@ class ApartmentListingViewModel : ViewModel() {
 
     private val api = RetrofitClient.retrofit.create(PropertyApiService::class.java)
 
-
     private val _immobili = MutableStateFlow<List<ImmobileDTO>>(emptyList())
     val immobili = _immobili.asStateFlow()
 
@@ -42,6 +41,7 @@ class ApartmentListingViewModel : ViewModel() {
                     else -> null
                 }
 
+                // Ora i riferimenti a centerLat, centerLon e radiusKm funzioneranno
                 val results = api.getImmobili(
                     query = fullQuery,
                     tipoVendita = isVendita,
@@ -49,9 +49,14 @@ class ApartmentListingViewModel : ViewModel() {
                     maxPrezzo = filters?.maxPrice?.toInt(),
                     minMq = filters?.minSurface?.toInt(),
                     maxMq = filters?.maxSurface?.toInt(),
+                    minStanze = filters?.minRooms,
+                    maxStanze = filters?.maxRooms,
                     bagni = filters?.bathrooms,
                     condizione = filters?.condition,
-                    // Parametri geografici (se presenti nei filtri passati dalla mappa)
+                    // Parametri geografici per la ricerca su mappa
+                    lat = filters?.centerLat,
+                    lon = filters?.centerLon,
+                    radiusKm = filters?.radiusKm
                 )
 
                 _immobili.value = results

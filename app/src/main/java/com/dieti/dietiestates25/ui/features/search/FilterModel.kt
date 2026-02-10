@@ -1,4 +1,4 @@
-package com.dieti.dietiestates25.ui.features.search
+package com.dieti.dietiestates25.data.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
@@ -14,15 +14,9 @@ data class FilterModel(
     val maxRooms: Int? = null,
     val bathrooms: Int? = null,
     val condition: String? = null,
-    
-    // Parametri per la ricerca su mappa
+
+    // Parametri per la ricerca su mappa (Geo)
     val centerLat: Double? = null,
     val centerLon: Double? = null,
     val radiusKm: Double? = null
 ) : Parcelable
-
-// Enum per sapere da dove vengono aperti i filtri
-enum class FilterOriginScreen {
-    APARTMENT_LISTING,
-    MAP_SEARCH
-}
