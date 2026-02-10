@@ -50,7 +50,7 @@ fun AppOutlinedTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
-    typography: Typography = MaterialTheme.typography, // <-- PARAMETRO MODIFICATO
+    typography: Typography = MaterialTheme.typography,
     colorScheme: ColorScheme = MaterialTheme.colorScheme
 ) {
     var isFocused by remember { mutableStateOf(false) }

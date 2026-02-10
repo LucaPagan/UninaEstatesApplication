@@ -1,7 +1,6 @@
 package com.dieti.dietiestates25.ui.features.notification
 
 import android.content.res.Configuration
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,8 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.CircularProgressIndicator
@@ -70,14 +67,6 @@ data class NotificationMock(
     val isRead: Boolean
 )
 
-data class AppointmentMock(
-    val id: String,
-    val title: String,
-    val date: String,
-    val time: String,
-    val location: String
-)
-
 @Composable
 fun NotificationScreen(
     navController: NavController,
@@ -90,12 +79,10 @@ fun NotificationScreen(
 
     // --- GESTIONE STATO LOCALE ---
     var isLoading by remember { mutableStateOf(true) }
-    var isShowingAppointments by remember { mutableStateOf(false) }
     var currentTab by remember { mutableStateOf(NotificationTab.TUTTE) }
 
     // Liste dati
     var notifications by remember { mutableStateOf<List<NotificationMock>>(emptyList()) }
-    var appointments by remember { mutableStateOf<List<AppointmentMock>>(emptyList()) }
 
     // --- CARICAMENTO DATI SIMULATO ---
     LaunchedEffect(Unit) {
@@ -107,11 +94,6 @@ fun NotificationScreen(
             NotificationMock("2", "Promemoria Appuntamento", "Visita confermata per domani", "19/05/2024", true, true),
             NotificationMock("3", "Aggiornamento Prezzo", "Il prezzo dell'immobile in lista preferiti è sceso", "18/05/2024", false, true),
             NotificationMock("4", "Benvenuto", "Grazie per esserti registrato a DietiEstates!", "15/05/2024", false, true)
-        )
-
-        appointments = listOf(
-            AppointmentMock("1", "Visita Trilocale", "22/05/2024", "10:00", "Via Toledo 12"),
-            AppointmentMock("2", "Incontro Agente", "24/05/2024", "16:30", "Sede Centrale")
         )
 
         isLoading = false
@@ -135,10 +117,7 @@ fun NotificationScreen(
         }
     }
 
-    // Configurazione UI dinamica
-    val actionIcon = if (isShowingAppointments) Icons.Filled.Notifications else Icons.Filled.CalendarToday
-    val actionContentDescription = if (isShowingAppointments) "Mostra Notifiche" else "Mostra Appuntamenti"
-    val screenTitle = if (isShowingAppointments) "Appuntamenti" else "Notifiche"
+    val screenTitle = "Notifiche"
 
     val gradientColors = listOf(
         colorScheme.primary.copy(alpha = 0.7f),
@@ -151,12 +130,6 @@ fun NotificationScreen(
         topBar = {
             AppTopBar(
                 title = screenTitle,
-                actionIcon = actionIcon,
-                actionContentDescription = actionContentDescription,
-                onActionClick = { isShowingAppointments = !isShowingAppointments },
-                actionBackgroundColor = colorScheme.primaryContainer,
-                actionIconTint = colorScheme.onPrimaryContainer,
-                showAppIcon = true,
                 colorScheme = colorScheme,
                 typography = typography,
                 dimensions = dimensions
@@ -177,29 +150,16 @@ fun NotificationScreen(
                     CircularProgressIndicator(color = colorScheme.primary)
                 }
             } else {
-                if (isShowingAppointments) {
-                    AppointmentsScreenContent(
-                        appointments = appointments,
-                        onAppointmentClick = {
-                            // Navigazione finta o dettaglio
-                            Toast.makeText(context, "Dettaglio Appuntamento ${it.title}", Toast.LENGTH_SHORT).show()
-                        },
-                        dimensions = dimensions,
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-                } else {
-                    NotificationScreenContent(
-                        currentTab = currentTab,
-                        notifications = filteredNotifications,
-                        onTabSelected = { currentTab = it },
-                        onToggleFavorite = { id -> toggleFavorite(id) },
-                        navController = navController,
-                        dimensions = dimensions,
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-                }
+                NotificationScreenContent(
+                    currentTab = currentTab,
+                    notifications = filteredNotifications,
+                    onTabSelected = { currentTab = it },
+                    onToggleFavorite = { id -> toggleFavorite(id) },
+                    navController = navController,
+                    dimensions = dimensions,
+                    colorScheme = colorScheme,
+                    typography = typography
+                )
             }
         }
     }
@@ -251,54 +211,6 @@ private fun NotificationScreenContent(
 }
 
 @Composable
-private fun AppointmentsScreenContent(
-    appointments: List<AppointmentMock>,
-    onAppointmentClick: (AppointmentMock) -> Unit,
-    dimensions: Dimensions,
-    colorScheme: ColorScheme,
-    typography: Typography
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = dimensions.paddingMedium)
-    ) {
-        if (appointments.isEmpty()) {
-            EmptyDisplayView(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                message = "Nessun appuntamento programmato.",
-                dimensions = dimensions,
-                colorScheme = colorScheme,
-                typography = typography
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(
-                    horizontal = dimensions.paddingMedium,
-                    vertical = dimensions.paddingSmall
-                ),
-                verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
-            ) {
-                items(appointments, key = { it.id }) { appointment ->
-                    AppointmentItem(
-                        appointment = appointment,
-                        onClick = { onAppointmentClick(appointment) },
-                        dimensions = dimensions,
-                        colorScheme = colorScheme,
-                        typography = typography
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun NotificationsList(
     modifier: Modifier = Modifier,
     notifications: List<NotificationMock>,
@@ -344,7 +256,11 @@ fun NotificationItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
-            .background(if (notification.isRead) colorScheme.surfaceVariant else colorScheme.primaryContainer.copy(alpha = 0.3f))
+            .background(
+                if (notification.isRead) colorScheme.surfaceVariant else colorScheme.primaryContainer.copy(
+                    alpha = 0.3f
+                )
+            )
             .clickable(onClick = onClick)
             .padding(dimensions.paddingMedium),
         verticalAlignment = Alignment.CenterVertically
@@ -376,49 +292,6 @@ fun NotificationItem(
                 tint = if (notification.isFavorite) colorScheme.primary else colorScheme.onSurfaceVariant
             )
         }
-    }
-}
-
-@Composable
-fun AppointmentItem(
-    appointment: AppointmentMock,
-    onClick: () -> Unit,
-    dimensions: Dimensions,
-    colorScheme: ColorScheme,
-    typography: Typography
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(dimensions.cornerRadiusMedium))
-            .background(colorScheme.secondaryContainer.copy(alpha = 0.5f))
-            .clickable(onClick = onClick)
-            .padding(dimensions.paddingMedium),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = appointment.title,
-                style = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = colorScheme.onSecondaryContainer
-            )
-            Text(
-                text = "Luogo: ${appointment.location}",
-                style = typography.bodyMedium,
-                color = colorScheme.onSecondaryContainer
-            )
-            Spacer(modifier = Modifier.height(dimensions.spacingExtraSmall))
-            Text(
-                text = "${appointment.date} ore ${appointment.time}",
-                style = typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                color = colorScheme.primary
-            )
-        }
-        Icon(
-            imageVector = Icons.Filled.CalendarToday,
-            contentDescription = null,
-            tint = colorScheme.primary
-        )
     }
 }
 

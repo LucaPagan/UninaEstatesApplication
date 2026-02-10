@@ -38,8 +38,10 @@ fun HomeScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    // Controllo se l'utente è l'Admin (basato sull'ID impostato al login)
-    val isAdmin = idUtente == "ADMIN_SESSION"
+    // REFRESH AUTOMATICO: Ricarica i dati (e ripristina la sessione se serve) ogni volta che si entra
+    LaunchedEffect(Unit) {
+        viewModel.refreshData()
+    }
 
     Scaffold(
         topBar = {
@@ -83,8 +85,16 @@ fun HomeScreen(
                         }
                     }
                     is HomeUiState.Error -> {
-                        Box(modifier = Modifier.fillMaxWidth().padding(dimensions.paddingLarge), contentAlignment = Alignment.Center) {
-                            Text(text = "Errore caricamento dati.", color = colorScheme.error)
+                        // UI di errore con tasto Riprova
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(dimensions.paddingLarge),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(text = "Errore: ${state.message}", color = colorScheme.error, textAlign = TextAlign.Center)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(onClick = { viewModel.refreshData() }) {
+                                Text("Riprova")
+                            }
                         }
                     }
                     is HomeUiState.Success -> {

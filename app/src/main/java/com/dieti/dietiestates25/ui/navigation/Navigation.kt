@@ -15,14 +15,12 @@ import com.dieti.dietiestates25.ui.features.home.HomeScreen
 import com.dieti.dietiestates25.ui.features.notification.NotificationScreen
 import com.dieti.dietiestates25.ui.features.profile.ProfileScreen
 import com.dieti.dietiestates25.ui.features.property.PropertySellScreen
-import com.dieti.dietiestates25.ui.features.appointments.AppointmentBookingScreen
 import com.dieti.dietiestates25.ui.features.property.PriceProposalScreen
 import com.dieti.dietiestates25.ui.features.property.PropertyScreen
 import com.dieti.dietiestates25.ui.features.search.MapSearchScreen
 import com.dieti.dietiestates25.ui.features.search.SearchFilterScreen
 import com.dieti.dietiestates25.ui.features.auth.WelcomeScreen
 import com.dieti.dietiestates25.ui.features.search.SearchScreen
-import com.dieti.dietiestates25.ui.features.appointments.AppointmentDetailScreen
 import com.dieti.dietiestates25.ui.features.auth.LoginScreen
 import com.dieti.dietiestates25.ui.features.property.EditPropertyScreen
 import com.dieti.dietiestates25.ui.features.search.FullScreenMapScreen
@@ -178,17 +176,6 @@ fun Navigation(
             )
         }
 
-        composable(
-            route = "${Screen.AppointmentBookingScreen.route}/{idProperty}",
-            arguments = listOf(navArgument("idProperty") { type = NavType.StringType })
-        ) { entry ->
-            AppointmentBookingScreen(
-                navController = navController,
-                idUtente = "",
-                idImmobile = entry.arguments?.getString("idProperty") ?: ""
-            )
-        }
-
         composable(Screen.PriceProposalScreen.route) { PriceProposalScreen(navController) }
 
         composable(
@@ -219,7 +206,6 @@ fun Navigation(
             PropertySellScreen(navController, idUtente = entry.arguments?.getString("idUtente") ?: "")
         }
 
-        composable(route = Screen.AppointmentDetailScreen.route){ AppointmentDetailScreen(navController = navController, appointmentId = "") }
         composable(route = Screen.YourPropertyScreen.route) { YourPropertyScreen(navController = navController, idUtente = "") }
         composable(
             // Definiamo la rotta con il placeholder /{immobileId}
