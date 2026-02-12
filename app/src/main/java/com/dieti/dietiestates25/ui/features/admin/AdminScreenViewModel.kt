@@ -21,6 +21,7 @@ sealed class AdminOperationState {
     data class Error(val message: String) : AdminOperationState()
 }
 
+// Torniamo a ViewModel standard (non serve più AndroidViewModel per il Context)
 class AdminScreenViewModel : ViewModel() {
 
     private val api: AdminApiService = RetrofitClient.retrofit.create(AdminApiService::class.java)
@@ -51,17 +52,26 @@ class AdminScreenViewModel : ViewModel() {
         }
     }
 
-    // --- CREATE ACTIONS ---
+    // --- CREATE AGENZIA (Senza Geocoding Client-Side) ---
     fun createAgency(nome: String, indirizzo: String, adminId: String) {
         viewModelScope.launch {
             _operationState.value = AdminOperationState.Loading
+
+            if (adminId.isBlank()) {
+                _operationState.value = AdminOperationState.Error("Seleziona un Amministratore")
+                return@launch
+            }
+
             try {
-                if (adminId.isBlank()) {
-                    _operationState.value = AdminOperationState.Error("Seleziona un Amministratore")
-                    return@launch
-                }
-                val response = api.createAgency(CreateAgenziaRequest(nome, indirizzo, adminId))
-                handleResponse(response, "Agenzia creata!")
+                // Inviamo solo l'indirizzo testuale, il backend penserà alle coordinate
+                val request = CreateAgenziaRequest(
+                    nome = nome,
+                    indirizzo = indirizzo,
+                    adminId = adminId
+                )
+
+                val response = api.createAgency(request)
+                handleResponse(response, "Agenzia creata con successo!")
                 fetchAgencies() // Refresh
             } catch (e: Exception) { handleError(e) }
         }
@@ -101,7 +111,6 @@ class AdminScreenViewModel : ViewModel() {
         }
     }
 
-    // --- CHANGE PASSWORD (SELF) ---
     fun changeMyPassword(oldPass: String, newPass: String) {
         viewModelScope.launch {
             _operationState.value = AdminOperationState.Loading

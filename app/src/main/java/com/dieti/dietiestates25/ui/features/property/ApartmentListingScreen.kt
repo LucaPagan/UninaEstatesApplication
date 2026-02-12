@@ -1,7 +1,6 @@
 package com.dieti.dietiestates25.ui.features.property
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,18 +13,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
 import com.dieti.dietiestates25.data.model.FilterModel
 import com.dieti.dietiestates25.data.model.FilterOriginScreen
 import com.dieti.dietiestates25.data.remote.ImmobileDTO
 import com.dieti.dietiestates25.data.remote.RetrofitClient
-import com.dieti.dietiestates25.ui.components.AppPropertyViewButton
+import com.dieti.dietiestates25.ui.components.AppPropertyCard
 import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
 import com.dieti.dietiestates25.ui.features.search.SearchFilterScreen
 import com.dieti.dietiestates25.ui.navigation.Screen
@@ -117,11 +114,31 @@ fun ApartmentListingScreen(
                 }
 
                 items(items = immobili, key = { it.id }) { property ->
-                    RealPropertyCard(
-                        immobile = property,
-                        onClick = {
-                            navController.navigate(Screen.PropertyScreen.withId(property.id))
-                        }
+                    // FIX: Visualizzazione uniforme con la Home
+                    // Usiamo AppPropertyCard invece di RealPropertyCard per consistenza
+                    val imageUrl = property.immagini.firstOrNull()?.url?.let { RetrofitClient.getFullUrl(it) }
+
+                    // Calcolo bagni per dettagli
+                    val bagni = property.ambienti
+                        .filter { it.tipologia.contains("bagno", ignoreCase = true) }
+                        .sumOf { it.numero }
+
+                    val details = mutableListOf<String>().apply {
+                        property.categoria?.let { add(it) }
+                        property.mq?.let { add("$it mq") }
+                        if (bagni > 0) add("$bagni bagni")
+                    }
+
+                    AppPropertyCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp), // Altezza adatta per listing verticale
+                        price = if (property.tipoVendita) "€ ${property.prezzo?.let { String.format("%,d", it) } ?: "-"}" else "€ ${property.prezzo}/mese",
+                        imageUrl = imageUrl,
+                        address = property.indirizzo ?: property.localita ?: "Zona non specificata",
+                        details = details,
+                        onClick = { navController.navigate(Screen.PropertyScreen.withId(property.id)) },
+                        horizontalMode = false
                     )
                 }
             }
@@ -132,9 +149,6 @@ fun ApartmentListingScreen(
         ModalBottomSheet(
             onDismissRequest = { showFilterSheet = false },
             sheetState = sheetState,
-            // FIX CRITICO PER IL GIALLO:
-            // 1. containerColor deve essere surface (Bianco)
-            // 2. tonalElevation deve essere 0.dp per impedire che il Giallo del surfaceTint venga applicato
             containerColor = MaterialTheme.colorScheme.surface,
             tonalElevation = 0.dp,
             scrimColor = Color.Black.copy(alpha = 0.5f),
@@ -143,9 +157,7 @@ fun ApartmentListingScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    // Rimuoviamo defaultMinSize fisso o lo adattiamo se serve, ma lasciamo che il contenuto decida
                     .defaultMinSize(minHeight = 400.dp)
-                    // statusBarsPadding e navigationBarsPadding sono importanti per non finire sotto le barre di sistema
                     .statusBarsPadding()
                     .navigationBarsPadding()
             ) {
@@ -206,84 +218,6 @@ fun EmptyStateView(comune: String, activeFilters: FilterModel?, onReset: () -> U
             )
             if (activeFilters != null) {
                 Button(onClick = onReset) { Text("Resetta Filtri") }
-            }
-        }
-    }
-}
-
-@Composable
-fun RealPropertyCard(immobile: ImmobileDTO, onClick: () -> Unit) {
-    val dimensions = Dimensions
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(280.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(dimensions.cornerRadiusMedium),
-        elevation = CardDefaults.cardElevation(defaultElevation = dimensions.elevationSmall),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column {
-            Box(modifier = Modifier.weight(0.6f)) {
-                val imageUrl = immobile.immagini.firstOrNull()?.url?.let { RetrofitClient.getFullUrl(it) }
-
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize().background(Color.LightGray),
-                    contentScale = ContentScale.Crop
-                )
-
-                Surface(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                    shape = RoundedCornerShape(topStart = dimensions.cornerRadiusMedium, bottomEnd = dimensions.cornerRadiusMedium),
-                    modifier = Modifier.align(Alignment.TopStart)
-                ) {
-                    val prezzoFormat = if (immobile.tipoVendita) "€ ${immobile.prezzo?.let { String.format("%,d", it) } ?: "-"}" else "€ ${immobile.prezzo}/mese"
-                    Text(text = prezzoFormat, style = MaterialTheme.typography.labelLarge, color = Color.White, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
-                }
-            }
-
-            Column(
-                modifier = Modifier.weight(0.4f).padding(12.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        text = immobile.categoria ?: "Immobile",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = immobile.indirizzo ?: immobile.localita ?: "Zona non specificata",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val detailsList = mutableListOf<String>()
-                    immobile.mq?.let { detailsList.add("${it}mq") }
-                    val bagni = immobile.ambienti.filter { it.tipologia.contains("bagno", ignoreCase = true) }.sumOf { it.numero }
-                    if (bagni > 0) detailsList.add("$bagni bagni")
-
-                    Text(
-                        text = detailsList.joinToString(" • "),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    AppPropertyViewButton(onClick = onClick)
-                }
             }
         }
     }

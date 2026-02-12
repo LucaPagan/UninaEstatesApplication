@@ -1,6 +1,7 @@
 package com.dieti.dietiestates25.data.remote
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 // --- IMMOBILI ---
@@ -163,19 +164,6 @@ data class AppuntamentoDTO(
 )
 
 // --- OFFERTE ---
-data class OffertaRequest(
-    val utenteId: String,
-    val immobileId: String,
-    val importo: Int,
-    val corpo: String? = null
-)
-
-data class OffertaDTO(
-    val id: String,
-    val immobileTitolo: String,
-    val importo: Int,
-    val data: String
-)
 
 // --- NOTIFICHE ---
 data class NotificationDTO(
@@ -283,4 +271,25 @@ data class AgenteDTO(
     val id: String,
     val nome: String,
     val cognome: String,
+)
+
+data class OffertaRicevutaDTO(
+    val id: String,
+    val nomeOfferente: String,
+    val cognomeOfferente: String,
+    val prezzoOfferto: Int,
+    val immobileId: String,
+    val immobileTitolo: String,
+    val immobilePrezzoBase: Int,
+    val immagineUrl: String?,
+    val dataOfferta: String // Arriverà come stringa ISO dal backend
+)
+
+data class RichiestaDTO(
+    val id: String,
+    val titolo: String,
+    val descrizione: String?,
+    val stato: String,
+    val data: String,
+    val immagineUrl: String? // Aggiungi questo se manca!
 )

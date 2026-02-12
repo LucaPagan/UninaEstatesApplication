@@ -51,7 +51,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val response = apiService.registrazione(request)
                 if (response.isSuccessful && response.body() != null) {
                     val utente = response.body()!!
-                    salvaSessioneCompleta(utente, rememberMe, pass)
+                    salvaSessioneCompleta(utente, rememberMe)
                     _state.value = RegisterState.Success(utente)
                 } else {
                     _state.value = RegisterState.Error("Errore reg: ${response.code()}")
@@ -76,7 +76,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 val response = apiService.login(request)
                 if (response.isSuccessful && response.body() != null) {
                     val utente = response.body()!!
-                    salvaSessioneCompleta(utente, rememberMe, pass)
+                    salvaSessioneCompleta(utente, rememberMe)
                     _state.value = RegisterState.Success(utente)
                 } else {
                     val errMsg = response.errorBody()?.string() ?: "Errore ${response.code()}"
@@ -88,29 +88,29 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private suspend fun salvaSessioneCompleta(utente: UtenteResponseDTO, rememberMe: Boolean, passwordRaw: String? = null) {
+    private suspend fun salvaSessioneCompleta(utente: UtenteResponseDTO, rememberMe: Boolean) {
         RetrofitClient.loggedUserEmail = utente.email
 
-        var tokenToSave = ""
-        if (passwordRaw != null) {
-            val credentials = "${utente.email}:$passwordRaw"
-            val basicToken = "Basic " + android.util.Base64.encodeToString(credentials.toByteArray(), android.util.Base64.NO_WRAP)
-            tokenToSave = basicToken
-            RetrofitClient.authToken = basicToken
-        }
+        // FIX CRITICO: Generazione Token Bearer con UUID
+        // Il backend ora usa SimpleAuthFilter che si aspetta "Bearer <UUID>"
+        // Non usiamo più Basic Auth.
+        val tokenToSave = "Bearer ${utente.id}"
+
+        RetrofitClient.authToken = tokenToSave
+
+        Log.d("AUTH_VIEWMODEL", "Token generato: $tokenToSave per utente ${utente.id}")
 
         try {
             userPrefs.saveUserData(utente.id, utente.email)
             if (rememberMe) userPrefs.setFirstRunCompleted()
 
-            // FIX: Passiamo l'email corretta al SessionManager
             SessionManager.saveUserSession(
                 getApplication(),
                 utente.id,
                 "${utente.nome} ${utente.cognome}",
-                utente.email, // Email corretta qui
+                utente.email,
                 utente.ruolo ?: "UTENTE",
-                tokenToSave,
+                tokenToSave, // Salviamo il Bearer token corretto
                 rememberMe
             )
         } catch (e: Exception) {

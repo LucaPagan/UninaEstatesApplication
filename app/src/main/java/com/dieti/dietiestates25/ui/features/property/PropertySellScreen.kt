@@ -22,8 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -31,7 +31,7 @@ import com.dieti.dietiestates25.data.remote.AmbienteDto
 import com.dieti.dietiestates25.data.remote.ImmobileCreateRequest
 import com.dieti.dietiestates25.ui.components.*
 import com.dieti.dietiestates25.ui.navigation.Screen
-import com.dieti.dietiestates25.ui.utils.SessionManager // Importante per controllare il ruolo
+import com.dieti.dietiestates25.ui.utils.SessionManager
 
 @Composable
 fun PropertySellScreen(
@@ -44,14 +44,13 @@ fun PropertySellScreen(
     val scrollState = rememberScrollState()
 
     val formState by viewModel.formState.collectAsState()
-
-    // Recuperiamo il ruolo per decidere dove navigare dopo il successo
     val userRole = remember { SessionManager.getUserRole(context) ?: "UTENTE" }
 
     // --- FORM VARIABLES ---
     var tipoVendita by remember { mutableStateOf("Vendita") }
     var categoria by remember { mutableStateOf("") }
     var indirizzo by remember { mutableStateOf("") }
+    // RIMOSSO: var localita by remember { mutableStateOf("") }
     var mq by remember { mutableStateOf("") }
     var piano by remember { mutableStateOf("") }
     var ascensore by remember { mutableStateOf(false) }
@@ -64,12 +63,10 @@ fun PropertySellScreen(
     var speseCondominiali by remember { mutableStateOf("") }
     var descrizione by remember { mutableStateOf("") }
 
-    // --- AMBIENTI ---
     val addedAmbienti = remember { mutableStateListOf<AmbienteDto>() }
     var currentAmbienteType by remember { mutableStateOf("") }
     var currentAmbienteNum by remember { mutableStateOf("1") }
 
-    // --- PHOTO PICKER ---
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(),
@@ -79,262 +76,116 @@ fun PropertySellScreen(
     fun isFormValid(): Boolean {
         return categoria.isNotBlank() &&
                 indirizzo.isNotBlank() &&
+                // RIMOSSO: localita.isNotBlank() &&
                 mq.isNotBlank() &&
-                piano.isNotBlank() &&
-                arredamento.isNotBlank() &&
-                esposizione.isNotBlank() &&
-                statoProprieta.isNotBlank() &&
-                annoCostruzione.isNotBlank() &&
                 prezzo.isNotBlank() &&
-                speseCondominiali.isNotBlank() &&
-                descrizione.isNotBlank() &&
-                addedAmbienti.isNotEmpty() &&
                 selectedImageUris.isNotEmpty()
     }
 
     LaunchedEffect(formState) {
         when (formState) {
             is PropertyFormState.Success -> {
-                Toast.makeText(context, "Annuncio pubblicato con successo!", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Annuncio inviato! Sarà assegnato all'agenzia più vicina.", Toast.LENGTH_LONG).show()
                 viewModel.resetState()
-
-                // --- FIX NAVIGAZIONE ---
                 if (userRole == "MANAGER" || userRole == "ADMIN") {
-                    // Se sono un Manager, torno alla dashboard manager
-                    navController.navigate(Screen.ManagerScreen.withIdUtente(idUtente)) {
-                        // Rimuove tutto dallo stack fino alla ManagerScreen per forzare il refresh
-                        popUpTo(Screen.ManagerScreen.route) { inclusive = true }
-                    }
+                    navController.navigate(Screen.ManagerScreen.withIdUtente(idUtente)) { popUpTo(Screen.ManagerScreen.route) { inclusive = true } }
                 } else {
-                    // Utente normale
-                    navController.navigate(Screen.HomeScreen.withIdUtente(idUtente)) {
-                        popUpTo(Screen.HomeScreen.withIdUtente(idUtente)) { inclusive = true }
-                    }
+                    navController.navigate(Screen.HomeScreen.withIdUtente(idUtente)) { popUpTo(Screen.HomeScreen.route) { inclusive = true } }
                 }
             }
-            is PropertyFormState.Error -> {
-                // Handled in UI text
-            }
+            is PropertyFormState.Error -> { /* Gestito nella UI */ }
             else -> {}
         }
     }
 
-    val gradientColors = arrayOf(
-        0.0f to colorScheme.primary.copy(alpha = 0.1f),
-        1.0f to colorScheme.background
-    )
+    val gradientColors = arrayOf(0.0f to colorScheme.primary.copy(alpha = 0.1f), 1.0f to colorScheme.background)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(colorStops = gradientColors))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .systemBarsPadding()
-        ) {
-            GeneralHeaderBar(
-                title = "Inserimento Proprietà",
-                onBackClick = { navController.popBackStack() }
-            )
+    Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(colorStops = gradientColors))) {
+        Column(modifier = Modifier.fillMaxSize().systemBarsPadding()) {
+            GeneralHeaderBar(title = "Inserimento Proprietà", onBackClick = { navController.popBackStack() })
 
             if (formState is PropertyFormState.Loading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             } else {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .verticalScroll(scrollState)
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().weight(1f).verticalScroll(scrollState).padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-
-                    // --- SEZIONE 1: BASE ---
                     FormSection(title = "Dati Principali", isRequired = true) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             SegmentedButton("Vendita", tipoVendita == "Vendita", { tipoVendita = "Vendita" }, Modifier.weight(1f))
                             SegmentedButton("Affitto", tipoVendita == "Affitto", { tipoVendita = "Affitto" }, Modifier.weight(1f))
                         }
-
-                        DropdownMenuField("Categoria", categoria, { categoria = it },
-                            listOf("Residenziale", "Commerciale", "Industriale", "Terreno"))
+                        DropdownMenuField("Categoria", categoria, { categoria = it }, listOf("Residenziale", "Commerciale", "Industriale", "Terreno"))
 
                         OutlinedTextField(
-                            value = indirizzo,
-                            onValueChange = { indirizzo = it },
-                            label = { Text("Indirizzo Completo") },
+                            value = indirizzo, onValueChange = { indirizzo = it },
+                            // MODIFICA IMPORTANTE: Invito l'utente a inserire anche la città qui
+                            label = { Text("Indirizzo completo (Via, Civico, Città)") },
                             modifier = Modifier.fillMaxWidth(),
-                            leadingIcon = { Icon(Icons.Default.LocationOn, null) }
+                            leadingIcon = { Icon(Icons.Default.Place, null) }
                         )
+
+                        // RIMOSSO: Campo Località
                     }
 
-                    // --- SEZIONE 2: DETTAGLI TECNICI ---
                     FormSection(title = "Dettagli Tecnici", isRequired = true) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedTextField(
-                                value = mq,
-                                onValueChange = { if (it.all { c -> c.isDigit() }) mq = it },
-                                label = { Text("Mq") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.weight(1f)
-                            )
-                            OutlinedTextField(
-                                value = piano,
-                                onValueChange = { if (it.all { c -> c.isDigit() || c == '-' }) piano = it },
-                                label = { Text("Piano") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.weight(1f)
-                            )
+                            OutlinedTextField(value = mq, onValueChange = { if (it.all { c -> c.isDigit() }) mq = it }, label = { Text("Mq") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+                            OutlinedTextField(value = piano, onValueChange = { if (it.all { c -> c.isDigit() || c == '-' }) piano = it }, label = { Text("Piano") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
                         }
-
                         CheckboxField("Ascensore presente", ascensore, { ascensore = it })
-
-                        DropdownMenuField("Arredamento", arredamento, { arredamento = it },
-                            listOf("Non arredato", "Parzialmente arredato", "Arredato"))
-
+                        DropdownMenuField("Arredamento", arredamento, { arredamento = it }, listOf("Non arredato", "Parzialmente arredato", "Arredato"))
                         CheckboxField("Climatizzazione presente", climatizzazione, { climatizzazione = it })
-
-                        DropdownMenuField("Esposizione", esposizione, { esposizione = it },
-                            listOf("Nord", "Sud", "Est", "Ovest", "Doppia", "Multipla"))
-
-                        DropdownMenuField("Stato Proprietà", statoProprieta, { statoProprieta = it },
-                            listOf("Nuovo", "Ristrutturato", "Buono stato", "Da ristrutturare"))
-
-                        OutlinedTextField(
-                            value = annoCostruzione,
-                            onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) annoCostruzione = it },
-                            label = { Text("Anno Costruzione (YYYY)") },
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
+                        DropdownMenuField("Esposizione", esposizione, { esposizione = it }, listOf("Nord", "Sud", "Est", "Ovest", "Doppia", "Multipla"))
+                        DropdownMenuField("Stato Proprietà", statoProprieta, { statoProprieta = it }, listOf("Nuovo", "Ristrutturato", "Buono stato", "Da ristrutturare"))
+                        OutlinedTextField(value = annoCostruzione, onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) annoCostruzione = it }, label = { Text("Anno Costruzione (YYYY)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                     }
 
-                    // --- SEZIONE 3: ECONOMICA ---
                     FormSection(title = "Economica", isRequired = true) {
-                        OutlinedTextField(
-                            value = prezzo,
-                            onValueChange = { if (it.all { c -> c.isDigit() }) prezzo = it },
-                            label = { Text("Prezzo (€)") },
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
-                        OutlinedTextField(
-                            value = speseCondominiali,
-                            onValueChange = { if (it.all { c -> c.isDigit() }) speseCondominiali = it },
-                            label = { Text("Spese Condominiali (€/mese)") },
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
+                        OutlinedTextField(value = prezzo, onValueChange = { if (it.all { c -> c.isDigit() }) prezzo = it }, label = { Text("Prezzo (€)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                        OutlinedTextField(value = speseCondominiali, onValueChange = { if (it.all { c -> c.isDigit() }) speseCondominiali = it }, label = { Text("Spese Condominiali (€/mese)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                     }
 
-                    // --- SEZIONE 4: DESCRIZIONE ---
                     FormSection(title = "Descrizione", isRequired = true) {
-                        OutlinedTextField(
-                            value = descrizione,
-                            onValueChange = { descrizione = it },
-                            label = { Text("Descrizione") },
-                            modifier = Modifier.fillMaxWidth().height(100.dp),
-                            maxLines = 5
-                        )
+                        OutlinedTextField(value = descrizione, onValueChange = { descrizione = it }, label = { Text("Descrizione") }, modifier = Modifier.fillMaxWidth().height(100.dp), maxLines = 5)
                     }
 
-                    // --- SEZIONE 5: AMBIENTI ---
                     FormSection(title = "Ambienti", isRequired = true) {
-                        Text("Aggiungi i locali uno alla volta:", style = MaterialTheme.typography.bodyMedium)
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Box(modifier = Modifier.weight(2f)) {
-                                DropdownMenuField("Tipo", currentAmbienteType, { currentAmbienteType = it },
-                                    listOf("Cucina", "Soggiorno", "Camera da Letto", "Bagno", "Studio", "Balcone", "Giardino", "Altro"), required = false)
-                            }
-                            OutlinedTextField(
-                                value = currentAmbienteNum,
-                                onValueChange = { if(it.all { c -> c.isDigit() }) currentAmbienteNum = it },
-                                label = { Text("N.") },
-                                modifier = Modifier.weight(1f),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                            )
-                            Button(
-                                onClick = {
-                                    if (currentAmbienteType.isNotBlank() && currentAmbienteNum.isNotBlank()) {
-                                        addedAmbienti.add(AmbienteDto(currentAmbienteType, currentAmbienteNum.toInt()))
-                                        currentAmbienteType = ""
-                                        currentAmbienteNum = "1"
-                                    }
-                                },
-                                enabled = currentAmbienteType.isNotBlank()
-                            ) {
-                                Text("Add")
-                            }
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Box(modifier = Modifier.weight(2f)) { DropdownMenuField("Tipo", currentAmbienteType, { currentAmbienteType = it }, listOf("Cucina", "Soggiorno", "Camera da Letto", "Bagno", "Studio", "Balcone", "Giardino", "Altro"), required = false) }
+                            OutlinedTextField(value = currentAmbienteNum, onValueChange = { if(it.all { c -> c.isDigit() }) currentAmbienteNum = it }, label = { Text("N.") }, modifier = Modifier.weight(1f), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                            Button(onClick = { if (currentAmbienteType.isNotBlank() && currentAmbienteNum.isNotBlank()) { addedAmbienti.add(AmbienteDto(currentAmbienteType, currentAmbienteNum.toInt())); currentAmbienteType = ""; currentAmbienteNum = "1" } }, enabled = currentAmbienteType.isNotBlank()) { Text("Add") }
                         }
-
                         if (addedAmbienti.isNotEmpty()) {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceVariant)
-                            ) {
+                            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceVariant)) {
                                 Column(modifier = Modifier.padding(8.dp)) {
                                     addedAmbienti.forEachIndexed { index, item ->
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
+                                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                             Text("• ${item.numero}x ${item.tipologia}")
-                                            IconButton(onClick = { addedAmbienti.removeAt(index) }, modifier = Modifier.size(24.dp)) {
-                                                Icon(Icons.Default.Close, "Rimuovi", tint = colorScheme.error)
-                                            }
+                                            IconButton(onClick = { addedAmbienti.removeAt(index) }, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Close, "Rimuovi", tint = colorScheme.error) }
                                         }
                                         if (index < addedAmbienti.size - 1) Divider()
                                     }
                                 }
                             }
-                        } else {
-                            // Replaced 'caption' with 'bodySmall'
-                            Text("Nessun ambiente inserito", style = MaterialTheme.typography.bodySmall, color = colorScheme.error)
                         }
                     }
 
-                    // --- SEZIONE 6: IMMAGINI ---
                     FormSection(title = "Galleria", isRequired = true) {
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(150.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(colorScheme.surfaceVariant)
-                                .border(1.dp, if(selectedImageUris.isEmpty()) colorScheme.error else colorScheme.outline, RoundedCornerShape(12.dp))
-                                .clickable { photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                            modifier = Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(12.dp)).background(colorScheme.surfaceVariant).border(1.dp, if(selectedImageUris.isEmpty()) colorScheme.error else colorScheme.outline, RoundedCornerShape(12.dp)).clickable { photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(Icons.Default.AddPhotoAlternate, null, tint = colorScheme.primary, modifier = Modifier.size(32.dp))
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    if (selectedImageUris.isEmpty()) "Tocca per selezionare foto (Obbligatorio)"
-                                    else "${selectedImageUris.size} foto selezionate",
-                                    color = if (selectedImageUris.isEmpty()) colorScheme.error else colorScheme.onSurfaceVariant
-                                )
+                                Text(if (selectedImageUris.isEmpty()) "Tocca per selezionare foto (Obbligatorio)" else "${selectedImageUris.size} foto selezionate", color = if (selectedImageUris.isEmpty()) colorScheme.error else colorScheme.onSurfaceVariant)
                             }
                         }
                     }
 
                     if (formState is PropertyFormState.Error) {
-                        Text(
-                            text = (formState as PropertyFormState.Error).message,
-                            color = colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
+                        Text(text = (formState as PropertyFormState.Error).message, color = colorScheme.error, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -345,6 +196,7 @@ fun PropertySellScreen(
                                 tipoVendita = (tipoVendita == "Vendita"),
                                 categoria = categoria,
                                 indirizzo = indirizzo,
+                                localita = "", // Passiamo stringa vuota, il backend userà geoapify sull'indirizzo
                                 mq = mq.toIntOrNull(),
                                 piano = piano.toIntOrNull(),
                                 ascensore = ascensore,
@@ -356,33 +208,16 @@ fun PropertySellScreen(
                                 prezzo = prezzo.toIntOrNull(),
                                 speseCondominiali = speseCondominiali.toIntOrNull(),
                                 descrizione = descrizione,
-                                ambienti = addedAmbienti.toList(),
-                                localita = "",
+                                ambienti = addedAmbienti.toList()
                             )
-                            // Corrected Call: Added 'onSuccess = {}'
                             viewModel.submitAd(context, request, selectedImageUris, onSuccess = {})
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
                         enabled = isFormValid(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isFormValid()) colorScheme.primary else colorScheme.secondary
-                        )
-                    ) {
-                        Text("Pubblica Annuncio")
-                    }
+                        colors = ButtonDefaults.buttonColors(containerColor = if (isFormValid()) colorScheme.primary else colorScheme.secondary)
+                    ) { Text("Pubblica Annuncio") }
 
-                    if (!isFormValid()) {
-                        // Replaced 'caption' with 'bodySmall'
-                        Text(
-                            "Compila tutti i campi e aggiungi almeno un ambiente e una foto.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = colorScheme.error,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
-                    }
-
+                    if (!isFormValid()) Text("Compila tutti i campi obbligatori (inclusa Foto).", style = MaterialTheme.typography.bodySmall, color = colorScheme.error, modifier = Modifier.align(Alignment.CenterHorizontally))
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }

@@ -39,13 +39,12 @@ fun ManagerScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    // Carichiamo i dati all'avvio
     LaunchedEffect(idUtente) {
         viewModel.loadDashboardData(idUtente)
     }
 
     val onLogout = {
-        authViewModel.logout() // Usiamo la logica robusta di AuthViewModel
+        authViewModel.logout()
         navController.navigate(Screen.LoginScreen.route) {
             popUpTo(0) { inclusive = true }
         }
@@ -56,7 +55,6 @@ fun ManagerScreen(
             AppTopBar(
                 title = "Dashboard Manager",
                 showAppIcon = true,
-                // Aggiungiamo il tasto logout anche nella TopBar per comodità (opzionale)
                 actionIcon = Icons.Default.Logout,
                 onActionClick = onLogout,
                 colorScheme = colorScheme,
@@ -64,7 +62,6 @@ fun ManagerScreen(
                 dimensions = dimensions
             )
         }
-        // Nessuna BottomBar come richiesto
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -91,7 +88,8 @@ fun ManagerScreen(
                         count = uiState.notificationCount.toString(),
                         icon = Icons.Default.NotificationsActive,
                         modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate(Screen.NotificationScreen.route) }, // Azione integrata
+                        // FIX: Navigazione aggiornata alla schermata notifiche manager
+                        onClick = { navController.navigate(Screen.ManagerNotificationScreen.route) },
                         dimensions = dimensions,
                         typography = typography,
                         colorScheme = colorScheme
@@ -99,9 +97,9 @@ fun ManagerScreen(
                     StatCard(
                         title = "Proposte",
                         count = uiState.proposalCount.toString(),
-                        icon = Icons.Default.Description, // O icona Proposte
+                        icon = Icons.Default.Description,
                         modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate(Screen.RequestsScreen.withIdUtente(idUtente)) }, // Azione integrata
+                        onClick = { navController.navigate(Screen.RequestsScreen.withIdUtente(idUtente)) },
                         dimensions = dimensions,
                         typography = typography,
                         colorScheme = colorScheme
@@ -119,9 +117,6 @@ fun ManagerScreen(
 
                 Spacer(modifier = Modifier.height(dimensions.spacingMedium))
 
-                // --- PULSANTI DI NAVIGAZIONE RIMASTI ---
-
-                // Pulsante per vedere gli immobili personali
                 ManagerMenuButton(
                     text = "Visualizza i tuoi immobili",
                     onClick = { navController.navigate(Screen.YourPropertyScreen.route) },
@@ -133,8 +128,6 @@ fun ManagerScreen(
 
                 Spacer(modifier = Modifier.height(dimensions.spacingExtraLarge))
 
-                // --- AZIONI OPERATIVE ---
-
                 AppPrimaryButton(
                     text = "Pubblica Annuncio",
                     onClick = { navController.navigate(Screen.PropertySellScreen.withIdUtente(idUtente)) },
@@ -142,16 +135,12 @@ fun ManagerScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Pulsante SOLO SE CAPO
                 if (uiState.isCapo) {
                     Spacer(modifier = Modifier.height(dimensions.spacingMedium))
 
                     AppSecondaryButton(
                         text = "Crea un Agente",
-                        onClick = {
-                            // Navigazione verso la registrazione (o schermata dedicata creazione agente)
-                            navController.navigate(Screen.RegisterScreen.route)
-                        },
+                        onClick = { navController.navigate(Screen.RegisterScreen.route) },
                         icon = Icons.Default.PersonAdd,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -163,43 +152,37 @@ fun ManagerScreen(
     }
 }
 
-// Componente Helper per le Card dei Contatori con pulsante circolare integrato
+// ... (StatCard resta uguale) ...
 @Composable
 fun StatCard(
     title: String,
     count: String,
     icon: ImageVector,
-    onClick: () -> Unit, // Callback per il click
+    onClick: () -> Unit,
     modifier: Modifier,
     dimensions: Dimensions,
     typography: Typography,
     colorScheme: ColorScheme,
 ) {
     Card(
-        modifier = modifier.height(dimensions.infoCardHeight), // Altezza leggermente aumentata per ospitare il bottone
+        modifier = modifier.height(dimensions.infoCardHeight),
         colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = dimensions.elevationSmall),
         shape = RoundedCornerShape(dimensions.cornerRadiusMedium)
     ) {
-        Box( // Usiamo Box per sovrapporre il pulsante nell'angolo
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(dimensions.paddingMedium)
+        Box(
+            modifier = Modifier.fillMaxSize().padding(dimensions.paddingMedium)
         ) {
-            // Contenuto principale (Icona e Testi)
             Column(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Icona colorata
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = colorScheme.primary,
                     modifier = Modifier.size(dimensions.iconSizeExtraLarge)
                 )
-
-                // Numeri e Titolo
                 Column {
                     Text(
                         text = count,
@@ -214,27 +197,16 @@ fun StatCard(
                     )
                 }
             }
-
-            // Pulsante Circolare nell'angolo in basso a destra
             CircularIconActionButton(
                 onClick = onClick,
-                iconVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, // Freccia per indicare navigazione
+                iconVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "Vai a $title",
-                modifier = Modifier.align(Alignment.BottomEnd), // Posizionato in basso a destra
+                modifier = Modifier.align(Alignment.BottomEnd),
                 backgroundColor = colorScheme.surfaceDim,
                 iconTint = colorScheme.primary,
-                buttonSize = dimensions.iconSizeLarge, // Leggermente più piccolo del standard se serve
+                buttonSize = dimensions.iconSizeLarge,
                 iconSize = dimensions.iconSizeMedium
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ManagerScreenPreview() {
-    val navController = rememberNavController()
-    DietiEstatesTheme {
-        ManagerScreen(navController = navController, idUtente = "admin_test")
     }
 }

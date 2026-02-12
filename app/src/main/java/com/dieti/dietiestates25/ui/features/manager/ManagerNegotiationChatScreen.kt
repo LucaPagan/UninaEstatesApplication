@@ -1,4 +1,4 @@
-package com.dieti.dietiestates25.ui.features.notification
+package com.dieti.dietiestates25.ui.features.manager
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
@@ -18,38 +18,39 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.dieti.dietiestates25.data.remote.MessaggioTrattativaDTO
 import com.dieti.dietiestates25.data.remote.RetrofitClient
-import com.dieti.dietiestates25.data.remote.UserResponseRequest
 import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
+import com.dieti.dietiestates25.ui.features.notification.ChatBubble
 import com.dieti.dietiestates25.ui.utils.SessionManager
 import kotlinx.coroutines.launch
 
 @Composable
-fun NegotiationDetailScreen(
+fun ManagerNegotiationChatScreen(
     navController: NavController,
     offertaId: String
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val userId = SessionManager.getUserId(context) ?: ""
+    // Qui otteniamo l'ID dell'Agente
+    val agentId = SessionManager.getUserId(context) ?: ""
 
     var history by remember { mutableStateOf<List<MessaggioTrattativaDTO>>(emptyList()) }
     var canReply by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) }
-    var showDialog by remember { mutableStateOf(false) } // Per controproposta
+    var showDialog by remember { mutableStateOf(false) }
 
-    // Funzione per caricare i dati
     fun loadHistory() {
         scope.launch {
             isLoading = true
             try {
-                // Ora notificationService è disponibile in RetrofitClient
-                val res = RetrofitClient.notificationService.getStoriaTrattativa(offertaId, userId)
+                // Usiamo lo stesso endpoint della history, passando l'ID Agente come viewer
+                val res = RetrofitClient.notificationService.getStoriaTrattativa(offertaId, agentId)
                 if (res.isSuccessful) {
                     history = res.body()?.cronologia ?: emptyList()
+                    // Il backend calcola automaticamente 'canReply' basandosi sull'ID viewer (Agente)
                     canReply = res.body()?.canUserReply ?: false
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "Errore caricamento: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Errore caricamento chat", Toast.LENGTH_SHORT).show()
             } finally {
                 isLoading = false
             }
@@ -58,20 +59,27 @@ fun NegotiationDetailScreen(
 
     LaunchedEffect(Unit) { loadHistory() }
 
-    // Funzione invio risposta
     fun sendResponse(esito: String, prezzo: Int? = null, msg: String? = null) {
         scope.launch {
             isLoading = true
             try {
-                val req = UserResponseRequest(offertaId, userId, esito, prezzo, msg)
-                // Ora notificationService è disponibile
-                val res = RetrofitClient.notificationService.inviaRispostaUtente(req)
+                // Usiamo il DTO di risposta per il manager
+                val req = RispostaRequest(offertaId, agentId, esito, prezzo, msg)
+                val res = RetrofitClient.managerService.inviaRisposta(req)
+                
                 if (res.isSuccessful) {
-                    Toast.makeText(context, "Risposta inviata!", Toast.LENGTH_SHORT).show()
-                    loadHistory() // Ricarica la chat
+                    Toast.makeText(context, "Risposta inviata", Toast.LENGTH_SHORT).show()
+                    loadHistory()
+                } else {
+                    Toast.makeText(context, "Errore invio: ${res.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "Errore rete", Toast.LENGTH_SHORT).show()
+                // Gestione crash JSON (Response<Unit>)
+                if (e is java.io.EOFException) {
+                    loadHistory()
+                } else {
+                    Toast.makeText(context, "Errore rete", Toast.LENGTH_SHORT).show()
+                }
             } finally {
                 isLoading = false
             }
@@ -80,26 +88,21 @@ fun NegotiationDetailScreen(
 
     Scaffold(
         topBar = {
-            // FIX: Parametro nominato onBackClick obbligatorio
+            // FIX: Uso del parametro nominato 'onBackClick' per evitare ambiguità con 'actions'
             GeneralHeaderBar(
-                title = "Dettaglio Trattativa",
+                title = "Trattativa",
                 onBackClick = { navController.popBackStack() }
             )
         }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-
-            // CHAT LIST
             LazyColumn(
                 modifier = Modifier.weight(1f).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(history) { msg ->
-                    ChatBubble(msg)
-                }
+                items(history) { msg -> ChatBubble(msg) }
             }
 
-            // ACTION BUTTONS (Solo se tocca all'utente)
             if (canReply) {
                 Surface(shadowElevation = 8.dp, modifier = Modifier.fillMaxWidth()) {
                     Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -109,20 +112,19 @@ fun NegotiationDetailScreen(
                     }
                 }
             } else {
-                Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                    Text(
-                        text = if (history.lastOrNull()?.tipo == "ACCETTATA") "Trattativa conclusa con successo!"
-                        else if (history.lastOrNull()?.tipo == "RIFIUTATA") "Trattativa chiusa."
-                        else "In attesa di risposta dall'agente...",
-                        modifier = Modifier.padding(16.dp),
-                        color = Color.Gray
-                    )
+                val lastStatus = history.lastOrNull()?.tipo
+                val infoText = when(lastStatus) {
+                    "ACCETTATA" -> "Trattativa conclusa con successo."
+                    "RIFIUTATA" -> "Trattativa interrotta."
+                    else -> "In attesa dell'utente..."
+                }
+                Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth()) {
+                    Text(infoText, Modifier.padding(16.dp), color = Color.Gray)
                 }
             }
         }
     }
 
-    // DIALOG CONTROPROPOSTA
     if (showDialog) {
         var price by remember { mutableStateOf("") }
         var msg by remember { mutableStateOf("") }
@@ -133,39 +135,18 @@ fun NegotiationDetailScreen(
                 Column {
                     OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Prezzo €") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                     Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(value = msg, onValueChange = { msg = it }, label = { Text("Messaggio (Opzionale)") })
+                    OutlinedTextField(value = msg, onValueChange = { msg = it }, label = { Text("Messaggio") })
                 }
             },
             confirmButton = {
                 Button(onClick = {
-                    val p = price.toIntOrNull()
-                    if (p != null) {
-                        sendResponse("CONTROPROPOSTA", p, msg)
+                    price.toIntOrNull()?.let {
+                        sendResponse("CONTROPROPOSTA", it, msg)
                         showDialog = false
                     }
                 }) { Text("Invia") }
             },
             dismissButton = { TextButton({ showDialog = false }) { Text("Annulla") } }
         )
-    }
-}
-
-@Composable
-fun ChatBubble(msg: MessaggioTrattativaDTO) {
-    val align = if (msg.isMe) Alignment.End else Alignment.Start
-    val bg = if (msg.isMe) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-
-    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = align) {
-        Surface(shape = RoundedCornerShape(12.dp), color = bg, shadowElevation = 1.dp) {
-            Column(Modifier.padding(12.dp)) {
-                Text(if (msg.isMe) "Tu" else msg.autoreNome, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                if (msg.prezzo != null) {
-                    Text("Proposta: € ${String.format("%,d", msg.prezzo)}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                }
-                Text(msg.testo)
-                Spacer(Modifier.height(4.dp))
-                Text(msg.tipo, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-            }
-        }
     }
 }

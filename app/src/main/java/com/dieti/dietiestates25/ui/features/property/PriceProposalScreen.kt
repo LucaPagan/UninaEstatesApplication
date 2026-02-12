@@ -1,79 +1,80 @@
 package com.dieti.dietiestates25.ui.features.property
 
 import android.annotation.SuppressLint
-import com.dieti.dietiestates25.ui.components.AppPrimaryButton
-import com.dieti.dietiestates25.ui.theme.Dimensions
-
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.Typography
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.AppOutlinedTextField
+import com.dieti.dietiestates25.ui.components.AppPrimaryButton
 import com.dieti.dietiestates25.ui.components.GeneralHeaderBar
+import com.dieti.dietiestates25.ui.theme.Dimensions
+// Import necessari per correggere gli errori 'getValue' e 'collectAsState'
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PriceProposalScreen(
-    navController: NavController
+    navController: NavController,
+    immobileId: String?,
+    viewModel: PriceProposalViewModel = viewModel()
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
+    val context = LocalContext.current
+
+    // Caricamento dati immobile
+    val immobileData by viewModel.immobileData.collectAsState()
+
+    LaunchedEffect(immobileId) {
+        if (immobileId != null) {
+            viewModel.loadImmobileData(immobileId)
+        }
+    }
+
+    // Prezzo base dinamico
+    val startingPrice = immobileData?.prezzo?.toDouble() ?: 0.0
+    val placeholder = immobileData?.prezzo?.let { String.format("%,d", it) } ?: "0"
 
     var proposedPrice by remember { mutableStateOf("") }
-    val placeholder = "110.000"
-    val startingPrice = 129500.0
-
     val focusManager = LocalFocusManager.current
     val haptic = LocalHapticFeedback.current
+
+    // Ora questo funziona perché abbiamo gli import corretti
+    val uiState by viewModel.proposalState.collectAsState()
+
+    LaunchedEffect(uiState) {
+        when (uiState) {
+            is ProposalState.Success -> {
+                navController.popBackStack()
+                viewModel.resetState()
+            }
+            else -> {}
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -84,16 +85,31 @@ fun PriceProposalScreen(
             )
         },
         bottomBar = {
-            PriceProposalBottomBar(
-                proposedPrice = proposedPrice,
-                placeholder = placeholder,
-                haptic = haptic,
-                onProposeClick = { price ->
-                    println("Prezzo proposto: $price")
-                },
-                dimensions = dimensions,
-                colorScheme = colorScheme
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(colorScheme.background)
+                        .padding(dimensions.paddingMedium),
+                ) {
+                    AppPrimaryButton(
+                        onClick = {
+                            if (uiState !is ProposalState.Loading && immobileId != null) {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                val finalPrice = if (proposedPrice.isEmpty()) placeholder else proposedPrice
+                                viewModel.sendProposal(immobileId, finalPrice, context = context)
+                            }
+                        },
+                        text = if (uiState is ProposalState.Loading) "Invio in corso..." else "Proponi",
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = uiState !is ProposalState.Loading
+                    )
+                }
+            }
         }
     ) { paddingValues ->
         Box(
@@ -102,9 +118,7 @@ fun PriceProposalScreen(
                 .background(colorScheme.surface)
                 .padding(paddingValues)
                 .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
-                        focusManager.clearFocus()
-                    })
+                    detectTapGestures(onTap = { focusManager.clearFocus() })
                 }
         ) {
             Column(
@@ -112,299 +126,93 @@ fun PriceProposalScreen(
                     .fillMaxSize()
                     .imePadding()
             ) {
-                InformationCard(
-                    text = "Proponi un nuovo prezzo all'inserzionista, senza impegno, adatto al tuo budget",
-                    dimensions = dimensions,
-                    colorScheme = colorScheme,
-                    typography = typography
-                )
+                // Gestione Errore
+                if (uiState is ProposalState.Error) {
+                    val errorMessage = (uiState as ProposalState.Error).message
+                    Text(
+                        text = errorMessage,
+                        color = colorScheme.error,
+                        modifier = Modifier.padding(dimensions.paddingMedium)
+                    )
+                }
 
-                StartingPriceRow(
-                    startingPrice = startingPrice,
-                    dimensions = dimensions,
-                    colorScheme = colorScheme,
-                    typography = typography
-                )
+                // Info Card
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(dimensions.paddingMedium),
+                    colors = CardDefaults.cardColors(containerColor = colorScheme.secondary),
+                    shape = RoundedCornerShape(dimensions.cornerRadiusSmall),
+                    border = BorderStroke(dimensions.borderStrokeSmall, colorScheme.outline)
+                ) {
+                    Text(
+                        text = "Proponi un nuovo prezzo all'inserzionista, senza impegno, adatto al tuo budget",
+                        modifier = Modifier.padding(dimensions.paddingMedium),
+                        style = typography.bodyMedium,
+                        color = colorScheme.onSecondary
+                    )
+                }
 
-                YourProposalRow(
-                    proposedPrice = proposedPrice,
-                    onProposedPriceChange = { proposedPrice = it },
-                    placeholder = placeholder,
-                    focusManager = focusManager,
-                    haptic = haptic,
-                    dimensions = dimensions,
-                    colorScheme = colorScheme,
-                    typography = typography
-                )
+                // Starting Price Row
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(dimensions.paddingMedium),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Prezzo di partenza", style = typography.bodyLarge, color = colorScheme.onBackground)
+                    Text(
+                        text = if(startingPrice > 0.0) "€${String.format("%,.0f", startingPrice)}" else "Caricamento...",
+                        style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                        color = colorScheme.onBackground
+                    )
+                }
 
-                PriceDifferenceRow(
-                    proposedPrice = proposedPrice,
-                    startingPrice = startingPrice,
-                    dimensions = dimensions,
-                    colorScheme = colorScheme,
-                    typography = typography
-                )
+                // Proposal Input Row
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = dimensions.paddingMedium),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("La tua proposta", style = typography.bodyLarge, color = colorScheme.onBackground)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start,
+                        modifier = Modifier.width(dimensions.infoCardHeight),
+                    ) {
+                        AppOutlinedTextField(
+                            value = proposedPrice,
+                            onValueChange = { newValue ->
+                                if (newValue.all { it.isDigit() || it == '.' }) {
+                                    if (newValue.isNotEmpty()) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    proposedPrice = newValue
+                                }
+                            },
+                            placeholder = {
+                                if (proposedPrice.isEmpty()) Text(placeholder, style = typography.bodyLarge, color = colorScheme.primary.copy(alpha = 0.5f))
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            colorScheme = colorScheme,
+                            typography = typography
+                        )
+                        IconButton(onClick = { proposedPrice = ""; focusManager.clearFocus() }) {
+                            Icon(Icons.Default.Cancel, "Cancella", tint = colorScheme.primary)
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.weight(1f))
+            }
 
-                InformationNoteCard(
-                    text = "Il prezzo è stato elaborato da un professionista immobiliare. Per mantenere coerenza con il mercato, puoi fare un'offerta con una variazione massima del 15%",
-                    dimensions = dimensions,
-                    colorScheme = colorScheme,
-                    typography = typography
-                )
+            if (uiState is ProposalState.Loading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = colorScheme.primary)
+                }
             }
         }
     }
-}
-
-@Composable
-private fun PriceProposalBottomBar(
-    proposedPrice: String,
-    placeholder: String,
-    haptic: HapticFeedback,
-    onProposeClick: (Double) -> Unit,
-    dimensions: Dimensions,
-    colorScheme: ColorScheme = MaterialTheme.colorScheme
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(colorScheme.background)
-                .padding(dimensions.paddingMedium),
-        ) {
-            AppPrimaryButton(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    val priceValue =
-                        if (proposedPrice.isEmpty()) placeholder.replace(".", "").toDoubleOrNull() ?: 0.0
-                        else proposedPrice.replace(".", "").toDoubleOrNull() ?: 0.0
-                    onProposeClick(priceValue)
-                },
-                text = "Proponi",
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    }
-}
-
-@Composable
-private fun InformationCard(
-    text: String,
-    dimensions: Dimensions,
-    colorScheme: ColorScheme = MaterialTheme.colorScheme,
-    typography: Typography = MaterialTheme.typography
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(dimensions.paddingMedium),
-        colors = CardDefaults.cardColors(containerColor = colorScheme.secondary),
-        shape = RoundedCornerShape(dimensions.cornerRadiusSmall),
-        border = BorderStroke(dimensions.borderStrokeSmall, colorScheme.outline)
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(dimensions.paddingMedium),
-            style = typography.bodyMedium,
-            color = colorScheme.onSecondary
-        )
-    }
-}
-
-@SuppressLint("DefaultLocale")
-@Composable
-private fun StartingPriceRow(
-    startingPrice: Double,
-    dimensions: Dimensions,
-    colorScheme: ColorScheme = MaterialTheme.colorScheme,
-    typography: Typography = MaterialTheme.typography
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(dimensions.paddingMedium),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Prezzo di partenza",
-            style = typography.bodyLarge,
-            color = colorScheme.onBackground
-        )
-        Text(
-            text = "€${String.format("%,.0f", startingPrice)}",
-            style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = colorScheme.onBackground
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun YourProposalRow(
-    proposedPrice: String,
-    onProposedPriceChange: (String) -> Unit,
-    placeholder: String,
-    focusManager: FocusManager,
-    haptic: HapticFeedback,
-    dimensions: Dimensions,
-    colorScheme: ColorScheme = MaterialTheme.colorScheme,
-    typography: Typography = MaterialTheme.typography
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = dimensions.paddingMedium),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "La tua proposta",
-            style = typography.bodyLarge,
-            color = colorScheme.onBackground
-        )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start,
-            modifier = Modifier.width(dimensions.infoCardHeight),
-        ) {
-            AppOutlinedTextField(
-                value = proposedPrice,
-                onValueChange = { newValue ->
-                    if (newValue.all { it.isDigit() || it == '.' }) {
-                        if (newValue.isNotEmpty()) {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        }
-                        onProposedPriceChange(newValue)
-                    }
-                },
-                placeholder = {
-                    if (proposedPrice.isEmpty()) {
-                        Text(
-                            text = placeholder,
-                            style = typography.bodyLarge.copy(textAlign = TextAlign.Start),
-                            color = colorScheme.primary.copy(alpha = 0.5f)
-                        )
-                    }
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    cursorColor = colorScheme.primary,
-                    focusedTextColor = colorScheme.primary,
-                    unfocusedTextColor = colorScheme.primary,
-                    focusedPlaceholderColor = colorScheme.primary.copy(alpha = 0.5f),
-                    unfocusedPlaceholderColor = colorScheme.primary.copy(alpha = 0.5f)
-                ),
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-                colorScheme = colorScheme,
-                typography = typography
-            )
-            Spacer(modifier = Modifier.width(dimensions.spacingSmall))
-            IconButton(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onProposedPriceChange("")
-                    focusManager.clearFocus()
-                },
-                modifier = Modifier.size(dimensions.iconSizeMedium)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Cancel,
-                    contentDescription = "Cancella proposta",
-                    tint = colorScheme.primary
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PriceDifferenceRow(
-    proposedPrice: String,
-    startingPrice: Double,
-    dimensions: Dimensions,
-    colorScheme: ColorScheme = MaterialTheme.colorScheme,
-    typography: Typography = MaterialTheme.typography
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(dimensions.paddingMedium),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Differenza di prezzo",
-            style = typography.bodyLarge,
-            color = colorScheme.onBackground
-        )
-        val differencePercent = if (proposedPrice.isNotBlank()) {
-            try {
-                val proposedPriceValue = proposedPrice.replace(".", "").toDouble()
-                val calculatedPercent = (proposedPriceValue - startingPrice) / startingPrice * 100
-                minOf(calculatedPercent, 100.0)
-            } catch (e: NumberFormatException) { 0.0 }
-        } else { 0.0 }
-        val priceDifferenceText = String.format("%.1f%%", differencePercent)
-        val differenceColor = when {
-            differencePercent > 0.0 -> colorScheme.onBackground
-            differencePercent == 0.0 -> colorScheme.onBackground
-            differencePercent > -12.0 -> colorScheme.primary
-            differencePercent >= -15.0 -> colorScheme.tertiary
-            else -> colorScheme.error
-        }
-        Box(
-            modifier = Modifier
-                .clip(CircleShape)
-                .background(differenceColor)
-                .padding(horizontal = dimensions.paddingMedium, vertical = dimensions.paddingSmall),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = priceDifferenceText,
-                color = if (differenceColor == colorScheme.onBackground) colorScheme.background else colorScheme.surface,
-                style = typography.labelLarge
-            )
-        }
-    }
-}
-
-@Composable
-private fun InformationNoteCard(
-    text: String,
-    dimensions: Dimensions,
-    colorScheme: ColorScheme = MaterialTheme.colorScheme,
-    typography: Typography = MaterialTheme.typography
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(dimensions.paddingMedium),
-        colors = CardDefaults.cardColors(containerColor = colorScheme.secondary),
-        shape = RoundedCornerShape(dimensions.cornerRadiusSmall),
-        border = BorderStroke(dimensions.borderStrokeSmall, colorScheme.outline)
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(dimensions.paddingMedium),
-            style = typography.bodySmall,
-            color = colorScheme.onSecondary
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PriceProposalScreenPreview() {
-    val navController = rememberNavController()
-    PriceProposalScreen(navController = navController)
 }
