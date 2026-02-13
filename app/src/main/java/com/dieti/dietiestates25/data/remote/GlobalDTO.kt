@@ -1,5 +1,6 @@
 package com.dieti.dietiestates25.data.remote
 
+import com.dieti.dietiestates25.data.model.modelsource.PhonePrefix
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -115,6 +116,18 @@ data class ImmobileDetailDTO(
 )
 
 // --- UTENTI ---
+data class ProfileData(
+    val name: String,
+    val email: String,
+    val selectedPrefix: PhonePrefix,
+    val phoneNumberWithoutPrefix: String,
+
+    // Questi sono i campi che mancavano e causavano l'errore "Unresolved reference"
+    val notifTrattative: Boolean = true,
+    val notifPubblicazione: Boolean = true,
+    val notifNuoviImmobili: Boolean = true
+)
+
 data class UtenteRegistrazioneRequest(
     val nome: String,
     val cognome: String,
@@ -130,8 +143,13 @@ data class UtenteResponseDTO(
     val email: String,
     val telefono: String?,
     val ruolo: String,
+
+    // Campi aggiunti per le notifiche
+    val notifTrattative: Boolean = true,
+    val notifPubblicazione: Boolean = true,
+    val notifNuoviImmobili: Boolean = true,
+
     val preferiti: List<ImmobileSummaryDTO> = emptyList(),
-    // Nuovo campo per gestire i dati del Manager
     val agenziaNome: String? = null
 )
 

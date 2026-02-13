@@ -4,8 +4,10 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.dieti.dietiestates25.data.model.ProfileData
+// Import fondamentale corretto
 import com.dieti.dietiestates25.data.model.modelsource.PhonePrefix
+import com.dieti.dietiestates25.data.remote.NotificationPreferencesRequest
+import com.dieti.dietiestates25.data.remote.ProfileData
 import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.dieti.dietiestates25.data.remote.UtenteResponseDTO
 import com.dieti.dietiestates25.ui.utils.SessionManager
@@ -18,7 +20,6 @@ sealed class ProfileUiState {
     object Loading : ProfileUiState()
     data class Success(val data: ProfileData) : ProfileUiState()
     data class Error(val message: String) : ProfileUiState()
-    // Nuovo stato per segnalare l'avvenuta cancellazione
     object UserDeleted : ProfileUiState()
 }
 
@@ -65,7 +66,6 @@ class ProfileViewModel : ViewModel() {
                     _uiState.value = ProfileUiState.Success(profileData)
                 } else {
                     if (response.code() == 404) {
-                        // Se l'utente non esiste più, puliamo tutto
                         SessionManager.logout(context)
                         _uiState.value = ProfileUiState.Error("Utente non trovato (404). Logout eseguito.")
                     } else {
@@ -78,7 +78,44 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    // --- NUOVA FUNZIONE ELIMINAZIONE ---
+    fun updateNotificationPreference(
+        trattative: Boolean? = null,
+        pubblicazione: Boolean? = null,
+        nuoviImmobili: Boolean? = null
+    ) {
+        val currentState = _uiState.value
+        if (currentState is ProfileUiState.Success) {
+            val oldData = currentState.data
+
+            // Ora questi riferimenti funzioneranno perché ProfileData è aggiornato
+            val newTrattative = trattative ?: oldData.notifTrattative
+            val newPubblicazione = pubblicazione ?: oldData.notifPubblicazione
+            val newNuovi = nuoviImmobili ?: oldData.notifNuoviImmobili
+
+            val newData = oldData.copy(
+                notifTrattative = newTrattative,
+                notifPubblicazione = newPubblicazione,
+                notifNuoviImmobili = newNuovi
+            )
+
+            _uiState.value = ProfileUiState.Success(newData)
+
+            viewModelScope.launch {
+                try {
+                    val request = NotificationPreferencesRequest(
+                        notifTrattative = newTrattative,
+                        notifPubblicazione = newPubblicazione,
+                        notifNuoviImmobili = newNuovi
+                    )
+                    RetrofitClient.notificationService.updatePreferences(request)
+                    Log.d("ProfileVM", "Preferenze notifiche aggiornate sul server")
+                } catch (e: Exception) {
+                    Log.e("ProfileVM", "Errore aggiornamento preferenze", e)
+                }
+            }
+        }
+    }
+
     fun deleteProfile(context: Context) {
         viewModelScope.launch {
             _uiState.value = ProfileUiState.Loading
@@ -90,20 +127,14 @@ class ProfileViewModel : ViewModel() {
             }
 
             try {
-                Log.d("PROFILE_DEBUG", "Eliminazione utente: $userId")
                 val response = profileService.deleteUser(userId)
-
                 if (response.isSuccessful) {
-                    Log.d("PROFILE_DEBUG", "Utente eliminato con successo dal DB.")
-                    // Logout locale per pulire le preferenze
                     SessionManager.logout(context)
-                    // Segnaliamo alla UI che è stato cancellato
                     _uiState.value = ProfileUiState.UserDeleted
                 } else {
                     _uiState.value = ProfileUiState.Error("Errore eliminazione: ${response.code()}")
                 }
             } catch (e: Exception) {
-                Log.e("PROFILE_DEBUG", "Errore rete eliminazione", e)
                 _uiState.value = ProfileUiState.Error("Errore rete: ${e.message}")
             }
         }
@@ -113,21 +144,26 @@ class ProfileViewModel : ViewModel() {
         val fullPhone = dto.telefono ?: ""
         val foundPrefix = availablePrefixes.firstOrNull { fullPhone.startsWith(it.prefix) }
         val fullName = "${dto.nome} ${dto.cognome}".trim()
-        val preferitiList = dto.preferiti
 
         return if (foundPrefix != null) {
             ProfileData(
                 name = fullName,
                 email = dto.email,
                 selectedPrefix = foundPrefix,
-                phoneNumberWithoutPrefix = fullPhone.removePrefix(foundPrefix.prefix).trim()
+                phoneNumberWithoutPrefix = fullPhone.removePrefix(foundPrefix.prefix).trim(),
+                notifTrattative = dto.notifTrattative,
+                notifPubblicazione = dto.notifPubblicazione,
+                notifNuoviImmobili = dto.notifNuoviImmobili
             )
         } else {
             ProfileData(
                 name = fullName,
                 email = dto.email,
                 selectedPrefix = availablePrefixes.first(),
-                phoneNumberWithoutPrefix = fullPhone
+                phoneNumberWithoutPrefix = fullPhone,
+                notifTrattative = dto.notifTrattative,
+                notifPubblicazione = dto.notifPubblicazione,
+                notifNuoviImmobili = dto.notifNuoviImmobili
             )
         }
     }

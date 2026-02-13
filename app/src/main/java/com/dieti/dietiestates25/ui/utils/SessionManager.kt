@@ -3,13 +3,20 @@ package com.dieti.dietiestates25.ui.utils
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import com.dieti.dietiestates25.data.remote.FcmTokenRequest
+import com.dieti.dietiestates25.data.remote.RetrofitClient
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 object SessionManager {
     private const val PREF_NAME = "UninaEstatesSession"
+    private const val FCM_PREF_NAME = "FCM_PREFS"
 
     private const val KEY_USER_ID = "user_id"
     private const val KEY_USER_NAME = "user_name"
-    private const val KEY_USER_EMAIL = "user_email" // NUOVO CAMPO
+    private const val KEY_USER_EMAIL = "user_email"
     private const val KEY_USER_ROLE = "user_role"
     private const val KEY_AUTH_TOKEN = "auth_token"
 
@@ -24,7 +31,7 @@ object SessionManager {
         context: Context,
         userId: String,
         nome: String,
-        email: String, // Parametro Aggiunto
+        email: String,
         ruolo: String,
         token: String,
         rememberMe: Boolean
@@ -33,7 +40,7 @@ object SessionManager {
 
         editor.putString(KEY_USER_ID, userId)
         editor.putString(KEY_USER_NAME, nome)
-        editor.putString(KEY_USER_EMAIL, email) // Salviamo l'email
+        editor.putString(KEY_USER_EMAIL, email)
         editor.putString(KEY_USER_ROLE, ruolo)
         editor.putString(KEY_AUTH_TOKEN, token)
 
@@ -45,6 +52,43 @@ object SessionManager {
         }
 
         editor.apply()
+
+        // --- NUOVO: Sincronizzazione Token FCM al login ---
+        syncFcmToken(context, token)
+    }
+
+    private fun syncFcmToken(context: Context, authToken: String) {
+        // 1. Controlla se c'è un token in sospeso salvato dal Service
+        val fcmPrefs = context.getSharedPreferences(FCM_PREF_NAME, Context.MODE_PRIVATE)
+        val pendingToken = fcmPrefs.getString("pending_token", null)
+
+        if (pendingToken != null) {
+            sendTokenToBackend(pendingToken, authToken)
+            fcmPrefs.edit().remove("pending_token").apply()
+        } else {
+            // 2. Se non c'è, chiedi a Firebase il token attuale
+            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    Log.w("SessionManager", "Fetching FCM registration token failed", task.exception)
+                    return@addOnCompleteListener
+                }
+                val token = task.result
+                sendTokenToBackend(token, authToken)
+            }
+        }
+    }
+
+    private fun sendTokenToBackend(fcmToken: String, authToken: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Assicuriamoci che Retrofit abbia il token di auth
+                RetrofitClient.authToken = authToken
+                RetrofitClient.notificationService.updateFcmToken(FcmTokenRequest(fcmToken))
+                Log.d("SessionManager", "Token FCM sincronizzato dopo il login")
+            } catch (e: Exception) {
+                Log.e("SessionManager", "Errore sync FCM", e)
+            }
+        }
     }
 
     fun saveAuthToken(context: Context, token: String) {
@@ -88,13 +132,11 @@ object SessionManager {
 
     fun logout(context: Context) {
         val editor = getPrefs(context).edit()
-        editor.remove(KEY_USER_ID)
-        editor.remove(KEY_USER_NAME)
-        editor.remove(KEY_USER_EMAIL)
-        editor.remove(KEY_USER_ROLE)
-        editor.remove(KEY_AUTH_TOKEN)
-        editor.remove(KEY_EXPIRY_TIME)
+        editor.clear() // Pulisce tutto
         editor.apply()
+
+        // Opzionale: Si potrebbe chiamare un endpoint di logout per rimuovere il token FCM lato server
+        // per evitare notifiche dopo il logout, ma Firebase gestisce bene i token invalidi.
     }
 
     fun isLoggedIn(context: Context): Boolean = getUserId(context) != null

@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
     id("kotlin-parcelize")
+    id("com.google.gms.google-services") version "4.4.4" apply false
     id ("org.jetbrains.kotlin.plugin.serialization") version ("1.9.23") // Usa la tua versione di Kotlin
 }
 
@@ -76,6 +77,14 @@ dependencies {
     // Coil (Per caricare le immagini dagli URL/Byte)
     implementation(libs.coil.compose)
 
+    //Notifiche
+    // 1. Aggiungi questa riga per la BOM (Gestisce le versioni automaticamente)
+    // BOM: Gestisce tutte le versioni di Firebase
+    implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
+
+    // Messaging: NOTA che NON c'è la versione e NON c'è "-ktx"
+    implementation(libs.firebase.messaging)
+
     // Retrofit (Network)
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0") // O Moshi/Kotlinx.serialization
@@ -100,7 +109,7 @@ dependencies {
     implementation(libs.androidx.compose.animation.core)
 
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.foundation)
+    implementation(libs.firebase.messaging)
 
     // Debug
     debugImplementation(libs.ui.tooling)

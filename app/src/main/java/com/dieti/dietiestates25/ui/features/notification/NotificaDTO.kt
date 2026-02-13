@@ -4,6 +4,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -13,6 +14,14 @@ data class NotificaDTO(
     val corpo: String,
     val data: String,
     val letto: Boolean
+)
+
+data class FcmTokenRequest(val token: String)
+
+data class NotificationPreferencesRequest(
+    val notifTrattative: Boolean,
+    val notifPubblicazione: Boolean,
+    val notifNuoviImmobili: Boolean
 )
 
 // DTO Aggiornato con i campi per il dettaglio manager
@@ -55,6 +64,11 @@ data class UserResponseRequest(
 
 interface NotificationApiService {
 
+    @POST("api/notifications/token")
+    suspend fun updateFcmToken(@Body request: FcmTokenRequest): Response<Unit>
+
+    @PUT("api/notifications/preferences")
+    suspend fun updatePreferences(@Body request: NotificationPreferencesRequest): Response<Unit>
     @GET("api/notifiche/utente/{userId}")
     suspend fun getNotificheUtente(@Path("userId") userId: String): Response<List<NotificaDTO>>
 
