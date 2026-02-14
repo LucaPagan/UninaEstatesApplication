@@ -1,64 +1,42 @@
 package com.dieti.dietiestates25.ui.features.profile
 
-import android.content.res.Configuration
-import android.util.Log
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.Typography
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.data.remote.ProfileData
-import com.dieti.dietiestates25.ui.components.AppBottomNavigation
-import com.dieti.dietiestates25.ui.components.DeleteConfirmAlertDialog
-import com.dieti.dietiestates25.ui.components.LogoutConfirmAlertDialog
-import com.dieti.dietiestates25.ui.components.AppPrimaryButton
-import com.dieti.dietiestates25.ui.components.AppRedButton
-import com.dieti.dietiestates25.ui.components.AppTopBar
-import com.dieti.dietiestates25.ui.navigation.Screen
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import com.dieti.dietiestates25.ui.components.*
 import com.dieti.dietiestates25.ui.theme.Dimensions
 import com.dieti.dietiestates25.ui.utils.SessionManager
 import com.dieti.dietiestates25.ui.features.auth.AuthViewModel
@@ -70,32 +48,72 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel()
 ) {
-    Log.d("PROFILE_UI", "Screen started. ID: $idUtente")
-
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsState()
 
-    // Caricamento dati
+    // --- STATO PERMESSI NOTIFICHE (Sistema Android) ---
+    var hasNotificationPermission by remember {
+        mutableStateOf(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+            } else {
+                true
+            }
+        )
+    }
+
+    // Launcher per richiedere il permesso
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            hasNotificationPermission = isGranted
+            if (isGranted) {
+                Toast.makeText(context, "Notifiche attivate!", Toast.LENGTH_SHORT).show()
+                // Ricarichiamo il profilo per sincronizzare il token se necessario
+                viewModel.loadUserProfile(context, idUtente)
+            } else {
+                Toast.makeText(context, "Notifiche disabilitate. Potrai attivarle dalle impostazioni.", Toast.LENGTH_LONG).show()
+            }
+        }
+    )
+
+    // Funzione per aprire le impostazioni di sistema se il permesso è stato negato permanentemente
+    val openAppSettings = {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
+        }
+        context.startActivity(intent)
+    }
+
+    // Observer per aggiornare lo stato del permesso quando l'app torna in primo piano (onResume)
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    hasNotificationPermission = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) == PackageManager.PERMISSION_GRANTED
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    // Caricamento dati iniziale
     LaunchedEffect(idUtente) {
         viewModel.loadUserProfile(context, idUtente)
     }
 
-    // Gestione stato 'Utente Eliminato'
-    LaunchedEffect(uiState) {
-        if (uiState is ProfileUiState.UserDeleted) {
-            Toast.makeText(context, "Profilo eliminato definitivamente.", Toast.LENGTH_LONG).show()
-            authViewModel.logout()
-            navController.navigate(Screen.LoginScreen.route) {
-                popUpTo(0) { inclusive = true }
-            }
-        }
-    }
-
-    // Funzioni di callback
+    // Gestione Logout/Delete
     val onLogout = {
         authViewModel.logout()
         Toast.makeText(context, "Logout effettuato", Toast.LENGTH_SHORT).show()
-        navController.navigate(Screen.LoginScreen.route) {
+        navController.navigate("LoginScreen") {
             popUpTo(0) { inclusive = true }
         }
     }
@@ -111,7 +129,14 @@ fun ProfileScreen(
         onLogout = onLogout,
         onDelete = { viewModel.deleteProfile(context) },
         onRetry = { viewModel.loadUserProfile(context, idUtente) },
-        onUpdateNotification = onUpdateNotification
+        onUpdateNotification = onUpdateNotification,
+        hasNotificationPermission = hasNotificationPermission,
+        onRequestPermission = {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        },
+        onOpenSettings = openAppSettings
     )
 }
 
@@ -123,7 +148,10 @@ fun ProfileScreenContent(
     onLogout: () -> Unit,
     onDelete: () -> Unit,
     onRetry: () -> Unit,
-    onUpdateNotification: (Boolean?, Boolean?, Boolean?) -> Unit
+    onUpdateNotification: (Boolean?, Boolean?, Boolean?) -> Unit,
+    hasNotificationPermission: Boolean,
+    onRequestPermission: () -> Unit,
+    onOpenSettings: () -> Unit
 ) {
     val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
@@ -134,20 +162,23 @@ fun ProfileScreenContent(
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    // --- LOGICA VISIBILITÀ IMPOSTAZIONI ---
     val sessionUserId = remember { SessionManager.getUserId(context) }
     val userRole = remember { SessionManager.getUserRole(context) }
 
-    // È il mio profilo se l'ID passato è nullo (default) oppure coincide con il mio ID sessione
+    // MODIFICA CRITICA: Aggiunto controllo per keyword "session" e "utente"
+    // Questo risolve il bug della scomparsa dei settings quando si naviga tramite NavBar
     val isMyProfile by remember(idUtente, sessionUserId) {
-        derivedStateOf { idUtente == null || idUtente == sessionUserId }
+        derivedStateOf {
+            idUtente == null ||
+                    idUtente == "session" ||
+                    idUtente == "utente" ||
+                    idUtente == "{idUtente}" || // Gestione parametri di default Navigation
+                    idUtente == sessionUserId
+        }
     }
 
-    // Mostriamo i settings solo se è il mio profilo E non sono un manager
-    // (I manager, da backend, hanno i settings hardcoded a true per ora)
+    // Mostra settings se è il mio profilo e NON sono manager
     val showSettings = isMyProfile && userRole != "MANAGER"
-
-    // Mostriamo i tasti azione (Logout/Delete) solo se è il mio profilo
     val showActions = isMyProfile
 
     val gradientColors = listOf(
@@ -157,7 +188,6 @@ fun ProfileScreenContent(
         colorScheme.primary.copy(alpha = 0.6f)
     )
 
-    // Fallback per navigation bar: se idUtente è null, usa quello di sessione
     val navId = idUtente ?: sessionUserId ?: "utente"
 
     Scaffold(
@@ -209,6 +239,9 @@ fun ProfileScreenContent(
                             onUpdateNotification = onUpdateNotification,
                             showSettings = showSettings,
                             showActions = showActions,
+                            hasNotificationPermission = hasNotificationPermission,
+                            onRequestPermission = onRequestPermission,
+                            onOpenSettings = onOpenSettings,
                             typography = typography,
                             colorScheme = colorScheme,
                             dimensions = dimensions
@@ -251,7 +284,7 @@ private fun ErrorContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(dimensions.paddingLarge)
         ) {
-            Icon(Icons.Default.Warning, null, tint = colorScheme.error, modifier = Modifier.height(48.dp).width(48.dp))
+            Icon(Icons.Default.Warning, null, tint = colorScheme.error, modifier = Modifier.size(48.dp))
             Spacer(modifier = Modifier.height(dimensions.spacingMedium))
             Text("Ops! Qualcosa non va.", style = typography.titleMedium, color = colorScheme.onSurface)
 
@@ -276,6 +309,9 @@ private fun ProfileInnerContent(
     onUpdateNotification: (Boolean?, Boolean?, Boolean?) -> Unit,
     showSettings: Boolean,
     showActions: Boolean,
+    hasNotificationPermission: Boolean,
+    onRequestPermission: () -> Unit,
+    onOpenSettings: () -> Unit,
     typography: Typography,
     colorScheme: ColorScheme,
     dimensions: Dimensions
@@ -298,28 +334,79 @@ private fun ProfileInnerContent(
 
         ProfileReadOnlyFields(profileData, colorScheme, typography, dimensions)
 
-        // --- SEZIONE NOTIFICHE (Solo se è il mio profilo E non sono manager) ---
+        // --- SEZIONE NOTIFICHE ---
         if (showSettings) {
-            Text(
-                text = "Impostazioni Notifiche",
-                style = typography.titleMedium,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
+                    .fillMaxWidth()
                     .padding(top = dimensions.spacingLarge, bottom = dimensions.paddingMedium)
-                    .align(Alignment.Start)
-            )
+            ) {
+                Icon(
+                    if (hasNotificationPermission) Icons.Default.Notifications else Icons.Default.NotificationsOff,
+                    contentDescription = null,
+                    tint = if (hasNotificationPermission) colorScheme.primary else colorScheme.error
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Impostazioni Notifiche",
+                    style = typography.titleMedium
+                )
+            }
+
+            // --- BOX PERMESSI DI SISTEMA ---
+            // Se l'utente non ha i permessi di sistema, mostriamo un box per abilitarli
+            if (!hasNotificationPermission) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = colorScheme.errorContainer),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = dimensions.paddingMedium)
+                        .clickable { onRequestPermission() } // Cliccando si tenta di chiedere il permesso
+                ) {
+                    Column(modifier = Modifier.padding(dimensions.paddingMedium)) {
+                        Text(
+                            text = "Notifiche disabilitate dal sistema",
+                            style = typography.labelLarge,
+                            color = colorScheme.onErrorContainer
+                        )
+                        Text(
+                            text = "Non riceverai notifiche push. Tocca qui per abilitarle o vai nelle impostazioni.",
+                            style = typography.bodySmall,
+                            color = colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row {
+                            Button(
+                                onClick = onRequestPermission,
+                                colors = ButtonDefaults.buttonColors(containerColor = colorScheme.error)
+                            ) {
+                                Text("Abilita Ora", color = Color.White)
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            OutlinedButton(
+                                onClick = onOpenSettings,
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = colorScheme.error)
+                            ) {
+                                Text("Impostazioni")
+                            }
+                        }
+                    }
+                }
+            }
 
             NotificationSettingsSection(
                 profileData = profileData,
                 onUpdate = onUpdateNotification,
                 colorScheme = colorScheme,
                 typography = typography,
-                dimensions = dimensions
+                dimensions = dimensions,
+                isEnabled = hasNotificationPermission // Opzionale: puoi disabilitare gli switch se non c'è permesso, o lasciarli attivi per le preferenze DB
             )
         }
 
         Spacer(modifier = Modifier.height(dimensions.spacingLarge))
 
-        // --- PULSANTI AZIONE (Solo se è il mio profilo) ---
         if (showActions) {
             ProfileActionButtons(onLogoutClick, onDeleteClick, dimensions)
             Spacer(modifier = Modifier.height(dimensions.spacingLarge))
@@ -333,7 +420,8 @@ private fun NotificationSettingsSection(
     onUpdate: (Boolean?, Boolean?, Boolean?) -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions
+    dimensions: Dimensions,
+    isEnabled: Boolean // Passiamo lo stato dei permessi
 ) {
     Column(
         modifier = Modifier
@@ -439,13 +527,4 @@ private fun ProfileActionButtons(onLogoutClick: () -> Unit, onDeleteProfileClick
     AppPrimaryButton(onClick = onLogoutClick, text = "Esci Dal Profilo", modifier = Modifier.fillMaxWidth())
     Spacer(modifier = Modifier.height(dimensions.spacingMedium))
     AppRedButton(onClick = onDeleteProfileClick, text = "Elimina Profilo", modifier = Modifier.fillMaxWidth())
-}
-
-@Preview(name = "Light Mode", showBackground = true)
-@Composable
-fun ProfileScreenPreviewLight() {
-    val mockData = ProfileData("Mario Rossi", "mario@email.it", com.dieti.dietiestates25.data.model.modelsource.PhonePrefix("+39", "", ""), "3331234567")
-    DietiEstatesTheme {
-        ProfileScreenContent(rememberNavController(), "id", ProfileUiState.Success(mockData), {}, {}, {}, { _, _, _ -> })
-    }
 }

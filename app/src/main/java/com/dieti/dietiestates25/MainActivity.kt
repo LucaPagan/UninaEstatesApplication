@@ -13,11 +13,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import com.dieti.dietiestates25.data.local.UserPreferences
+import com.dieti.dietiestates25.data.remote.FcmTokenRequest
 import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.dieti.dietiestates25.ui.navigation.Navigation
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.utils.SessionManager
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,6 +57,26 @@ class MainActivity : ComponentActivity() {
                                 RetrofitClient.loggedUserEmail = savedEmail // Imposta l'email corretta
 
                                 Log.d("MainActivity", "Sessione ripristinata per $savedEmail ($savedRole)")
+
+                                // --- AGGIUNTA FONDAMENTALE PER NOTIFICHE ---
+                                // Aggiorna il token FCM all'avvio se l'utente è loggato
+                                FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        val token = task.result
+                                        // Usiamo Dispatchers.IO per la chiamata di rete in background
+                                        CoroutineScope(Dispatchers.IO).launch {
+                                            try {
+                                                RetrofitClient.notificationService.updateFcmToken(FcmTokenRequest(token))
+                                                Log.d("FCM_STARTUP", "Token aggiornato all'avvio: ${token.take(10)}...")
+                                            } catch (e: Exception) {
+                                                Log.e("FCM_STARTUP", "Errore aggiornamento token avvio", e)
+                                            }
+                                        }
+                                    } else {
+                                        Log.w("FCM_STARTUP", "Fetching FCM registration token failed", task.exception)
+                                    }
+                                }
+                                // -------------------------------------------
 
                                 // Routing
                                 startDestination = when (savedRole) {
