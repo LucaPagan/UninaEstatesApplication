@@ -1,5 +1,6 @@
 package com.dieti.dietiestates25.ui.features.manager
 
+import ManagerNotificationsViewModel
 import android.app.Application
 import android.widget.Toast
 import androidx.compose.foundation.background

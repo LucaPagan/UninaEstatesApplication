@@ -4,13 +4,15 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-// Import fondamentale corretto
 import com.dieti.dietiestates25.data.model.modelsource.PhonePrefix
+import com.dieti.dietiestates25.data.remote.FcmTokenRequest
 import com.dieti.dietiestates25.data.remote.NotificationPreferencesRequest
 import com.dieti.dietiestates25.data.remote.ProfileData
 import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.dieti.dietiestates25.data.remote.UtenteResponseDTO
 import com.dieti.dietiestates25.ui.utils.SessionManager
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,12 +60,20 @@ class ProfileViewModel : ViewModel() {
                 return@launch
             }
 
+            // 1. CARICAMENTO PROFILO
             try {
                 val response = profileService.getUserProfile(finalUserId)
                 if (response.isSuccessful && response.body() != null) {
                     val dto = response.body()!!
                     val profileData = mapDtoToProfileData(dto)
                     _uiState.value = ProfileUiState.Success(profileData)
+
+                    // 2. SINCRONIZZAZIONE TOKEN CRITICA
+                    // Se è il mio profilo, aggiorno il token FCM sul server per essere sicuro di ricevere notifiche
+                    if (finalUserId == sessionUserId) {
+                        syncFcmToken()
+                    }
+
                 } else {
                     if (response.code() == 404) {
                         SessionManager.logout(context)
@@ -78,6 +88,31 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
+    // Funzione fondamentale: Prende il token attuale e lo manda al backend
+    private fun syncFcmToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("ProfileVM", "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+
+            // Get new FCM registration token
+            val token = task.result
+            sendTokenToBackend(token)
+        })
+    }
+
+    private fun sendTokenToBackend(token: String) {
+        viewModelScope.launch {
+            try {
+                RetrofitClient.notificationService.updateFcmToken(FcmTokenRequest(token))
+                Log.d("ProfileVM", "Token sincronizzato con successo: $token")
+            } catch (e: Exception) {
+                Log.e("ProfileVM", "Errore invio token al backend", e)
+            }
+        }
+    }
+
     fun updateNotificationPreference(
         trattative: Boolean? = null,
         pubblicazione: Boolean? = null,
@@ -87,7 +122,6 @@ class ProfileViewModel : ViewModel() {
         if (currentState is ProfileUiState.Success) {
             val oldData = currentState.data
 
-            // Ora questi riferimenti funzioneranno perché ProfileData è aggiornato
             val newTrattative = trattative ?: oldData.notifTrattative
             val newPubblicazione = pubblicazione ?: oldData.notifPubblicazione
             val newNuovi = nuoviImmobili ?: oldData.notifNuoviImmobili
@@ -111,6 +145,7 @@ class ProfileViewModel : ViewModel() {
                     Log.d("ProfileVM", "Preferenze notifiche aggiornate sul server")
                 } catch (e: Exception) {
                     Log.e("ProfileVM", "Errore aggiornamento preferenze", e)
+                    // Opzionale: rollback UI in caso di errore
                 }
             }
         }

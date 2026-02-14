@@ -34,13 +34,19 @@ data class EsitoRichiestaRequest(
     val id: String
 )
 
+// FIX: Classe per mappare la risposta JSON del backend (evita crash Unit)
+data class ManagerActionResponse(
+    val message: String? = null,
+    val error: String? = null
+)
+
 interface ManagerApiService {
 
     @GET("/api/manager/dashboard/{agenteId}")
     suspend fun getDashboardStats(@Path("agenteId") agenteId: String): Response<DashboardStatsDTO>
 
     @POST("/api/risposte")
-    suspend fun inviaRisposta(@Body request: RispostaRequest): Response<Unit>
+    suspend fun inviaRisposta(@Body request: RispostaRequest): Response<ManagerActionResponse> // FIX: Return Type
 
     @GET("/api/manager/richieste/{agenteId}/pendenti")
     suspend fun getRichiestePendenti(@Path("agenteId") agenteId: String): Response<List<RichiestaDTO>>
@@ -49,12 +55,11 @@ interface ManagerApiService {
     suspend fun accettaRichiesta(
         @Header("X-Manager-Id") managerId: String,
         @Body request: EsitoRichiestaRequest
-    ): Response<Unit>
+    ): Response<ManagerActionResponse> // FIX: Return Type
 
     @POST("/api/manager/richieste/rifiuta")
-    suspend fun rifiutaRichiesta(@Body request: EsitoRichiestaRequest): Response<Unit>
+    suspend fun rifiutaRichiesta(@Body request: EsitoRichiestaRequest): Response<ManagerActionResponse> // FIX: Return Type
 
-    // NUOVO: Recupera la lista di tutte le trattative (nuove + in corso)
     @GET("/api/trattative/manager/{agenteId}")
     suspend fun getTrattativeManager(@Path("agenteId") agenteId: String): Response<List<TrattativaSummaryDTO>>
 }
