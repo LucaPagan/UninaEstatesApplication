@@ -1,6 +1,5 @@
 package com.dieti.dietiestates25.ui.features.manager
 
-import ManagerNotificationsViewModel
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
