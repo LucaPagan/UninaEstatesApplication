@@ -311,3 +311,8 @@ data class RichiestaDTO(
     val data: String,
     val immagineUrl: String? // Aggiungi questo se manca!
 )
+
+data class ManagerActionResponse(
+    val message: String? = null,
+    val error: String? = null
+)
