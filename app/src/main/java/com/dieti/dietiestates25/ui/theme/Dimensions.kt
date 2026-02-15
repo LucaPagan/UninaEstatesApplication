@@ -53,6 +53,7 @@ object Dimensions {
     val statusBadgePadding = 10.dp
     val tabButtonPadding = 2.dp
     val propertyCardHeight = 250.dp
+    val propertyCardWidth = 300.dp
     val infoCardHeight = 150.dp
     val prefixWidth = 130.dp
 

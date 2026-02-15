@@ -17,4 +17,16 @@ object AppGradients {
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
             )
         )
+
+
+    val primaryToSecondary: Brush
+        @Composable
+        get() = Brush.verticalGradient(
+            colors = listOf(
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                MaterialTheme.colorScheme.background,
+                MaterialTheme.colorScheme.background,
+                MaterialTheme.colorScheme.background,
+            )
+        )
 }

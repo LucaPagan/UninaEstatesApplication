@@ -1,13 +1,11 @@
 package com.dieti.dietiestates25.ui.features.property
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dieti.dietiestates25.data.remote.ImmobileDTO
 import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.dieti.dietiestates25.ui.utils.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -19,32 +17,39 @@ sealed class YourPropertyState {
     data class Error(val message: String) : YourPropertyState()
 }
 
-class YourPropertyViewModel(application: Application) : AndroidViewModel(application) {
-
+class YourPropertyViewModel : ViewModel() {
     private val api = RetrofitClient.retrofit.create(PropertyApiService::class.java)
-
     private val _uiState = MutableStateFlow<YourPropertyState>(YourPropertyState.Idle)
-    val uiState: StateFlow<YourPropertyState> = _uiState.asStateFlow()
+    val uiState = _uiState.asStateFlow()
 
-    fun loadMyProperties() {
+    fun loadProperties(context: android.content.Context) {
         _uiState.value = YourPropertyState.Loading
 
-        // Recuperiamo l'ID del manager loggato
-        val userId = SessionManager.getUserId(getApplication())
-
-        if (userId == null) {
-            _uiState.value = YourPropertyState.Error("Utente non identificato. Effettua il login.")
-            return
-        }
+        val userId = SessionManager.getUserId(context)
+        val role = SessionManager.getUserRole(context)
 
         viewModelScope.launch {
             try {
-                val response = api.getImmobiliByAgente(userId)
-                if (response.isSuccessful && response.body() != null) {
-                    val lista = response.body()!!
-                    _uiState.value = YourPropertyState.Success(lista)
+                if (userId == null && role != "ADMIN") {
+                    _uiState.value = YourPropertyState.Error("Sessione scaduta. Effettua nuovamente il login.")
+                    return@launch
+                }
+
+                // Se l'utente è ADMIN, chiamiamo l'endpoint generico getImmobili
+                // che, senza parametri di ricerca, restituisce tutto il catalogo.
+                val response = if (role == "ADMIN") {
+                    api.getAllImmobili()
                 } else {
-                    _uiState.value = YourPropertyState.Error("Nessun immobile trovato o errore server.")
+                    // Se è un Agente/Manager, carichiamo solo i suoi
+                    if (userId == null) throw Exception("ID Utente non trovato in sessione")
+                    api.getImmobiliByAgente(userId)
+                }
+
+                if (response.isSuccessful && response.body() != null) {
+                    _uiState.value = YourPropertyState.Success(response.body()!!)
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: "Errore server: ${response.code()}"
+                    _uiState.value = YourPropertyState.Error(errorMsg)
                 }
             } catch (e: Exception) {
                 _uiState.value = YourPropertyState.Error("Errore di connessione: ${e.message}")

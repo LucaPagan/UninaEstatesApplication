@@ -102,7 +102,7 @@ fun NegotiationDetailScreen(
             // ACTION BUTTONS (Solo se tocca all'utente)
             if (canReply) {
                 Surface(shadowElevation = 8.dp, modifier = Modifier.fillMaxWidth()) {
-                    Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(Modifier.padding(15.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(onClick = { sendResponse("RIFIUTATA") }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) { Text("Rifiuta") }
                         Button(onClick = { showDialog = true }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF57C00))) { Text("Controproposta") }
                         Button(onClick = { sendResponse("ACCETTATA") }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))) { Text("Accetta") }
@@ -160,9 +160,9 @@ fun ChatBubble(msg: MessaggioTrattativaDTO) {
             Column(Modifier.padding(12.dp)) {
                 Text(if (msg.isMe) "Tu" else msg.autoreNome, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 if (msg.prezzo != null) {
-                    Text("Proposta: € ${String.format("%,d", msg.prezzo)}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text("Proposta: € ${String.format("%,d", msg.prezzo)}", fontWeight = FontWeight.Bold, color = if (msg.isMe) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary)
                 }
-                Text(msg.testo)
+                Text(msg.testo, color = MaterialTheme.colorScheme.surfaceVariant)
                 Spacer(Modifier.height(4.dp))
                 Text(msg.tipo, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             }

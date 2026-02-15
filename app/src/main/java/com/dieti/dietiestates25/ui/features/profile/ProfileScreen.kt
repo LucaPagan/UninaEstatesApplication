@@ -45,18 +45,28 @@ import com.dieti.dietiestates25.ui.features.auth.AuthViewModel
 fun ProfileScreen(
     navController: NavController,
     idUtente: String?,
+    onLogout: () -> Unit, // Callback per gestire l'uscita (come in AdminDashboard)
     viewModel: ProfileViewModel = viewModel(),
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val uiState by viewModel.uiState.collectAsState()
 
+    val performFullLogout = {
+        viewModel.logout(context) // Pulisce SessionManager (Token, ID, etc)
+        authViewModel.logout()    // Pulisce lo stato del ViewModel Auth
+        onLogout()         // Chiama il callback di navigazione definito in Navigation.kt
+    }
+
     // --- STATO PERMESSI NOTIFICHE (Sistema Android) ---
     var hasNotificationPermission by remember {
         mutableStateOf(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
             } else {
                 true
             }
@@ -73,7 +83,11 @@ fun ProfileScreen(
                 // Ricarichiamo il profilo per sincronizzare il token se necessario
                 viewModel.loadUserProfile(context, idUtente)
             } else {
-                Toast.makeText(context, "Notifiche disabilitate. Potrai attivarle dalle impostazioni.", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context,
+                    "Notifiche disabilitate. Potrai attivarle dalle impostazioni.",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     )
@@ -109,15 +123,6 @@ fun ProfileScreen(
         viewModel.loadUserProfile(context, idUtente)
     }
 
-    // Gestione Logout/Delete
-    val onLogout = {
-        authViewModel.logout()
-        Toast.makeText(context, "Logout effettuato", Toast.LENGTH_SHORT).show()
-        navController.navigate("LoginScreen") {
-            popUpTo(0) { inclusive = true }
-        }
-    }
-
     val onUpdateNotification: (Boolean?, Boolean?, Boolean?) -> Unit = { t, p, n ->
         viewModel.updateNotificationPreference(t, p, n)
     }
@@ -126,7 +131,7 @@ fun ProfileScreen(
         navController = navController,
         idUtente = idUtente,
         uiState = uiState,
-        onLogout = onLogout,
+        onLogout = performFullLogout,
         onDelete = { viewModel.deleteProfile(context) },
         onRetry = { viewModel.loadUserProfile(context, idUtente) },
         onUpdateNotification = onUpdateNotification,
@@ -151,7 +156,7 @@ fun ProfileScreenContent(
     onUpdateNotification: (Boolean?, Boolean?, Boolean?) -> Unit,
     hasNotificationPermission: Boolean,
     onRequestPermission: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
 ) {
     val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
@@ -221,15 +226,27 @@ fun ProfileScreenContent(
                         CircularProgressIndicator(color = colorScheme.primary)
                     }
                 }
+
                 is ProfileUiState.Error -> {
-                    ErrorContent(uiState.message, onRetry, onLogout, colorScheme, typography, dimensions)
+                    ErrorContent(
+                        uiState.message,
+                        onRetry,
+                        onLogout,
+                        colorScheme,
+                        typography,
+                        dimensions
+                    )
                 }
+
                 is ProfileUiState.Success -> {
                     val data = uiState.data
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = {})
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = {})
                             .verticalScroll(rememberScrollState())
                     ) {
                         ProfileInnerContent(
@@ -254,8 +271,7 @@ fun ProfileScreenContent(
         if (showLogoutDialog) {
             LogoutConfirmAlertDialog(
                 onDismissRequest = { showLogoutDialog = false },
-                onLogoutConfirm = { _ -> showLogoutDialog = false; onLogout() },
-                isEditMode = false, hasUnsavedChanges = false, canSaveChanges = false,
+                onLogoutConfirm = { showLogoutDialog = false; onLogout() } as () -> Unit,
                 colorScheme = colorScheme, dimensions = dimensions, typography = typography
             )
         }
@@ -277,23 +293,43 @@ private fun ErrorContent(
     onLogout: () -> Unit,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions
+    dimensions: Dimensions,
 ) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(dimensions.paddingLarge)
         ) {
-            Icon(Icons.Default.Warning, null, tint = colorScheme.error, modifier = Modifier.size(48.dp))
+            Icon(
+                Icons.Default.Warning,
+                null,
+                tint = colorScheme.error,
+                modifier = Modifier.size(48.dp)
+            )
             Spacer(modifier = Modifier.height(dimensions.spacingMedium))
-            Text("Ops! Qualcosa non va.", style = typography.titleMedium, color = colorScheme.onSurface)
+            Text(
+                "Ops! Qualcosa non va.",
+                style = typography.titleMedium,
+                color = colorScheme.onSurface
+            )
 
-            val displayError = if (message.contains("404")) "Utente non trovato.\nEffettua il logout." else message
-            Text(displayError, color = colorScheme.error, style = typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(vertical = dimensions.paddingSmall))
+            val displayError =
+                if (message.contains("404")) "Utente non trovato.\nEffettua il logout." else message
+            Text(
+                displayError,
+                color = colorScheme.error,
+                style = typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(vertical = dimensions.paddingSmall)
+            )
             Spacer(modifier = Modifier.height(dimensions.spacingLarge))
 
             if (!message.contains("404")) {
-                AppPrimaryButton(onClick = onRetry, text = "Riprova", modifier = Modifier.fillMaxWidth())
+                AppPrimaryButton(
+                    onClick = onRetry,
+                    text = "Riprova",
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Spacer(modifier = Modifier.height(dimensions.spacingMedium))
             }
             AppRedButton(onClick = onLogout, text = "Logout", modifier = Modifier.fillMaxWidth())
@@ -314,7 +350,7 @@ private fun ProfileInnerContent(
     onOpenSettings: () -> Unit,
     typography: Typography,
     colorScheme: ColorScheme,
-    dimensions: Dimensions
+    dimensions: Dimensions,
 ) {
     Column(
         modifier = Modifier
@@ -421,12 +457,15 @@ private fun NotificationSettingsSection(
     colorScheme: ColorScheme,
     typography: Typography,
     dimensions: Dimensions,
-    isEnabled: Boolean // Passiamo lo stato dei permessi
+    isEnabled: Boolean, // Passiamo lo stato dei permessi
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colorScheme.surfaceVariant.copy(alpha = 0.3f), shape = MaterialTheme.shapes.medium)
+            .background(
+                colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                shape = MaterialTheme.shapes.medium
+            )
             .padding(dimensions.paddingMedium)
     ) {
         NotificationSwitchItem(
@@ -437,7 +476,10 @@ private fun NotificationSettingsSection(
             colorScheme = colorScheme, typography = typography
         )
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colorScheme.outlineVariant)
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 8.dp),
+            color = colorScheme.outlineVariant
+        )
 
         NotificationSwitchItem(
             label = "Esito Pubblicazione",
@@ -447,7 +489,10 @@ private fun NotificationSettingsSection(
             colorScheme = colorScheme, typography = typography
         )
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colorScheme.outlineVariant)
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 8.dp),
+            color = colorScheme.outlineVariant
+        )
 
         NotificationSwitchItem(
             label = "Nuovi Immobili in Zona",
@@ -466,7 +511,7 @@ private fun NotificationSwitchItem(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     colorScheme: ColorScheme,
-    typography: Typography
+    typography: Typography,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -474,7 +519,11 @@ private fun NotificationSwitchItem(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(text = label, style = typography.bodyLarge, color = colorScheme.onSurface)
-            Text(text = description, style = typography.bodySmall, color = colorScheme.onSurfaceVariant)
+            Text(
+                text = description,
+                style = typography.bodySmall,
+                color = colorScheme.onSurfaceVariant
+            )
         }
         Switch(
             checked = checked,
@@ -494,12 +543,15 @@ private fun ProfileReadOnlyFields(
     profileData: ProfileData,
     colorScheme: ColorScheme,
     typography: Typography,
-    dimensions: Dimensions
+    dimensions: Dimensions,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(colorScheme.surfaceVariant.copy(alpha = 0.3f), shape = MaterialTheme.shapes.medium)
+            .background(
+                colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                shape = MaterialTheme.shapes.medium
+            )
             .padding(dimensions.paddingMedium)
     ) {
         ProfileFieldItem("Nome", profileData.name, colorScheme, typography, dimensions)
@@ -517,14 +569,40 @@ private fun ProfileReadOnlyFields(
 }
 
 @Composable
-private fun ProfileFieldItem(label: String, value: String, colorScheme: ColorScheme, typography: Typography, dimensions: Dimensions) {
+private fun ProfileFieldItem(
+    label: String,
+    value: String,
+    colorScheme: ColorScheme,
+    typography: Typography,
+    dimensions: Dimensions,
+) {
     Text(text = label, style = typography.labelMedium, color = colorScheme.primary)
-    Text(text = value, style = typography.bodyLarge, color = colorScheme.onSurface, modifier = Modifier.padding(top = dimensions.paddingExtraSmall, bottom = dimensions.paddingMedium))
+    Text(
+        text = value,
+        style = typography.bodyLarge,
+        color = colorScheme.onSurface,
+        modifier = Modifier.padding(
+            top = dimensions.paddingExtraSmall,
+            bottom = dimensions.paddingMedium
+        )
+    )
 }
 
 @Composable
-private fun ProfileActionButtons(onLogoutClick: () -> Unit, onDeleteProfileClick: () -> Unit, dimensions: Dimensions) {
-    AppPrimaryButton(onClick = onLogoutClick, text = "Esci Dal Profilo", modifier = Modifier.fillMaxWidth())
+private fun ProfileActionButtons(
+    onLogoutClick: () -> Unit,
+    onDeleteProfileClick: () -> Unit,
+    dimensions: Dimensions,
+) {
+    AppPrimaryButton(
+        onClick = onLogoutClick,
+        text = "Esci Dal Profilo",
+        modifier = Modifier.fillMaxWidth()
+    )
     Spacer(modifier = Modifier.height(dimensions.spacingMedium))
-    AppRedButton(onClick = onDeleteProfileClick, text = "Elimina Profilo", modifier = Modifier.fillMaxWidth())
+    AppRedButton(
+        onClick = onDeleteProfileClick,
+        text = "Elimina Profilo",
+        modifier = Modifier.fillMaxWidth()
+    )
 }

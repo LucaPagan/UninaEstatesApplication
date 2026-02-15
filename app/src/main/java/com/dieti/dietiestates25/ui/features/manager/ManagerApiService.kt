@@ -10,7 +10,8 @@ import retrofit2.http.Path
 
 data class DashboardStatsDTO(
     val numeroNotifiche: Int,
-    val numeroProposte: Int
+    val numeroProposte: Int,
+    val isCapo: Boolean
 )
 
 data class RispostaRequest(
@@ -44,6 +45,9 @@ interface ManagerApiService {
 
     @GET("/api/manager/dashboard/{agenteId}")
     suspend fun getDashboardStats(@Path("agenteId") agenteId: String): Response<DashboardStatsDTO>
+
+    @POST("api/agente/create-sub-agent")
+    suspend fun createSubAgent(@Body request: CreateSubAgentRequest): Response<Unit>
 
     @POST("/api/risposte")
     suspend fun inviaRisposta(@Body request: RispostaRequest): Response<ManagerActionResponse> // FIX: Return Type

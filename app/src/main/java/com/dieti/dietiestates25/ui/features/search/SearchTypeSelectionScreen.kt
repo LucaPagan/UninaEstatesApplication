@@ -134,18 +134,6 @@ fun SearchTypeSelectionScreen(
                 modifier = Modifier.fillMaxWidth(),
                 icon = Icons.Filled.Map
             )
-
-            Spacer(modifier = Modifier.height(dimensions.spacingMedium))
-
-            AppPrimaryButton(
-                text = "Visualizza per Stazioni Metro",
-                onClick = {
-                    // TODO: Naviga alla schermata di ricerca per metro con i filtri
-                    // navController.navigate(Screen.MetroSearchScreen.buildRoute(idUtente, comune, ricercaQueryText, filters))
-                },
-                modifier = Modifier.fillMaxWidth(),
-                icon = Icons.Filled.Train
-            )
         }
     }
 }

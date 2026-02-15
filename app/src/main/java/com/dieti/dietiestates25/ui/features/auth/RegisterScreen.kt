@@ -1,6 +1,5 @@
 package com.dieti.dietiestates25.ui.features.auth
 
-import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,78 +16,90 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.dieti.dietiestates25.ui.components.AppIconDisplay
-import com.dieti.dietiestates25.ui.navigation.Screen // Import necessario per la navigazione corretta
+import com.dieti.dietiestates25.ui.components.AppPrimaryButton // Import aggiunto
+import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.AppGradients
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
 @Composable
 fun RegisterScreen(
     navController: NavController? = null,
-    viewModel: AuthViewModel = viewModel()
+    viewModel: AuthViewModel = viewModel(),
 ) {
-    // Stati UI locali per i campi di testo
+    // Stati UI locali
     var nome by remember { mutableStateOf("") }
     var cognome by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var numero by remember { mutableStateOf("") } // Telefono
+    var numero by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(false) }
-    var passwordVisible by remember { mutableStateOf(false) } // Per mostrare/nascondere pw
+    var passwordVisible by remember { mutableStateOf(false) }
 
     // Osserviamo lo stato dal ViewModel
     val registerState by viewModel.state.observeAsState(RegisterState.Idle)
 
     val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
+    val scrollState = rememberScrollState()
 
-    // GESTIONE DEGLI EFFETTI COLLATERALI (Navigazione e Errori)
+    // GESTIONE DEGLI EFFETTI COLLATERALI
     LaunchedEffect(registerState) {
         when (val state = registerState) {
             is RegisterState.Success -> {
-                // Recuperiamo l'ID dall'oggetto utente ricevuto
                 val userId = state.utente.id
-                Toast.makeText(context, "Benvenuto ${state.utente.nome}!", Toast.LENGTH_SHORT).show()
-
-                // FIX LOOP: Navigazione verso la Home (invece di welcome_view)
-                // Usiamo Screen.HomeScreen.route per coerenza con il resto dell'app
+                Toast.makeText(context, "Benvenuto ${state.utente.nome}!", Toast.LENGTH_SHORT)
+                    .show()
                 navController?.navigate(Screen.HomeScreen.route + "/$userId") {
-                    // Rimuove TUTTO (Intro, Register) dalla storia per evitare loop indietro
                     popUpTo(0) { inclusive = true }
                 }
             }
+
             is RegisterState.Error -> {
                 Toast.makeText(context, state.errore, Toast.LENGTH_LONG).show()
             }
-            else -> {
-            }
+
+            else -> {}
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .windowInsetsTopHeight(WindowInsets.statusBars)
+            .background(colorScheme.primaryContainer)
+    )
+
+    // Contenitore principale
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(AppGradients.primaryToBackground)
+            .imePadding() // <--- MODIFICA CRITICA: Ridimensiona la Box quando esce la tastiera
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(AppGradients.primaryToBackground)
-                .padding(Dimensions.paddingLarge)
-                .verticalScroll(rememberScrollState()), // Rende la colonna scrollabile
+                .verticalScroll(scrollState) // Permette lo scroll del contenuto
+                .padding(horizontal = Dimensions.paddingLarge, vertical = Dimensions.paddingMedium),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Logo App
             AppIconDisplay(
                 size = Dimensions.logoLarge,
                 shapeRadius = Dimensions.cornerRadiusMedium,
-                modifier = Modifier.padding(bottom = Dimensions.spacingLarge)
+                modifier = Modifier.padding(
+                    bottom = Dimensions.spacingLarge,
+                    top = Dimensions.spacingLarge
+                )
             )
 
             // Bottoni Login/Sign Up
             Row(modifier = Modifier.padding(bottom = Dimensions.spacingLarge)) {
                 Button(
-                    onClick = { navController?.navigate(Screen.LoginScreen.route) }, // Usa la rotta corretta
+                    onClick = { navController?.navigate(Screen.LoginScreen.route) },
                     colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary)
                 ) {
                     Text("Login", color = colorScheme.onPrimary)
@@ -102,7 +113,7 @@ fun RegisterScreen(
                 }
             }
 
-            // --- FORM DI REGISTRAZIONE ---
+            // --- FORM ---
             val fieldModifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = Dimensions.spacingSmall)
@@ -114,7 +125,6 @@ fun RegisterScreen(
                 unfocusedTextColor = colorScheme.onBackground
             )
 
-            // Se è in caricamento, disabilitiamo i campi (opzionale)
             val isLoading = registerState is RegisterState.Loading
 
             OutlinedTextField(
@@ -154,7 +164,6 @@ fun RegisterScreen(
                 enabled = !isLoading
             )
 
-            // Password con toggle visibility
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -162,9 +171,14 @@ fun RegisterScreen(
                 singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                    val image =
+                        if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(imageVector = image, contentDescription = null, tint = colorScheme.onBackground)
+                        Icon(
+                            imageVector = image,
+                            contentDescription = null,
+                            tint = colorScheme.onBackground
+                        )
                     }
                 },
                 colors = fieldColors,
@@ -174,22 +188,25 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(Dimensions.spacingMedium))
 
-            // Checkbox Remember Me
+            // Checkbox
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(bottom = Dimensions.spacingMedium)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = Dimensions.spacingMedium)
             ) {
                 Checkbox(
                     checked = rememberMe,
                     onCheckedChange = { rememberMe = it },
                     colors = CheckboxDefaults.colors(checkedColor = colorScheme.primary),
-                    enabled = !isLoading // Sfrutta la variabile isLoading definita sopra
+                    enabled = !isLoading
                 )
                 Text("Ricordami", color = colorScheme.onBackground)
             }
 
-            // Bottone Register
-            Button(
+            // Bottone Registra
+            AppPrimaryButton(
+                text = if (isLoading) "Registrazione in corso..." else "Registra",
                 onClick = {
                     viewModel.eseguiRegistrazione(
                         nome = nome,
@@ -197,21 +214,20 @@ fun RegisterScreen(
                         email = email,
                         pass = password,
                         telefono = numero,
-                        rememberMe = rememberMe // Passiamo il valore della checkbox
+                        rememberMe = rememberMe
                     )
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary),
-                enabled = !isLoading, // Disabilita se sta caricando
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = Dimensions.spacingMedium)
-            ) {
-                Text(if (isLoading) "Registrazione in corso..." else "Registra", color = colorScheme.onPrimary)
-            }
+            )
+
+            // Spazio extra per scrollare oltre la tastiera
+            Spacer(modifier = Modifier.height(Dimensions.spacingExtraLarge))
         }
 
-        // --- LOADING INDICATOR ---
-        // Mostra una rotellina al centro sopra tutto se sta caricando
+        // Loading Indicator
         if (registerState is RegisterState.Loading) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center),
@@ -219,4 +235,5 @@ fun RegisterScreen(
             )
         }
     }
+
 }

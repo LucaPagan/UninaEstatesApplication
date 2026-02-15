@@ -118,7 +118,7 @@ fun HomeScreen(
                             itemContent = { property ->
                                 val imageUrl = viewModel.getImmobileMainImageUrl(property)
                                 AppPropertyCard(
-                                    modifier = Modifier.width(dimensions.propertyCardHeight).height(dimensions.circularIconSize),
+                                    modifier = Modifier.width(dimensions.propertyCardWidth).height(dimensions.propertyCardHeight),
                                     price = "€ ${property.prezzo?.let { String.format("%,d", it) } ?: "Tratt."}",
                                     imageUrl = imageUrl,
                                     address = property.indirizzo ?: "Zona non specificata",

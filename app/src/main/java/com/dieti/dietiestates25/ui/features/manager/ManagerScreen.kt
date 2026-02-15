@@ -14,15 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.dieti.dietiestates25.ui.components.*
 import com.dieti.dietiestates25.ui.features.auth.AuthViewModel
 import com.dieti.dietiestates25.ui.navigation.Screen
 import com.dieti.dietiestates25.ui.theme.AppGradients
-import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
 import com.dieti.dietiestates25.ui.theme.Dimensions
 
 
@@ -88,7 +85,6 @@ fun ManagerScreen(
                         count = uiState.notificationCount.toString(),
                         icon = Icons.Default.NotificationsActive,
                         modifier = Modifier.weight(1f),
-                        // FIX: Navigazione aggiornata alla schermata notifiche manager
                         onClick = { navController.navigate(Screen.ManagerNotificationScreen.route) },
                         dimensions = dimensions,
                         typography = typography,
@@ -135,12 +131,15 @@ fun ManagerScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                // VISIBILE SOLO SE È CAPO
                 if (uiState.isCapo) {
+                    // Spazio aggiunto tra "Pubblica Annuncio" e "Crea Agente"
                     Spacer(modifier = Modifier.height(dimensions.spacingMedium))
 
                     AppSecondaryButton(
                         text = "Crea un Agente",
-                        onClick = { navController.navigate(Screen.RegisterScreen.route) },
+                        // Punta alla nuova rotta specifica per i manager (senza selezione agenzia)
+                        onClick = { navController.navigate(Screen.ManagerCreateAgentScreen.route) },
                         icon = Icons.Default.PersonAdd,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -152,7 +151,6 @@ fun ManagerScreen(
     }
 }
 
-// ... (StatCard resta uguale) ...
 @Composable
 fun StatCard(
     title: String,

@@ -15,10 +15,4 @@ interface ProfileApiService {
 
     @DELETE("api/utenti/{id}")
     suspend fun deleteUser(@Path("id") id: String): Response<Void>
-
-    // --- MANAGER (Spostato qui) ---
-    // Dato che il profilo del manager lo vediamo nella stessa schermata,
-    // mettiamo qui la chiamata per ottenerne i dati.
-    @GET("api/agenti/{id}")
-    suspend fun getAgenteProfile(@Path("id") id: String): Response<AgenteDTO>
 }

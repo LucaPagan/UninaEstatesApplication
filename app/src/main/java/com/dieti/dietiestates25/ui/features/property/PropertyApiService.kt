@@ -69,4 +69,9 @@ interface PropertyApiService {
 
     @DELETE("api/immobili/immagini/{imageId}")
     suspend fun eliminaImmagine(@Path("imageId") imageId: Int): Response<Unit>
+
+
+    // Utilizziamo il metodo @GetMapping base del controller che restituisce tutti gli immobili
+    @GET("api/immobili")
+    suspend fun getAllImmobili(): Response<List<ImmobileDTO>>
 }

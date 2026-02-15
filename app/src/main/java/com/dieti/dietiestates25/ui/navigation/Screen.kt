@@ -34,6 +34,7 @@ sealed class Screen(val route: String) {
     data object RequestsScreen : Screen("requests_screen") { fun withIdUtente(idUtente: String): String = "$route/${Uri.encode(idUtente)}" }
     data object ManagerNotificationScreen : Screen("manager_notification_screen") { fun withIdUtente(idUtente: String): String = "$route/${Uri.encode(idUtente)}" }
     data object ManagerRequestDetailScreen : Screen("manager_request_detail_screen") { fun withId(immobileId: String): String = "$route/${Uri.encode(immobileId)}" }
+    object ManagerCreateAgentScreen : Screen("manager_create_agent")
 
     // --- NUOVA ROTTA PER LA PREVIEW DI ASSEGNAZIONE DEL MANAGER ---
     data object ManagerPendingPropertyScreen : Screen("manager_pending_property_screen") {

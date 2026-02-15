@@ -84,6 +84,13 @@ fun LoginScreen(
 
     val isLoading = authState is RegisterState.Loading
 
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .windowInsetsTopHeight(WindowInsets.statusBars)
+            .background(colorScheme.primaryContainer)
+    )
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -97,7 +104,7 @@ fun LoginScreen(
             AppIconDisplay(
                 size = Dimensions.logoLarge,
                 shapeRadius = Dimensions.cornerRadiusMedium,
-                modifier = Modifier.padding(bottom = Dimensions.spacingLarge)
+                modifier = Modifier.padding(bottom = Dimensions.spacingLarge, top = Dimensions.spacingLarge)
             )
 
             // Bottoni Login/Register

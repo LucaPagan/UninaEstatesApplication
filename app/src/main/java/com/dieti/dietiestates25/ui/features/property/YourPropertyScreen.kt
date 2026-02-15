@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,14 +31,15 @@ import com.dieti.dietiestates25.data.remote.RetrofitClient
 import com.dieti.dietiestates25.data.remote.ImmobileDTO
 import com.dieti.dietiestates25.data.remote.ImmagineDto
 import com.dieti.dietiestates25.ui.theme.DietiEstatesTheme
+import com.dieti.dietiestates25.ui.utils.SessionManager
 
 @Composable
 fun YourPropertyScreen(
     navController: NavController,
-    idUtente: String,
     viewModel: YourPropertyViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     val colorScheme = MaterialTheme.colorScheme
     val typography = MaterialTheme.typography
     val dimensions = Dimensions
@@ -47,15 +49,16 @@ fun YourPropertyScreen(
         0.60f to colorScheme.background, 1.0f to colorScheme.primary
     )
 
+    // Lanciamo il caricamento basato sul ruolo salvato in sessione
     LaunchedEffect(Unit) {
-        viewModel.loadMyProperties()
+        viewModel.loadProperties(context)
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             GeneralHeaderBar(
-                title = "Le tue proprietà",
+                title = if (SessionManager.getUserRole(context) == "ADMIN") "Tutti gli Immobili" else "Le tue proprietà",
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -74,20 +77,25 @@ fun YourPropertyScreen(
                 }
                 is YourPropertyState.Error -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = state.message,
-                            color = colorScheme.error,
-                            style = typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(dimensions.paddingMedium)
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = state.message,
+                                color = colorScheme.error,
+                                style = typography.bodyLarge,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(dimensions.paddingMedium)
+                            )
+                            Button(onClick = { viewModel.loadProperties(context) }) {
+                                Text("Riprova")
+                            }
+                        }
                     }
                 }
                 is YourPropertyState.Success -> {
                     if (state.immobili.isEmpty()) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
-                                text = "Non hai ancora inserito nessun immobile.",
+                                text = "Nessun immobile trovato nel sistema.",
                                 style = typography.bodyLarge,
                                 color = colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
@@ -96,12 +104,7 @@ fun YourPropertyScreen(
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                start = dimensions.paddingMedium,
-                                end = dimensions.paddingMedium,
-                                top = dimensions.paddingMedium,
-                                bottom = dimensions.paddingLarge
-                            ),
+                            contentPadding = PaddingValues(dimensions.paddingMedium),
                             verticalArrangement = Arrangement.spacedBy(dimensions.paddingMedium)
                         ) {
                             items(items = state.immobili, key = { it.id }) { immobile ->
@@ -124,9 +127,6 @@ fun YourPropertyScreen(
     }
 }
 
-/**
- * Card personalizzata che accetta ImmobileDTO.
- */
 @Composable
 fun MyPropertyCard(
     immobile: ImmobileDTO,
@@ -145,12 +145,7 @@ fun MyPropertyCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column {
-            // SEZIONE IMMAGINE (Peso 0.6)
             Box(modifier = Modifier.weight(0.6f)) {
-
-                // FIX CRASH: Cast sicuro (as?) per gestire il caso in cui Gson inserisce null
-                // in un campo dichiarato Non-Null (immagini).
-                // FIX: Uso dell'URL helper sicuro
                 val imageUrl = immobile.immagini.firstOrNull()?.url?.let { RetrofitClient.getFullUrl(it) }
 
                 AsyncImage(
@@ -160,7 +155,6 @@ fun MyPropertyCard(
                     contentScale = ContentScale.Crop
                 )
 
-                // Etichetta Prezzo
                 Surface(
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
                     shape = RoundedCornerShape(topStart = dimensions.cornerRadiusMedium, bottomEnd = dimensions.cornerRadiusMedium),
@@ -176,14 +170,12 @@ fun MyPropertyCard(
                 }
             }
 
-            // SEZIONE DETTAGLI (Peso 0.4)
             Column(
                 modifier = Modifier.weight(0.4f).padding(12.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
                     Text(
-                        // MODIFICATO: ImmobileDTO non ha 'titolo', usiamo 'categoria' come fallback
                         text = immobile.categoria ?: "Immobile",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
@@ -216,7 +208,6 @@ fun MyPropertyCard(
                         modifier = Modifier.weight(1f)
                     )
 
-                    // Tasto Modifica
                     AppPropertyViewButton(
                         text = "Modifica",
                         onClick = onEditClick
@@ -232,9 +223,6 @@ fun MyPropertyCard(
 fun YourPropertyScreenPreview() {
     val navController = rememberNavController()
     DietiEstatesTheme {
-        YourPropertyScreen(
-            navController = navController,
-            idUtente = "previewUser"
-        )
+        YourPropertyScreen(navController = navController)
     }
 }

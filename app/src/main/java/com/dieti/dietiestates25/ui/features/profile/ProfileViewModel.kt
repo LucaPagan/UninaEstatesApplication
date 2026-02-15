@@ -47,12 +47,10 @@ class ProfileViewModel : ViewModel() {
             _uiState.value = ProfileUiState.Loading
             val sessionUserId = SessionManager.getUserId(context)
 
-            val finalUserId = if (!sessionUserId.isNullOrEmpty()) {
-                sessionUserId
-            } else if (!navUserId.isNullOrEmpty() && navUserId != "utente" && navUserId != "{idUtente}") {
-                navUserId
-            } else {
-                null
+            val finalUserId = when {
+                !sessionUserId.isNullOrEmpty() -> sessionUserId
+                !navUserId.isNullOrEmpty() && navUserId != "utente" && navUserId != "{idUtente}" && navUserId != "session" -> navUserId
+                else -> null
             }
 
             if (finalUserId.isNullOrEmpty()) {
@@ -60,92 +58,65 @@ class ProfileViewModel : ViewModel() {
                 return@launch
             }
 
-            // 1. CARICAMENTO PROFILO
             try {
                 val response = profileService.getUserProfile(finalUserId)
                 if (response.isSuccessful && response.body() != null) {
                     val dto = response.body()!!
-                    val profileData = mapDtoToProfileData(dto)
-                    _uiState.value = ProfileUiState.Success(profileData)
+                    _uiState.value = ProfileUiState.Success(mapDtoToProfileData(dto))
 
-                    // 2. SINCRONIZZAZIONE TOKEN CRITICA
-                    // Se è il mio profilo, aggiorno il token FCM sul server per essere sicuro di ricevere notifiche
                     if (finalUserId == sessionUserId) {
                         syncFcmToken()
                     }
-
                 } else {
                     if (response.code() == 404) {
-                        SessionManager.logout(context)
-                        _uiState.value = ProfileUiState.Error("Utente non trovato (404). Logout eseguito.")
+                        logout(context)
+                        _uiState.value = ProfileUiState.Error("Utente non trovato.")
                     } else {
                         _uiState.value = ProfileUiState.Error("Errore API: ${response.code()}")
                     }
                 }
             } catch (e: Exception) {
-                _uiState.value = ProfileUiState.Error("Errore connessione: ${e.message}")
+                _uiState.value = ProfileUiState.Error("Errore connessione: ${e.localizedMessage}")
             }
         }
     }
 
-    // Funzione fondamentale: Prende il token attuale e lo manda al backend
     private fun syncFcmToken() {
-        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                Log.w("ProfileVM", "Fetching FCM registration token failed", task.exception)
-                return@OnCompleteListener
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                task.result?.let { sendTokenToBackend(it) }
             }
-
-            // Get new FCM registration token
-            val token = task.result
-            sendTokenToBackend(token)
-        })
+        }
     }
 
     private fun sendTokenToBackend(token: String) {
         viewModelScope.launch {
             try {
                 RetrofitClient.notificationService.updateFcmToken(FcmTokenRequest(token))
-                Log.d("ProfileVM", "Token sincronizzato con successo: $token")
             } catch (e: Exception) {
-                Log.e("ProfileVM", "Errore invio token al backend", e)
+                Log.e("ProfileVM", "Errore invio token", e)
             }
         }
     }
 
-    fun updateNotificationPreference(
-        trattative: Boolean? = null,
-        pubblicazione: Boolean? = null,
-        nuoviImmobili: Boolean? = null
-    ) {
+    fun updateNotificationPreference(t: Boolean? = null, p: Boolean? = null, n: Boolean? = null) {
         val currentState = _uiState.value
         if (currentState is ProfileUiState.Success) {
             val oldData = currentState.data
-
-            val newTrattative = trattative ?: oldData.notifTrattative
-            val newPubblicazione = pubblicazione ?: oldData.notifPubblicazione
-            val newNuovi = nuoviImmobili ?: oldData.notifNuoviImmobili
-
             val newData = oldData.copy(
-                notifTrattative = newTrattative,
-                notifPubblicazione = newPubblicazione,
-                notifNuoviImmobili = newNuovi
+                notifTrattative = t ?: oldData.notifTrattative,
+                notifPubblicazione = p ?: oldData.notifPubblicazione,
+                notifNuoviImmobili = n ?: oldData.notifNuoviImmobili
             )
-
             _uiState.value = ProfileUiState.Success(newData)
 
             viewModelScope.launch {
                 try {
-                    val request = NotificationPreferencesRequest(
-                        notifTrattative = newTrattative,
-                        notifPubblicazione = newPubblicazione,
-                        notifNuoviImmobili = newNuovi
+                    RetrofitClient.notificationService.updatePreferences(
+                        NotificationPreferencesRequest(newData.notifTrattative, newData.notifPubblicazione, newData.notifNuoviImmobili)
                     )
-                    RetrofitClient.notificationService.updatePreferences(request)
-                    Log.d("ProfileVM", "Preferenze notifiche aggiornate sul server")
                 } catch (e: Exception) {
-                    Log.e("ProfileVM", "Errore aggiornamento preferenze", e)
-                    // Opzionale: rollback UI in caso di errore
+                    Log.e("ProfileVM", "Errore update preferenze", e)
                 }
             }
         }
@@ -153,26 +124,26 @@ class ProfileViewModel : ViewModel() {
 
     fun deleteProfile(context: Context) {
         viewModelScope.launch {
-            _uiState.value = ProfileUiState.Loading
             val userId = SessionManager.getUserId(context)
+            if (userId.isNullOrEmpty()) return@launch
 
-            if (userId.isNullOrEmpty()) {
-                _uiState.value = ProfileUiState.Error("Impossibile eliminare: ID utente mancante.")
-                return@launch
-            }
-
+            _uiState.value = ProfileUiState.Loading
             try {
                 val response = profileService.deleteUser(userId)
                 if (response.isSuccessful) {
                     SessionManager.logout(context)
                     _uiState.value = ProfileUiState.UserDeleted
                 } else {
-                    _uiState.value = ProfileUiState.Error("Errore eliminazione: ${response.code()}")
+                    _uiState.value = ProfileUiState.Error("Errore eliminazione")
                 }
             } catch (e: Exception) {
-                _uiState.value = ProfileUiState.Error("Errore rete: ${e.message}")
+                _uiState.value = ProfileUiState.Error("Errore di rete")
             }
         }
+    }
+
+    fun logout(context: Context) {
+        SessionManager.logout(context)
     }
 
     private fun mapDtoToProfileData(dto: UtenteResponseDTO): ProfileData {
@@ -180,30 +151,14 @@ class ProfileViewModel : ViewModel() {
         val foundPrefix = availablePrefixes.firstOrNull { fullPhone.startsWith(it.prefix) }
         val fullName = "${dto.nome} ${dto.cognome}".trim()
 
-        return if (foundPrefix != null) {
-            ProfileData(
-                name = fullName,
-                email = dto.email,
-                selectedPrefix = foundPrefix,
-                phoneNumberWithoutPrefix = fullPhone.removePrefix(foundPrefix.prefix).trim(),
-                notifTrattative = dto.notifTrattative,
-                notifPubblicazione = dto.notifPubblicazione,
-                notifNuoviImmobili = dto.notifNuoviImmobili
-            )
-        } else {
-            ProfileData(
-                name = fullName,
-                email = dto.email,
-                selectedPrefix = availablePrefixes.first(),
-                phoneNumberWithoutPrefix = fullPhone,
-                notifTrattative = dto.notifTrattative,
-                notifPubblicazione = dto.notifPubblicazione,
-                notifNuoviImmobili = dto.notifNuoviImmobili
-            )
-        }
-    }
-
-    fun logout(context: Context) {
-        SessionManager.logout(context)
+        return ProfileData(
+            name = fullName,
+            email = dto.email ?: "",
+            selectedPrefix = foundPrefix ?: availablePrefixes.first(),
+            phoneNumberWithoutPrefix = if (foundPrefix != null) fullPhone.removePrefix(foundPrefix.prefix).trim() else fullPhone,
+            notifTrattative = dto.notifTrattative,
+            notifPubblicazione = dto.notifPubblicazione,
+            notifNuoviImmobili = dto.notifNuoviImmobili
+        )
     }
 }

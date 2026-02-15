@@ -41,7 +41,7 @@ fun PropertyPreviewInfoWindow(
     AppPropertyCard(
         modifier = modifier
             .fillMaxWidth()
-            .height(130.dp), // Altezza fissa ottimale per la preview su mappa
+            .height(100.dp), // Altezza fissa ottimale per la preview su mappa
         price = property.price,
         imageUrl = property.imageUrl,
         imageResId = property.imageRes,
@@ -57,9 +57,6 @@ fun PropertyPreviewInfoWindow(
     )
 }
 
-// Rimosso BadgeInfo poiché ora usiamo lo stile standard di AppPropertyCard
-
-// --- STANDARD PROPERTY CARD (LISTA) ---
 @Composable
 fun AppPropertyCard(
     modifier: Modifier = Modifier,
@@ -91,7 +88,7 @@ fun AppPropertyCard(
                 )
                 Column(
                     modifier = Modifier
-                        .weight(0.6f)
+                        .weight(1f - imageHeightVerticalRatio)
                         .padding(12.dp),
                     verticalArrangement = Arrangement.Center // Centra verticalmente il contenuto
                 ) {
@@ -160,7 +157,9 @@ fun PropertyInfoContent(
     address: String,
     details: List<String>
 ) {
-    Column {
+    Column (
+        modifier = Modifier.fillMaxSize(),
+    ){
         Text(
             text = price,
             style = MaterialTheme.typography.titleLarge,

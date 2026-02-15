@@ -11,6 +11,7 @@ import com.dieti.dietiestates25.ui.features.auth.LoginScreen
 import com.dieti.dietiestates25.ui.features.auth.RegisterScreen
 import com.dieti.dietiestates25.ui.features.auth.WelcomeScreen
 import com.dieti.dietiestates25.ui.features.home.HomeScreen
+import com.dieti.dietiestates25.ui.features.manager.ManagerCreateAgentScreen
 import com.dieti.dietiestates25.ui.features.manager.ManagerNegotiationChatScreen
 import com.dieti.dietiestates25.ui.features.manager.ManagerOffersScreen
 import com.dieti.dietiestates25.ui.features.manager.ManagerPendingPropertyScreen
@@ -26,7 +27,7 @@ import com.dieti.dietiestates25.ui.features.search.*
 
 @Composable
 fun Navigation(
-    startDestination: String = Screen.LoginScreen.route
+    startDestination: String = Screen.LoginScreen.route,
 ) {
     val navController = rememberNavController()
 
@@ -48,7 +49,15 @@ fun Navigation(
                 onNavigateToCreateAgent = { navController.navigate(Screen.AdminCreateAgentScreen.route) },
                 onNavigateToCreateAgency = { navController.navigate(Screen.AdminCreateAgencyScreen.route) },
                 onNavigateToChangePassword = { navController.navigate(Screen.AdminChangePasswordScreen.route) },
-                onLogout = { navController.navigate(Screen.LoginScreen.route) { popUpTo(0) { inclusive = true } } }
+                onNavigateToYourProperties = { navController.navigate(Screen.YourPropertyScreen.route) },
+                onLogout = {
+                    navController.navigate(Screen.LoginScreen.route) {
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                    }
+                }
+
             )
         }
         composable(Screen.AdminCreateAdminScreen.route) { AdminCreateAdminScreen(navController) }
@@ -68,7 +77,16 @@ fun Navigation(
             route = "${Screen.ProfileScreen.route}/{idUtente}",
             arguments = listOf(navArgument("idUtente") { type = NavType.StringType })
         ) { entry ->
-            ProfileScreen(navController, idUtente = entry.arguments?.getString("idUtente"))
+            ProfileScreen(
+                navController = navController,
+                idUtente = entry.arguments?.getString("idUtente"),
+                onLogout = {
+                    // Qui gestisci la navigazione verso il Login pulendo lo stack
+                    navController.navigate(Screen.LoginScreen.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
 
         composable(Screen.NotificationScreen.route) { NotificationScreen(navController) }
@@ -151,7 +169,9 @@ fun Navigation(
                 navArgument("idUtente") { type = NavType.StringType },
                 navArgument("comune") { type = NavType.StringType },
                 navArgument("ricerca") { type = NavType.StringType },
-                navArgument("purchaseType") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("purchaseType") {
+                    type = NavType.StringType; nullable = true; defaultValue = null
+                },
                 navArgument("minPrice") { type = NavType.FloatType; defaultValue = -1f },
                 navArgument("maxPrice") { type = NavType.FloatType; defaultValue = -1f }
             )
@@ -171,7 +191,9 @@ fun Navigation(
                 navArgument("idUtente") { type = NavType.StringType },
                 navArgument("comune") { type = NavType.StringType },
                 navArgument("ricerca") { type = NavType.StringType },
-                navArgument("purchaseType") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("purchaseType") {
+                    type = NavType.StringType; nullable = true; defaultValue = null
+                },
                 navArgument("minPrice") { type = NavType.FloatType; defaultValue = -1f },
                 navArgument("maxPrice") { type = NavType.FloatType; defaultValue = -1f }
             )
@@ -191,7 +213,9 @@ fun Navigation(
                 navArgument("idUtente") { type = NavType.StringType },
                 navArgument("comune") { type = NavType.StringType },
                 navArgument("ricerca") { type = NavType.StringType },
-                navArgument("purchaseType") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("purchaseType") {
+                    type = NavType.StringType; nullable = true; defaultValue = null
+                },
                 navArgument("minPrice") { type = NavType.FloatType; defaultValue = -1f },
                 navArgument("maxPrice") { type = NavType.FloatType; defaultValue = -1f }
             )
@@ -240,10 +264,13 @@ fun Navigation(
             route = "${Screen.PropertySellScreen.route}/{idUtente}",
             arguments = listOf(navArgument("idUtente") { type = NavType.StringType })
         ) { entry ->
-            PropertySellScreen(navController, idUtente = entry.arguments?.getString("idUtente") ?: "")
+            PropertySellScreen(
+                navController,
+                idUtente = entry.arguments?.getString("idUtente") ?: ""
+            )
         }
 
-        composable(route = Screen.YourPropertyScreen.route) { YourPropertyScreen(navController = navController, idUtente = "") }
+        composable(route = Screen.YourPropertyScreen.route) { YourPropertyScreen(navController = navController) }
 
         composable(
             route = Screen.EditPropertyScreen.route + "/{${Screen.EditPropertyScreen.argId}}",
@@ -251,7 +278,8 @@ fun Navigation(
                 navArgument(Screen.EditPropertyScreen.argId) { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val immobileId = backStackEntry.arguments?.getString(Screen.EditPropertyScreen.argId) ?: ""
+            val immobileId =
+                backStackEntry.arguments?.getString(Screen.EditPropertyScreen.argId) ?: ""
             EditPropertyScreen(navController = navController, immobileId = immobileId)
         }
 
@@ -286,6 +314,10 @@ fun Navigation(
         ) { entry ->
             val offertaId = entry.arguments?.getString("offertaId") ?: ""
             ManagerNegotiationChatScreen(navController, offertaId)
+        }
+
+        composable(Screen.ManagerCreateAgentScreen.route) {
+            ManagerCreateAgentScreen(navController)
         }
     }
 }

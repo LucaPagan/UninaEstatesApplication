@@ -14,7 +14,7 @@ interface DietiEstatesApi { }
 
 object RetrofitClient {
     // Sostituisci con il tuo IP
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    private const val BASE_URL = "http://192.168.1.9:8080/"
 
     @Volatile
     var loggedUserEmail: String? = null

@@ -137,45 +137,6 @@ fun MapSearchScreen(
                         }
                     }
                 )
-            },
-            floatingActionButton = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingSmall),
-                    horizontalAlignment = Alignment.End
-                ) {
-                    // Tasto "Cerca in questa zona"
-                    ExtendedFloatingActionButton(
-                        onClick = {
-                            val center = cameraPositionState.position.target
-                            // Calcola raggio approssimativo in base allo zoom
-                            val radiusKm = 150000.0 / Math.pow(2.0, cameraPositionState.position.zoom.toDouble()) / 1000.0
-
-                            viewModel.loadProperties(
-                                query = "",
-                                filters = appliedFilters,
-                                searchArea = center,
-                                radiusKm = radiusKm.coerceAtLeast(1.0)
-                            )
-                        },
-                        containerColor = colorScheme.primaryContainer,
-                        contentColor = colorScheme.onPrimaryContainer,
-                        icon = { Icon(Icons.Default.Search, null) },
-                        text = { Text("Cerca qui") }
-                    )
-
-                    FloatingActionButton(
-                        onClick = {
-                            // Reset filtri e torna alla ricerca originale
-                            appliedFilters = null
-                            selectedProperty = null
-                            hasCenteredOnResults = false // Permette di ri-centrare
-                            viewModel.loadProperties("$comune $ricerca")
-                        },
-                        containerColor = colorScheme.secondaryContainer
-                    ) {
-                        Icon(Icons.Filled.FilterList, "Reset")
-                    }
-                }
             }
         ) { innerPadding ->
             Box(modifier = Modifier.fillMaxSize()) {
@@ -245,8 +206,8 @@ fun MapSearchScreen(
                         typography = typography,
                         colorScheme = colorScheme,
                         modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 80.dp, start = 16.dp, end = 16.dp)
+                            .align(Alignment.Center)
+                            .padding(top = 200.dp, start = 16.dp, end = 16.dp)
                     )
                 }
             }

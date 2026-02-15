@@ -47,21 +47,15 @@ fun UnsavedChangesAlertDialog( // Rinominato per chiarezza e convenzione
 @Composable
 fun LogoutConfirmAlertDialog(
     onDismissRequest: () -> Unit,
-    onLogoutConfirm: (saveFirst: Boolean) -> Unit,
-    isEditMode: Boolean,
-    hasUnsavedChanges: Boolean,
-    canSaveChanges: Boolean,
-    confirmButtonText: String = "Salva ed Esci", // Testo per il pulsante di conferma (quando ce ne sono due)
-    dismissButtonText: String = "Esci", // Testo per il pulsante di "uscita" o "uscita senza salvare"
+    onLogoutConfirm: () -> Unit,
+    confirmButtonText: String = "Esci",
+    dismissButtonText: String = "Annulla",
     colorScheme: ColorScheme = MaterialTheme.colorScheme,
-    typography: Typography = MaterialTheme.typography, // Usato per lo stile del testo dei bottoni
+    typography: Typography = MaterialTheme.typography,
     dimensions: Dimensions = Dimensions
 ) {
     val title = "Conferma Uscita"
-    var message = "Stai per uscire dal profilo. Continuare?"
-    if (isEditMode && hasUnsavedChanges) {
-        message = "Hai modifiche non salvate. Vuoi salvarle prima di uscire?"
-    }
+    val message = "Stai per uscire dal profilo. Continuare?"
 
     val centeredButtonTextStyle = typography.bodySmall.copy(
         textAlign = TextAlign.Center
@@ -72,35 +66,18 @@ fun LogoutConfirmAlertDialog(
         title = { Text(title) },
         text = { Text(message) },
         confirmButton = {
-            if (isEditMode && hasUnsavedChanges) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(dimensions.spacingSmall)
-                ) {
-                    AppRedButton(
-                        onClick = { onLogoutConfirm(false) },
-                        text = dismissButtonText,
-                        textStyle = centeredButtonTextStyle
-                    )
-                    AppPrimaryButton(
-                        onClick = { onLogoutConfirm(true) },
-                        text = confirmButtonText,
-                        textStyle = centeredButtonTextStyle,
-                        enabled = canSaveChanges
-                    )
-                }
-            } else {
-                AppPrimaryButton(
-                    onClick = { onLogoutConfirm(false) },
-                    text = dismissButtonText,
-                    textStyle = centeredButtonTextStyle
-                )
-            }
+            AppPrimaryButton(
+                onClick = onLogoutConfirm,
+                text = confirmButtonText,
+                textStyle = centeredButtonTextStyle
+            )
         },
         dismissButton = {
-            if (!(isEditMode && hasUnsavedChanges)) {
-                TextButton(onClick = onDismissRequest) {
-                    Text("Annulla")
-                }
+            TextButton(onClick = onDismissRequest) {
+                Text(
+                    text = dismissButtonText,
+                    color = colorScheme.primary
+                )
             }
         },
         containerColor = colorScheme.surfaceVariant,

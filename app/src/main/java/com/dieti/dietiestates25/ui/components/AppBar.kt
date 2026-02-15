@@ -221,6 +221,7 @@ fun GeneralHeaderBar(
     title: String,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
+    statusBarColor: Color = MaterialTheme.colorScheme.primary,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     val colorScheme = MaterialTheme.colorScheme
@@ -236,7 +237,7 @@ fun GeneralHeaderBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsTopHeight(WindowInsets.statusBars)
-                .background(colorScheme.primaryContainer) // Use the same color as the header
+                .background(statusBarColor ?: colorScheme.primaryContainer) // Use the same color as the header
         )
         // Header content
         Surface(
